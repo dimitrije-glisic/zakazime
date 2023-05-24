@@ -1,6 +1,3 @@
---liquibase formatted sql
-
---changeset liquibase:1
 CREATE TABLE accounts
 (
     user_id    INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
@@ -11,14 +8,12 @@ CREATE TABLE accounts
     last_login TIMESTAMP
 );
 
---changeset liquibase:2
 CREATE TABLE roles
 (
     role_id   INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     role_name VARCHAR(255) UNIQUE NOT NULL
 );
 
---changeset liquibase:3
 CREATE TABLE business_profile
 (
     business_id   INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
@@ -31,7 +26,6 @@ CREATE TABLE business_profile
     updated_on    TIMESTAMP
 );
 
---changeset liquibase:4
 CREATE TABLE service
 (
     service_id   INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
@@ -39,7 +33,6 @@ CREATE TABLE service
     description  TEXT NOT NULL
 );
 
---changeset liquibase:5
 CREATE TABLE service_category
 (
     category_id   INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
@@ -47,7 +40,6 @@ CREATE TABLE service_category
     description   TEXT
 );
 
---changeset liquibase:6
 CREATE TABLE account_roles_map
 (
     user_id    INT REFERENCES accounts (user_id),
@@ -56,7 +48,6 @@ CREATE TABLE account_roles_map
     PRIMARY KEY (user_id, role_id)
 );
 
---changeset liquibase:7
 CREATE TABLE business_account_map
 (
     user_id     INT REFERENCES accounts (user_id),
@@ -64,7 +55,6 @@ CREATE TABLE business_account_map
     PRIMARY KEY (user_id, business_id)
 );
 
---changeset liquibase:8
 CREATE TABLE service_category_map
 (
     service_id  INT REFERENCES service (service_id),
@@ -72,7 +62,6 @@ CREATE TABLE service_category_map
     PRIMARY KEY (service_id, category_id)
 );
 
---changeset liquibase:9
 CREATE TABLE business_service_map
 (
     business_id INT REFERENCES business_profile (business_id),
@@ -80,7 +69,6 @@ CREATE TABLE business_service_map
     PRIMARY KEY (business_id, service_id)
 );
 
---changeset liquibase:10
 CREATE TABLE service_provider_map
 (
     user_id    INT REFERENCES accounts (user_id),

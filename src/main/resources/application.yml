@@ -4,9 +4,8 @@ spring:
     url: jdbc:postgresql://localhost:5432/zakazivanje
     username: postgres
     password: postgres
-  liquibase:
-    change-log: classpath:db/changelog/changelog-master.yml
-
-logging:
-  level:
-    liquibase: info
+  flyway:
+    baseline-description: Initial setup
+    user: postgres
+    password: postgres
+    validateMigrationNaming: true
