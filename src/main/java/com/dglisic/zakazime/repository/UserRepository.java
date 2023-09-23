@@ -1,12 +1,15 @@
 package com.dglisic.zakazime.repository;
 
-import com.dglisic.zakazime.domain.UserDTO;
+import com.dglisic.zakazime.dto.UserDTO;
+
+import java.util.Optional;
+
 import model.tables.records.AccountsRecord;
 
 public interface UserRepository {
 
   void saveUser(UserDTO user);
 
-  AccountsRecord findUserByEmail(String email);
+  Optional<AccountsRecord> findUserByEmail(String email);
 
 }

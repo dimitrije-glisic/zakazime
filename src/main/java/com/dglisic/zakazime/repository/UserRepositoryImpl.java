@@ -1,7 +1,9 @@
 package com.dglisic.zakazime.repository;
 
-import com.dglisic.zakazime.domain.UserDTO;
+import com.dglisic.zakazime.dto.UserDTO;
 import java.time.LocalDateTime;
+import java.util.Optional;
+
 import model.tables.Accounts;
 import model.tables.records.AccountsRecord;
 import org.jooq.DSLContext;
@@ -28,7 +30,7 @@ public class UserRepositoryImpl implements UserRepository {
   }
 
   @Override
-  public AccountsRecord findUserByEmail(String email) {
-    return create.fetchOne(Accounts.ACCOUNTS, Accounts.ACCOUNTS.EMAIL.eq(email));
+  public Optional<AccountsRecord> findUserByEmail(String email) {
+    return Optional.ofNullable(create.fetchOne(Accounts.ACCOUNTS, Accounts.ACCOUNTS.EMAIL.eq(email)));
   }
 }
