@@ -19,7 +19,8 @@ public class UserRepositoryImpl implements UserRepository {
   @Override
   public void saveUser(UserDTO user) {
     var newUser = create.newRecord(Accounts.ACCOUNTS);
-    newUser.setUsername(user.username());
+    newUser.setFirstName(user.firstName());
+    newUser.setLastName(user.lastName());
     newUser.setPassword(user.password());
     newUser.setEmail(user.email());
     newUser.setCreatedOn(LocalDateTime.now());

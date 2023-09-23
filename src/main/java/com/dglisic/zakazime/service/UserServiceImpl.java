@@ -21,8 +21,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public UserDTO findUserByEmail(String email) {
     var user = userRepository.findUserByEmail(email);
-    return new UserDTO(UserDTO.extractFirstName(user.getUsername()), UserDTO.extractLastName(user.getUsername()), user.getPassword(),
-        user.getEmail());
+    return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail());
   }
 
 }
