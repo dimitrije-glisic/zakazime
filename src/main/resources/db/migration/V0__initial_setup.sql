@@ -1,8 +1,8 @@
 CREATE TABLE accounts
 (
     user_id    INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    first_name   VARCHAR(50) UNIQUE  NOT NULL,
-    last_name   VARCHAR(50) UNIQUE  NOT NULL,
+    first_name VARCHAR(50)         NOT NULL,
+    last_name  VARCHAR(50)         NOT NULL,
     password   VARCHAR(50)         NOT NULL,
     email      VARCHAR(255) UNIQUE NOT NULL,
     created_on TIMESTAMP           NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE service
 (
     service_id   INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     service_name VARCHAR(255) NOT NULL,
-    description  TEXT NOT NULL
+    description  TEXT         NOT NULL
 );
 
 CREATE TABLE service_category
