@@ -25,9 +25,9 @@ public class UserController {
   }
 
   @PostMapping("/register")
-  public ResponseEntity<String> registerUser(@Valid @RequestBody UserDTO user) {
+  public ResponseEntity<MessageDTO> registerUser(@Valid @RequestBody UserDTO user) {
     userService.registerUser(user);
-    return ResponseEntity.created(URI.create("/users/" + user.email())).build();
+    return ResponseEntity.created(URI.create("/users/" + user.email())).body(new MessageDTO("User created"));
   }
 
   @PostMapping("/login")
