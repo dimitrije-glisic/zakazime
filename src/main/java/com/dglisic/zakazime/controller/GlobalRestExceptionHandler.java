@@ -1,7 +1,6 @@
-package com.dglisic.zakazime.exception;
+package com.dglisic.zakazime.controller;
 
-import com.dglisic.zakazime.dto.ErrorDTO;
-
+import com.dglisic.zakazime.service.ApplicationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;

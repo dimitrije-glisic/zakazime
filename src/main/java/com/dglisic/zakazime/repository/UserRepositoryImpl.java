@@ -1,9 +1,7 @@
 package com.dglisic.zakazime.repository;
 
-import com.dglisic.zakazime.dto.UserDTO;
 import java.time.LocalDateTime;
 import java.util.Optional;
-
 import model.tables.Accounts;
 import model.tables.records.AccountsRecord;
 import org.jooq.DSLContext;
@@ -19,12 +17,12 @@ public class UserRepositoryImpl implements UserRepository {
   }
 
   @Override
-  public void saveUser(UserDTO user) {
+  public void saveUser(AccountsRecord account) {
     var newUser = create.newRecord(Accounts.ACCOUNTS);
-    newUser.setFirstName(user.firstName());
-    newUser.setLastName(user.lastName());
-    newUser.setPassword(user.password());
-    newUser.setEmail(user.email());
+    newUser.setFirstName(account.getFirstName());
+    newUser.setLastName(account.getLastName());
+    newUser.setEmail(account.getEmail());
+    newUser.setPassword(account.getPassword());
     newUser.setCreatedOn(LocalDateTime.now());
     newUser.store();
   }

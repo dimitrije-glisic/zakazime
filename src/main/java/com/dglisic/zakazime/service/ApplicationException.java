@@ -1,4 +1,4 @@
-package com.dglisic.zakazime.exception;
+package com.dglisic.zakazime.service;
 
 import org.springframework.http.HttpStatus;
 

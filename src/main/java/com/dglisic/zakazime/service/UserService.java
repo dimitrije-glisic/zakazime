@@ -1,13 +1,12 @@
 package com.dglisic.zakazime.service;
 
-import com.dglisic.zakazime.dto.CredentialsDTO;
-import com.dglisic.zakazime.dto.UserDTO;
+import model.tables.records.AccountsRecord;
 
 public interface UserService {
 
-  void registerUser(UserDTO user);
+  void registerUser(AccountsRecord account);
 
-  UserDTO findUserByEmail(String email);
+  AccountsRecord findUserByEmail(String email);
 
-  UserDTO loginUser(CredentialsDTO credentials);
+  AccountsRecord loginUser(String email, String password);
 }
