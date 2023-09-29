@@ -1,5 +1,6 @@
 package com.dglisic.zakazime.controller;
 
+import com.dglisic.zakazime.config.JwtProvider;
 import com.dglisic.zakazime.service.UserService;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -16,10 +17,12 @@ public class UserController {
 
   private final UserService userService;
   private final UserMapper userMapper;
+  private final JwtProvider jwtProvider;
 
-  public UserController(UserService userService, UserMapper userMapper) {
+  public UserController(UserService userService, UserMapper userMapper, JwtProvider jwtProvider) {
     this.userService = userService;
     this.userMapper = userMapper;
+    this.jwtProvider = jwtProvider;
   }
 
   @PostMapping("/register")
@@ -31,12 +34,14 @@ public class UserController {
   @PostMapping("/login")
   public ResponseEntity<UserDTO> loginUser(@Valid @RequestBody CredentialsDTO credentials) {
     AccountsRecord account = userService.loginUser(credentials.email(), credentials.password());
-    return ResponseEntity.ok(userMapper.mapToUserDTO(account));
+    String token = jwtProvider.generateToken(account.getEmail());
+    UserDTO userDTO = userMapper.mapToUserDTOWithToken(account, token);
+    return ResponseEntity.ok(userDTO);
   }
 
   @GetMapping("/users/{email}")
   public ResponseEntity<UserDTO> getUser(@PathVariable String email) {
-    AccountsRecord userByEmail = userService.findUserByEmail(email);
+    AccountsRecord userByEmail = userService.findUserByEmailOrElseThrow(email);
     return ResponseEntity.ok(userMapper.mapToUserDTO(userByEmail));
   }
 

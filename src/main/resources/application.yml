@@ -9,3 +9,7 @@ spring:
     user: postgres
     password: postgres
     validateMigrationNaming: true
+
+
+jwt:
+  secret-key: sgjaosfm2421kpmsfsmfpk214

@@ -6,7 +6,22 @@ public interface UserService {
 
   void registerUser(AccountsRecord account);
 
-  AccountsRecord findUserByEmail(String email);
+  /**
+   * Finds user by email
+   *
+   * @param email user email
+   * @return user
+   * @throws ApplicationException if user is not found
+   */
+  AccountsRecord findUserByEmailOrElseThrow(String email) throws ApplicationException;
 
-  AccountsRecord loginUser(String email, String password);
+  /**
+   * Logs in user
+   *
+   * @param email email
+   * @param password password
+   * @return account
+   * @throws ApplicationException if user is not found or password is wrong
+   */
+  AccountsRecord loginUser(String email, String password) throws ApplicationException;
 }

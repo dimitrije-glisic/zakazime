@@ -21,13 +21,13 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public AccountsRecord findUserByEmail(String email) {
+  public AccountsRecord findUserByEmailOrElseThrow(String email) {
     Optional<AccountsRecord> user = userRepository.findUserByEmail(email);
     return user.orElseThrow(() -> new ApplicationException("User not found", HttpStatus.NOT_FOUND));
   }
 
   @Override
-  public AccountsRecord loginUser(String email, String password) {
+  public AccountsRecord loginUser(String email, String password) throws ApplicationException {
     var user = userRepository.findUserByEmail(email);
     if (user.isPresent()) {
       if (user.get().getPassword().equals(password)) {
