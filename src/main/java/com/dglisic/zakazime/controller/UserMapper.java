@@ -2,26 +2,26 @@ package com.dglisic.zakazime.controller;
 
 import org.springframework.stereotype.Component;
 
-import model.tables.records.AccountsRecord;
+import model.tables.records.AccountRecord;
 
 @Component
 public class UserMapper {
 
-  public UserDTO mapToUserDTO(AccountsRecord user) {
+  public UserDTO mapToUserDTO(AccountRecord user) {
     return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail());
   }
 
-  public UserDTO mapToUserDTOWithToken(AccountsRecord user, String token) {
+  public UserDTO mapToUserDTOWithToken(AccountRecord user, String token) {
     return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, token);
   }
 
-  public AccountsRecord mapToAccount(UserDTO user) {
-    AccountsRecord accountsRecord = new AccountsRecord();
-    accountsRecord.setFirstName(user.firstName());
-    accountsRecord.setLastName(user.lastName());
-    accountsRecord.setEmail(user.email());
-    accountsRecord.setPassword(user.password());
-    return accountsRecord;
+  public AccountRecord mapToAccount(UserDTO user) {
+    AccountRecord AccountRecord = new AccountRecord();
+    AccountRecord.setFirstName(user.firstName());
+    AccountRecord.setLastName(user.lastName());
+    AccountRecord.setEmail(user.email());
+    AccountRecord.setPassword(user.password());
+    return AccountRecord;
   }
 
 }

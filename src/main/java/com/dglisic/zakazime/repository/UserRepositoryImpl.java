@@ -2,8 +2,11 @@ package com.dglisic.zakazime.repository;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-import model.tables.Accounts;
-import model.tables.records.AccountsRecord;
+import model.tables.Account;
+import model.tables.BusinessAccountMap;
+import model.tables.BusinessProfile;
+import model.tables.records.AccountRecord;
+import model.tables.records.BusinessProfileRecord;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
 
@@ -17,8 +20,8 @@ public class UserRepositoryImpl implements UserRepository {
   }
 
   @Override
-  public void saveUser(AccountsRecord account) {
-    var newUser = create.newRecord(Accounts.ACCOUNTS);
+  public void saveUser(AccountRecord account) {
+    var newUser = create.newRecord(Account.ACCOUNT);
     newUser.setFirstName(account.getFirstName());
     newUser.setLastName(account.getLastName());
     newUser.setEmail(account.getEmail());
@@ -28,7 +31,37 @@ public class UserRepositoryImpl implements UserRepository {
   }
 
   @Override
-  public Optional<AccountsRecord> findUserByEmail(String email) {
-    return Optional.ofNullable(create.fetchOne(Accounts.ACCOUNTS, Accounts.ACCOUNTS.EMAIL.eq(email)));
+  public Optional<AccountRecord> findUserByEmail(String email) {
+    return Optional.ofNullable(create.fetchOne(Account.ACCOUNT, Account.ACCOUNT.EMAIL.eq(email)));
+  }
+
+  @Override
+  public int save(BusinessProfileRecord businessProfile) {
+    BusinessProfileRecord businessProfileRecord = create.insertInto(BusinessProfile.BUSINESS_PROFILE)
+        .set(BusinessProfile.BUSINESS_PROFILE.NAME, businessProfile.getName())
+        .set(BusinessProfile.BUSINESS_PROFILE.EMAIL, businessProfile.getEmail())
+        .set(BusinessProfile.BUSINESS_PROFILE.PHONE_NUMBER, businessProfile.getPhoneNumber())
+        .set(BusinessProfile.BUSINESS_PROFILE.ADDRESS, businessProfile.getAddress())
+        .set(BusinessProfile.BUSINESS_PROFILE.CREATED_ON, LocalDateTime.now())
+        .returning(BusinessProfile.BUSINESS_PROFILE.ID)
+        .fetchOne();
+
+    if(businessProfileRecord != null) {
+      return businessProfileRecord.getId();
+    } else {
+      throw new RuntimeException("Business profile not saved");
+    }
+
+  }
+
+  @Override
+  public void linkBusinessProfileToUser(int userId, int businessProfileId) {
+    int insertResult = create.insertInto(BusinessAccountMap.BUSINESS_ACCOUNT_MAP)
+        .set(BusinessAccountMap.BUSINESS_ACCOUNT_MAP.USER_ID, userId)
+        .set(BusinessAccountMap.BUSINESS_ACCOUNT_MAP.BUSINESS_ID, businessProfileId)
+        .execute();
+    if (insertResult == 0) {
+      throw new RuntimeException("Business profile not linked to user");
+    }
   }
 }

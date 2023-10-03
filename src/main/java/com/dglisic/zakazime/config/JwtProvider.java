@@ -15,7 +15,7 @@ import java.util.Base64;
 import java.util.Date;
 
 import jakarta.annotation.PostConstruct;
-import model.tables.records.AccountsRecord;
+import model.tables.records.AccountRecord;
 
 @Component
 public class JwtProvider {
@@ -50,7 +50,7 @@ public class JwtProvider {
   public Authentication validateToken(String token) {
     DecodedJWT decodedJWT = JWT.require(HMAC256(secretKey)).build().verify(token);
     String email = decodedJWT.getClaim(EMAIL_CLAIM).asString();
-    AccountsRecord userByEmail = userService.findUserByEmailOrElseThrow(email);
+    AccountRecord userByEmail = userService.findUserByEmailOrElseThrow(email);
     return new UsernamePasswordAuthenticationToken(userByEmail, null, null);
   }
 
