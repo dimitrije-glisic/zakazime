@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import java.net.URI;
 import model.tables.records.AccountRecord;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,9 +30,11 @@ public class UserController {
   }
 
   @PostMapping("/register")
-  public ResponseEntity<MessageDTO> registerUser(@Valid @RequestBody UserDTO user) {
-    userService.registerUser(userMapper.mapToAccount(user));
-    return ResponseEntity.created(URI.create("/users/" + user.email())).body(new MessageDTO("User created"));
+  public ResponseEntity<UserDTO> registerUser(@Valid @RequestBody UserDTO user) {
+    AccountRecord account = userService.registerUser(userMapper.mapToAccount(user));
+    String token = jwtProvider.generateToken(account.getEmail());
+    UserDTO userDTO = userMapper.mapToUserDTOWithToken(account, token);
+    return ResponseEntity.created(URI.create("/users/" + userDTO.email())).body(userDTO);
   }
 
   @PostMapping("/login")

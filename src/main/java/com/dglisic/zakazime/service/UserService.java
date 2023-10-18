@@ -5,7 +5,7 @@ import model.tables.records.BusinessProfileRecord;
 
 public interface UserService {
 
-  void registerUser(AccountRecord account);
+  AccountRecord registerUser(AccountRecord account);
 
   /**
    * Finds user by email

@@ -7,7 +7,7 @@ import model.tables.records.BusinessProfileRecord;
 
 public interface UserRepository {
 
-  void saveUser(AccountRecord account);
+  AccountRecord saveUser(AccountRecord account);
 
   Optional<AccountRecord> findUserByEmail(String email);
 

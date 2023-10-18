@@ -20,7 +20,7 @@ public class UserRepositoryImpl implements UserRepository {
   }
 
   @Override
-  public void saveUser(AccountRecord account) {
+  public AccountRecord saveUser(AccountRecord account) {
     var newUser = create.newRecord(Account.ACCOUNT);
     newUser.setFirstName(account.getFirstName());
     newUser.setLastName(account.getLastName());
@@ -28,6 +28,7 @@ public class UserRepositoryImpl implements UserRepository {
     newUser.setPassword(account.getPassword());
     newUser.setCreatedOn(LocalDateTime.now());
     newUser.store();
+    return newUser;
   }
 
   @Override
@@ -41,6 +42,8 @@ public class UserRepositoryImpl implements UserRepository {
         .set(BusinessProfile.BUSINESS_PROFILE.NAME, businessProfile.getName())
         .set(BusinessProfile.BUSINESS_PROFILE.EMAIL, businessProfile.getEmail())
         .set(BusinessProfile.BUSINESS_PROFILE.PHONE_NUMBER, businessProfile.getPhoneNumber())
+        .set(BusinessProfile.BUSINESS_PROFILE.CITY, businessProfile.getCity())
+        .set(BusinessProfile.BUSINESS_PROFILE.POSTAL_CODE, businessProfile.getPostalCode())
         .set(BusinessProfile.BUSINESS_PROFILE.ADDRESS, businessProfile.getAddress())
         .set(BusinessProfile.BUSINESS_PROFILE.CREATED_ON, LocalDateTime.now())
         .returning(BusinessProfile.BUSINESS_PROFILE.ID)
