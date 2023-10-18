@@ -1,12 +1,14 @@
 CREATE TABLE account
 (
-    id         INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    first_name VARCHAR(50)         NOT NULL,
-    last_name  VARCHAR(50)         NOT NULL,
-    password   VARCHAR(50)         NOT NULL,
-    email      VARCHAR(255) UNIQUE NOT NULL,
-    created_on TIMESTAMP           NOT NULL,
-    last_login TIMESTAMP
+    id                  INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    first_name          VARCHAR(50)         NOT NULL,
+    last_name           VARCHAR(50)         NOT NULL,
+    password            VARCHAR(50)         NOT NULL,
+    email               VARCHAR(255) UNIQUE NOT NULL,
+    user_type           VARCHAR(50)         NOT NULL,
+    registration_status VARCHAR(50)         NOT NULL,
+    created_on          TIMESTAMP           NOT NULL,
+    last_login          TIMESTAMP
 );
 
 CREATE TABLE role

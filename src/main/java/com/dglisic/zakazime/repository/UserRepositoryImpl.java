@@ -1,5 +1,6 @@
 package com.dglisic.zakazime.repository;
 
+import com.dglisic.zakazime.service.UserRegistrationStatus;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import model.tables.Account;
@@ -26,9 +27,19 @@ public class UserRepositoryImpl implements UserRepository {
     newUser.setLastName(account.getLastName());
     newUser.setEmail(account.getEmail());
     newUser.setPassword(account.getPassword());
+    newUser.setUserType(account.getUserType());
+    newUser.setRegistrationStatus(account.getRegistrationStatus());
     newUser.setCreatedOn(LocalDateTime.now());
     newUser.store();
     return newUser;
+  }
+
+  @Override
+  public void updateRegistrationStatus(Integer accountId, UserRegistrationStatus status) {
+    create.update(Account.ACCOUNT)
+        .set(Account.ACCOUNT.REGISTRATION_STATUS, status.toString())
+        .where(Account.ACCOUNT.ID.eq(accountId))
+        .execute();
   }
 
   @Override
@@ -37,7 +48,7 @@ public class UserRepositoryImpl implements UserRepository {
   }
 
   @Override
-  public int save(BusinessProfileRecord businessProfile) {
+  public int saveBusinessProfile(BusinessProfileRecord businessProfile) {
     BusinessProfileRecord businessProfileRecord = create.insertInto(BusinessProfile.BUSINESS_PROFILE)
         .set(BusinessProfile.BUSINESS_PROFILE.NAME, businessProfile.getName())
         .set(BusinessProfile.BUSINESS_PROFILE.EMAIL, businessProfile.getEmail())
@@ -49,7 +60,7 @@ public class UserRepositoryImpl implements UserRepository {
         .returning(BusinessProfile.BUSINESS_PROFILE.ID)
         .fetchOne();
 
-    if(businessProfileRecord != null) {
+    if (businessProfileRecord != null) {
       return businessProfileRecord.getId();
     } else {
       throw new RuntimeException("Business profile not saved");

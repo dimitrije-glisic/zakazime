@@ -8,20 +8,23 @@ import model.tables.records.AccountRecord;
 public class UserMapper {
 
   public UserDTO mapToUserDTO(AccountRecord user) {
-    return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail());
+    return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), user.getUserType(),
+        user.getRegistrationStatus());
   }
 
   public UserDTO mapToUserDTOWithToken(AccountRecord user, String token) {
-    return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, token);
+    return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), token, user.getUserType(),
+        user.getRegistrationStatus());
   }
 
-  public AccountRecord mapToAccount(UserDTO user) {
-    AccountRecord AccountRecord = new AccountRecord();
-    AccountRecord.setFirstName(user.firstName());
-    AccountRecord.setLastName(user.lastName());
-    AccountRecord.setEmail(user.email());
-    AccountRecord.setPassword(user.password());
-    return AccountRecord;
+  public AccountRecord mapToAccount(UserRegistrationDTO registrationDTO) {
+    AccountRecord accountRecord = new AccountRecord();
+    accountRecord.setFirstName(registrationDTO.firstName());
+    accountRecord.setLastName(registrationDTO.lastName());
+    accountRecord.setEmail(registrationDTO.email());
+    accountRecord.setPassword(registrationDTO.password());
+    accountRecord.setUserType(registrationDTO.userType().toString());
+    return accountRecord;
   }
 
 }

@@ -27,4 +27,6 @@ public interface UserService {
   AccountRecord loginUser(String email, String password) throws ApplicationException;
 
   void finishBusinessUserRegistration(String ownerEmail, BusinessProfileRecord businessProfile);
+
+  AccountRecord registerBusinessUser(AccountRecord accountRecord);
 }

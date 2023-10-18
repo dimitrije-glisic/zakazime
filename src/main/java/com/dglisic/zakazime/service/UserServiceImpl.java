@@ -18,7 +18,14 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public AccountRecord registerUser(AccountRecord account) {
+    account.setRegistrationStatus(UserRegistrationStatus.COMPLETED.toString());
     return userRepository.saveUser(account);
+  }
+
+  @Override
+  public AccountRecord registerBusinessUser(AccountRecord accountRecord) {
+    accountRecord.setRegistrationStatus(UserRegistrationStatus.INITIAL.toString());
+    return userRepository.saveUser(accountRecord);
   }
 
   @Override
@@ -43,11 +50,19 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void finishBusinessUserRegistration(String ownerEmail, BusinessProfileRecord businessProfile) {
-    Optional<AccountRecord> user = userRepository.findUserByEmail(ownerEmail);
-    if (user.isPresent()) {
-      int businessProfileId = userRepository.save(businessProfile);
-      final int userId = user.get().getId();
+    Optional<AccountRecord> userByEmail = userRepository.findUserByEmail(ownerEmail);
+    if (userByEmail.isPresent()) {
+      AccountRecord user = userByEmail.get();
+      if (user.getUserType().equals(UserType.CUSTOMER.toString())) {
+        throw new ApplicationException("This is permitted only for business users", HttpStatus.BAD_REQUEST);
+      }
+      if (user.getRegistrationStatus().equals(UserRegistrationStatus.COMPLETED.toString())) {
+        throw new ApplicationException("User is already registered", HttpStatus.BAD_REQUEST);
+      }
+      int businessProfileId = userRepository.saveBusinessProfile(businessProfile);
+      final int userId = user.getId();
       userRepository.linkBusinessProfileToUser(userId, businessProfileId);
+      userRepository.updateRegistrationStatus(user.getId(), UserRegistrationStatus.COMPLETED);
     } else {
       throw new ApplicationException("User not found", HttpStatus.NOT_FOUND);
     }
