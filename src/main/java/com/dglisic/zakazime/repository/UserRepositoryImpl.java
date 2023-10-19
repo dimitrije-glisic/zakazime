@@ -48,30 +48,9 @@ public class UserRepositoryImpl implements UserRepository {
   }
 
   @Override
-  public int saveBusinessProfile(BusinessProfileRecord businessProfile) {
-    BusinessProfileRecord businessProfileRecord = create.insertInto(BusinessProfile.BUSINESS_PROFILE)
-        .set(BusinessProfile.BUSINESS_PROFILE.NAME, businessProfile.getName())
-        .set(BusinessProfile.BUSINESS_PROFILE.EMAIL, businessProfile.getEmail())
-        .set(BusinessProfile.BUSINESS_PROFILE.PHONE_NUMBER, businessProfile.getPhoneNumber())
-        .set(BusinessProfile.BUSINESS_PROFILE.CITY, businessProfile.getCity())
-        .set(BusinessProfile.BUSINESS_PROFILE.POSTAL_CODE, businessProfile.getPostalCode())
-        .set(BusinessProfile.BUSINESS_PROFILE.ADDRESS, businessProfile.getAddress())
-        .set(BusinessProfile.BUSINESS_PROFILE.CREATED_ON, LocalDateTime.now())
-        .returning(BusinessProfile.BUSINESS_PROFILE.ID)
-        .fetchOne();
-
-    if (businessProfileRecord != null) {
-      return businessProfileRecord.getId();
-    } else {
-      throw new RuntimeException("Business profile not saved");
-    }
-
-  }
-
-  @Override
   public void linkBusinessProfileToUser(int userId, int businessProfileId) {
     int insertResult = create.insertInto(BusinessAccountMap.BUSINESS_ACCOUNT_MAP)
-        .set(BusinessAccountMap.BUSINESS_ACCOUNT_MAP.USER_ID, userId)
+        .set(BusinessAccountMap.BUSINESS_ACCOUNT_MAP.ACCOUNT_ID, userId)
         .set(BusinessAccountMap.BUSINESS_ACCOUNT_MAP.BUSINESS_ID, businessProfileId)
         .execute();
     if (insertResult == 0) {

@@ -1,11 +1,13 @@
 package com.dglisic.zakazime.controller;
 
 import com.dglisic.zakazime.config.JwtProvider;
+import com.dglisic.zakazime.service.BusinessService;
 import com.dglisic.zakazime.service.UserService;
 import com.dglisic.zakazime.service.UserType;
 import jakarta.validation.Valid;
 import java.net.URI;
 import model.tables.records.AccountRecord;
+import model.tables.records.BusinessProfileRecord;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,13 +19,16 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
   private final UserService userService;
+  private final BusinessService businessService;
   private final UserMapper userMapper;
   private final BusinessProfileMapper businessProfileMapper;
   private final JwtProvider jwtProvider;
 
-  public UserController(UserService userService, UserMapper userMapper, BusinessProfileMapper businessProfileMapper,
+  public UserController(UserService userService, BusinessService businessService, UserMapper userMapper,
+                        BusinessProfileMapper businessProfileMapper,
                         JwtProvider jwtProvider) {
     this.userService = userService;
+    this.businessService = businessService;
     this.userMapper = userMapper;
     this.businessProfileMapper = businessProfileMapper;
     this.jwtProvider = jwtProvider;
@@ -58,9 +63,16 @@ public class UserController {
 
   @PostMapping("/users/{email}/finish-registration")
   public ResponseEntity<MessageDTO> finishRegistration(@PathVariable String email,
-                                                       @Valid @RequestBody BusinessProfileDTO businessProfileDTO) {
-    userService.finishBusinessUserRegistration(email, businessProfileMapper.mapToBusinessProfile(businessProfileDTO));
+                                                       @Valid @RequestBody BusinessProfileRegistrationDTO businessProfileDTO) {
+    BusinessProfileRecord businessProfileRecord = businessProfileMapper.mapToBusinessProfile(businessProfileDTO);
+    userService.finishBusinessUserRegistration(email, businessProfileRecord);
     return ResponseEntity.ok(new MessageDTO("Registration finished successfully"));
+  }
+
+  @GetMapping("/users/{email}/business-profile")
+  public ResponseEntity<BusinessProfileDTO> getBusinessProfile(@PathVariable String email) {
+    BusinessProfileRecord businessProfileRecord = businessService.getBusinessProfileForUser(email);
+    return ResponseEntity.ok(businessProfileMapper.mapToBusinessProfileDTO(businessProfileRecord));
   }
 
 }

@@ -1,5 +1,6 @@
 package com.dglisic.zakazime.service;
 
+import com.dglisic.zakazime.repository.BusinessRepository;
 import com.dglisic.zakazime.repository.UserRepository;
 import java.util.Optional;
 import model.tables.records.AccountRecord;
@@ -11,9 +12,11 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements UserService {
 
   private final UserRepository userRepository;
+  private final BusinessRepository businessRepository;
 
-  public UserServiceImpl(UserRepository userRepository) {
+  public UserServiceImpl(UserRepository userRepository, BusinessRepository businessRepository) {
     this.userRepository = userRepository;
+    this.businessRepository = businessRepository;
   }
 
   @Override
@@ -61,7 +64,8 @@ public class UserServiceImpl implements UserService {
       if (user.getRegistrationStatus().equals(UserRegistrationStatus.COMPLETED.toString())) {
         throw new ApplicationException("User is already registered", HttpStatus.BAD_REQUEST);
       }
-      int businessProfileId = userRepository.saveBusinessProfile(businessProfile);
+      businessProfile.setStatus(BusinessProfileStatus.PENDING.toString());
+      int businessProfileId = businessRepository.saveBusinessProfile(businessProfile);
       final int userId = user.getId();
       userRepository.linkBusinessProfileToUser(userId, businessProfileId);
       userRepository.updateRegistrationStatus(user.getId(), UserRegistrationStatus.COMPLETED);

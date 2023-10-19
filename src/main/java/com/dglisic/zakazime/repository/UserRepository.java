@@ -14,7 +14,5 @@ public interface UserRepository {
 
   Optional<AccountRecord> findUserByEmail(String email);
 
-  int saveBusinessProfile(BusinessProfileRecord businessProfile);
-
   void linkBusinessProfileToUser(int userId, int businessProfileId);
 }

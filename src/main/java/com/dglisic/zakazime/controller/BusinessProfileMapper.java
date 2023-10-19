@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class BusinessProfileMapper {
 
-  public BusinessProfileRecord mapToBusinessProfile(BusinessProfileDTO businessProfileDTO) {
+  public BusinessProfileRecord mapToBusinessProfile(BusinessProfileRegistrationDTO businessProfileDTO) {
     BusinessProfileRecord businessProfile = new BusinessProfileRecord();
     businessProfile.setName(businessProfileDTO.businessName());
     businessProfile.setPhoneNumber(businessProfileDTO.phoneNumber());
@@ -16,4 +16,14 @@ public class BusinessProfileMapper {
     return businessProfile;
   }
 
+  public BusinessProfileDTO mapToBusinessProfileDTO(BusinessProfileRecord businessProfileRecord) {
+    return  BusinessProfileDTO.builder()
+        .businessName(businessProfileRecord.getName())
+        .phoneNumber(businessProfileRecord.getPhoneNumber())
+        .city(businessProfileRecord.getCity())
+        .postalCode(businessProfileRecord.getPostalCode())
+        .address(businessProfileRecord.getAddress())
+        .status(businessProfileRecord.getStatus())
+        .build();
+  }
 }

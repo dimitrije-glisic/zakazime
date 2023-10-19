@@ -20,6 +20,7 @@ CREATE TABLE role
 CREATE TABLE business_profile
 (
     id           INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    status       VARCHAR(50)        NOT NULL,
     name         VARCHAR(50) UNIQUE NOT NULL,
     phone_number VARCHAR(50)        NOT NULL,
     city         VARCHAR(50)        NOT NULL,
@@ -47,17 +48,17 @@ CREATE TABLE service_category
 
 CREATE TABLE account_role_map
 (
-    user_id    INT REFERENCES account (id),
+    account_id    INT REFERENCES account (id),
     role_id    INT REFERENCES role (id),
     grant_date TIMESTAMP,
-    PRIMARY KEY (user_id, role_id)
+    PRIMARY KEY (account_id, role_id)
 );
 
 CREATE TABLE business_account_map
 (
-    user_id     INT REFERENCES account (id),
+    account_id     INT REFERENCES account (id),
     business_id INT REFERENCES business_profile (id),
-    PRIMARY KEY (user_id, business_id)
+    PRIMARY KEY (account_id, business_id)
 );
 
 CREATE TABLE service_category_map
@@ -76,7 +77,7 @@ CREATE TABLE business_service_map
 
 CREATE TABLE service_provider_map
 (
-    user_id    INT REFERENCES account (id),
+    account_id    INT REFERENCES account (id),
     service_id INT REFERENCES service (id),
-    PRIMARY KEY (user_id, service_id)
+    PRIMARY KEY (account_id, service_id)
 );
