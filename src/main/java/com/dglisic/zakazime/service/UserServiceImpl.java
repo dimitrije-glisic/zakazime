@@ -18,14 +18,16 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public AccountRecord registerUser(AccountRecord account) {
+    validateOnRegistration(account);
     account.setRegistrationStatus(UserRegistrationStatus.COMPLETED.toString());
     return userRepository.saveUser(account);
   }
 
   @Override
-  public AccountRecord registerBusinessUser(AccountRecord accountRecord) {
-    accountRecord.setRegistrationStatus(UserRegistrationStatus.INITIAL.toString());
-    return userRepository.saveUser(accountRecord);
+  public AccountRecord registerBusinessUser(AccountRecord account) {
+    validateOnRegistration(account);
+    account.setRegistrationStatus(UserRegistrationStatus.INITIAL.toString());
+    return userRepository.saveUser(account);
   }
 
   @Override
@@ -65,6 +67,12 @@ public class UserServiceImpl implements UserService {
       userRepository.updateRegistrationStatus(user.getId(), UserRegistrationStatus.COMPLETED);
     } else {
       throw new ApplicationException("User not found", HttpStatus.NOT_FOUND);
+    }
+  }
+
+  private void validateOnRegistration(AccountRecord account) {
+    if (userRepository.findUserByEmail(account.getEmail()).isPresent()) {
+      throw new ApplicationException("User with this email already exists", HttpStatus.BAD_REQUEST);
     }
   }
 
