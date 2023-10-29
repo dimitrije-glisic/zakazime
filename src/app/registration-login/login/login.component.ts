@@ -30,7 +30,7 @@ export class LoginComponent {
     if (this.loginForm.valid) {
       const credentials = this.loginForm.value;
       this.authService.login(credentials, () => {
-        this.router.navigateByUrl('/');
+        this.router.navigateByUrl('/home');
       });
     }
     return false;

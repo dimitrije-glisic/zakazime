@@ -4,7 +4,13 @@ import {BrowserModule} from '@angular/platform-browser';
 import {AppComponent} from './app.component';
 import {HowItWorksComponent} from './public-layout/how-it-works/how-it-works.component';
 import {AppRoutingModule} from './app-routing.module';
-import {HTTP_INTERCEPTORS, HttpClientModule, HttpHandler, HttpInterceptor, HttpRequest} from '@angular/common/http';
+import {
+  HTTP_INTERCEPTORS,
+  HttpClientModule,
+  HttpHandler,
+  HttpInterceptor,
+  HttpRequest
+} from '@angular/common/http';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {RegistrationComponent} from './registration-login/registration/registration.component';
 import {LoginComponent} from './registration-login/login/login.component';
@@ -14,6 +20,7 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {MatDialogModule} from '@angular/material/dialog';
 import {FinishRegistrationComponent} from './registration-login/finish-registration/finish-registration.component';
 import {AuthService} from "./auth.service";
+import { HomeComponent } from './home/home.component';
 
 
 @Injectable()
@@ -36,6 +43,7 @@ export class XhrInterceptor implements HttpInterceptor {
     PublicLayoutComponent,
     PublicHeaderComponent,
     FinishRegistrationComponent,
+    HomeComponent,
   ],
   imports: [
     BrowserModule,
@@ -46,7 +54,7 @@ export class XhrInterceptor implements HttpInterceptor {
     BrowserAnimationsModule,
     MatDialogModule
   ],
-  providers: [AuthService, { provide: HTTP_INTERCEPTORS, useClass: XhrInterceptor, multi: true }],
+  providers: [AuthService, {provide: HTTP_INTERCEPTORS, useClass: XhrInterceptor, multi: true}],
   bootstrap: [AppComponent]
 })
 export class AppModule {

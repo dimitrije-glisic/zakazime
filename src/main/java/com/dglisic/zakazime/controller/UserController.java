@@ -1,6 +1,8 @@
 package com.dglisic.zakazime.controller;
 
+import jakarta.servlet.http.HttpSession;
 import java.security.Principal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -16,6 +18,11 @@ public class UserController {
   @ResponseBody
   public Principal user(Principal user) {
     return user;
+  }
+
+  @GetMapping("/token")
+  public Map<String, String> token(HttpSession session) {
+    return Collections.singletonMap("token", session.getId());
   }
 
   @GetMapping("/resource")
