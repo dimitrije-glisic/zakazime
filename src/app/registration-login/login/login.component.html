@@ -1,0 +1,39 @@
+<div class="d-flex justify-content-center">
+    <div class="container border p-3" style="margin-top:150px; max-width: 250px;">
+        <div class="row">
+            <div class="col">
+                <h3 class="main-headline">
+                    <strong>Log in</strong>
+                </h3>
+                <p>Niste registrovani? <a routerLink="/register">Registrujte se ovde</a></p>
+            </div>
+        </div>
+        <div class="row" style="padding-top: 20px;">
+            <div class="col">
+                <form [formGroup]="loginForm" (ngSubmit)="loginUser()">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" formControlName="email" required>
+                        <div *ngIf="loginForm.controls['email'].invalid && loginForm.controls['email'].touched">
+                            Neispravan email.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Lozinka</label>
+                        <input type="password" class="form-control" id="password" formControlName="password" required>
+                        <div *ngIf="loginForm.controls['password'].invalid && loginForm.controls['password'].touched">
+                            Lozinka mora imati najmanje 6 karaktera.
+                        </div>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;"
+                            [disabled]="loginForm.invalid">Prijava</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div *ngIf="errorMessage" class="error-message">
+            {{ errorMessage }}
+        </div>
+    </div>
+</div>

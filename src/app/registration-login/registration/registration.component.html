@@ -1,0 +1,46 @@
+<div class="card">
+  <h5 class="card-title">Napravite biznis profil na ZakaziMe</h5>
+  <div class="card-body">
+
+    <form [formGroup]="registerForm" (ngSubmit)="registerUser()">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="firstName" class="form-label">Ime</label>
+          <input type="text" class="form-control" id="firstName" formControlName="firstName" required>
+          <div *ngIf="registerForm.controls['firstName'].invalid && registerForm.controls['firstName'].touched">
+            Ime je obavezno.
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="lastName" class="form-label">Prezime</label>
+          <input type="text" class="form-control" id="lastName" formControlName="lastName" required>
+          <div *ngIf="registerForm.controls['lastName'].invalid && registerForm.controls['lastName'].touched">
+            Prezime je obavezno.
+          </div>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" formControlName="email" required>
+        <div *ngIf="registerForm.controls['email'].invalid && registerForm.controls['email'].touched">
+          Neispravan email.
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Lozinka</label>
+        <input type="password" class="form-control" id="password" formControlName="password" required>
+        <div *ngIf="registerForm.controls['password'].invalid && registerForm.controls['password'].touched">
+          Lozinka mora imati najmanje 6 karaktera.
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width: 100%;"
+        [disabled]="registerForm.invalid">Registracija</button>
+    </form>
+
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+</div>

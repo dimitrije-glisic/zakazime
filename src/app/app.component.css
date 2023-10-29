@@ -1,0 +1,11 @@
+.right-align {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex: 1 0 auto;
+  }
+  
+  .right-align > *:not(:last-child) {
+    margin-right: 10px;
+  }
+  
