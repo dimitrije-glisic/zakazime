@@ -20,8 +20,7 @@ public class SecurityConfiguration {
       .httpBasic(basic -> basic.securityContextRepository(new HttpSessionSecurityContextRepository()))
       .authorizeHttpRequests(authorize ->
         authorize
-          .requestMatchers("/index.html", "/", "/home", "/login", "/register", "/user", "/resource", "/*.js",
-            "/*.css").permitAll()
+          .requestMatchers("/", "/home", "/login", "/register", "/user", "/resource").permitAll()
           .anyRequest().authenticated()
       )
       .csrf(csrf -> csrf

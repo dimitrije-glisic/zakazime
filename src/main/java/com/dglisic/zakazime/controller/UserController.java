@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class UserController {
 
-
   @GetMapping("/user")
   @ResponseBody
   public Principal user(Principal user) {
@@ -34,10 +33,9 @@ public class UserController {
     return model;
   }
 
-  @GetMapping(value = "/{path:[^\\.]*}")
-  public String redirect() {
-    return "forward:/";
-  }
-
+//  @GetMapping(value = "/{path:[^\\.]*}")
+//  public String redirect() {
+//    return "forward:/";
+//  }
 
 }
