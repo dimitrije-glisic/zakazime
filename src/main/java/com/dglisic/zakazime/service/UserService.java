@@ -1,11 +1,13 @@
 package com.dglisic.zakazime.service;
 
-import model.tables.records.AccountRecord;
+import com.dglisic.zakazime.controller.RegistrationRequest;
+import com.dglisic.zakazime.controller.UserDTO;
+import com.dglisic.zakazime.domain.User;
 import model.tables.records.BusinessProfileRecord;
 
 public interface UserService {
 
-  AccountRecord registerUser(AccountRecord account);
+  UserDTO registerUser(RegistrationRequest registrationRequest);
 
   /**
    * Finds user by email
@@ -14,7 +16,7 @@ public interface UserService {
    * @return user
    * @throws ApplicationException if user is not found
    */
-  AccountRecord findUserByEmailOrElseThrow(String email) throws ApplicationException;
+  User findUserByEmailOrElseThrow(String email) throws ApplicationException;
 
   /**
    * Logs in user
@@ -24,9 +26,9 @@ public interface UserService {
    * @return account
    * @throws ApplicationException if user is not found or password is wrong
    */
-  AccountRecord loginUser(String email, String password) throws ApplicationException;
+  User loginUser(String email, String password) throws ApplicationException;
 
   void finishBusinessUserRegistration(String ownerEmail, BusinessProfileRecord businessProfile);
 
-  AccountRecord registerBusinessUser(AccountRecord accountRecord);
+//  User registerBusinessUser(User accountRecord);
 }

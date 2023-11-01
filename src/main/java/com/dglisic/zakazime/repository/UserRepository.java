@@ -1,18 +1,14 @@
 package com.dglisic.zakazime.repository;
 
 
-import com.dglisic.zakazime.service.UserRegistrationStatus;
+import com.dglisic.zakazime.domain.User;
 import java.util.Optional;
-import model.tables.records.AccountRecord;
-import model.tables.records.BusinessProfileRecord;
 
 public interface UserRepository {
 
-  AccountRecord saveUser(AccountRecord account);
+  User saveUser(User account);
 
-  void updateRegistrationStatus(Integer accountId, UserRegistrationStatus status);
-
-  Optional<AccountRecord> findUserByEmail(String email);
+  Optional<User> findByEmail(String email);
 
   void linkBusinessProfileToUser(int userId, int businessProfileId);
 }
