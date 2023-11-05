@@ -1,47 +1,66 @@
 package com.dglisic.zakazime.service;
 
+import com.dglisic.zakazime.controller.RegistrationRequest;
+import com.dglisic.zakazime.controller.UserDTO;
+import com.dglisic.zakazime.domain.Role;
+import com.dglisic.zakazime.domain.User;
 import com.dglisic.zakazime.repository.BusinessRepository;
+import com.dglisic.zakazime.repository.RoleRepository;
 import com.dglisic.zakazime.repository.UserRepository;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
-import model.tables.records.AccountRecord;
+import java.util.UUID;
 import model.tables.records.BusinessProfileRecord;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserServiceImpl implements UserService {
 
   private final UserRepository userRepository;
+  private final RoleRepository roleRepository;
   private final BusinessRepository businessRepository;
 
-  public UserServiceImpl(UserRepository userRepository, BusinessRepository businessRepository) {
+  public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, BusinessRepository businessRepository) {
     this.userRepository = userRepository;
+    this.roleRepository = roleRepository;
     this.businessRepository = businessRepository;
   }
 
   @Override
-  public AccountRecord registerUser(AccountRecord account) {
-    validateOnRegistration(account);
-    account.setRegistrationStatus(UserRegistrationStatus.COMPLETED.toString());
-    return userRepository.saveUser(account);
+  public UserDTO registerUser(final RegistrationRequest registrationRequest) {
+    validateOnRegistration(registrationRequest);
+    final Role role = fromString(registrationRequest.role());
+    final User user = new User(registrationRequest, role);
+    final User savedUser = userRepository.saveUser(user);
+    return UserDTO.fromUser(savedUser);
   }
 
-  @Override
-  public AccountRecord registerBusinessUser(AccountRecord account) {
-    validateOnRegistration(account);
-    account.setRegistrationStatus(UserRegistrationStatus.INITIAL.toString());
-    return userRepository.saveUser(account);
+  private Role fromString(String roleName) {
+    Optional<Role> role = roleRepository.findByName(roleName);
+    return role.orElseThrow(() ->
+        new ApplicationException("Role not found", HttpStatus.BAD_REQUEST)
+    );
   }
 
+//  @Override
+//  public User registerBusinessUser(User account) {
+//    validateOnRegistration(account);
+//    account.setRegistrationStatus(UserRegistrationStatus.INITIAL.toString());
+//    return userRepository.saveUser(account);
+//  }
+
   @Override
-  public AccountRecord findUserByEmailOrElseThrow(String email) {
-    Optional<AccountRecord> user = userRepository.findUserByEmail(email);
+  public User findUserByEmailOrElseThrow(String email) {
+    Optional<User> user = userRepository.findByEmail(email);
     return user.orElseThrow(() -> new ApplicationException("User not found", HttpStatus.NOT_FOUND));
   }
 
   @Override
-  public AccountRecord loginUser(String email, String password) throws ApplicationException {
-    var user = userRepository.findUserByEmail(email);
+  public User loginUser(String email, String password) throws ApplicationException {
+    var user = userRepository.findByEmail(email);
     if (user.isPresent()) {
       if (user.get().getPassword().equals(password)) {
         return user.get();
@@ -53,31 +72,39 @@ public class UserServiceImpl implements UserService {
     }
   }
 
+  //add roles authorization
   @Override
   public void finishBusinessUserRegistration(String ownerEmail, BusinessProfileRecord businessProfile) {
-    Optional<AccountRecord> userByEmail = userRepository.findUserByEmail(ownerEmail);
+    Optional<User> userByEmail = userRepository.findByEmail(ownerEmail);
     if (userByEmail.isPresent()) {
-      AccountRecord user = userByEmail.get();
-      if (user.getUserType().equals(UserType.CUSTOMER.toString())) {
-        throw new ApplicationException("This is permitted only for business users", HttpStatus.BAD_REQUEST);
-      }
-      if (user.getRegistrationStatus().equals(UserRegistrationStatus.COMPLETED.toString())) {
-        throw new ApplicationException("User is already registered", HttpStatus.BAD_REQUEST);
-      }
+      User user = userByEmail.get();
+
+//      if (user.getUserType().equals(UserType.CUSTOMER.toString())) {
+//        throw new ApplicationException("This is permitted only for business users", HttpStatus.BAD_REQUEST);
+//      }
+
+//      if (user.getRegistrationStatus().equals(UserRegistrationStatus.COMPLETED.toString())) {
+//        throw new ApplicationException("User is already registered", HttpStatus.BAD_REQUEST);
+//      }
+
       businessProfile.setStatus(BusinessProfileStatus.PENDING.toString());
       int businessProfileId = businessRepository.saveBusinessProfile(businessProfile);
       final int userId = user.getId();
       userRepository.linkBusinessProfileToUser(userId, businessProfileId);
-      userRepository.updateRegistrationStatus(user.getId(), UserRegistrationStatus.COMPLETED);
+//      userRepository.updateRegistrationStatus(user.getId(), UserRegistrationStatus.COMPLETED);
     } else {
       throw new ApplicationException("User not found", HttpStatus.NOT_FOUND);
     }
   }
 
-  private void validateOnRegistration(AccountRecord account) {
-    if (userRepository.findUserByEmail(account.getEmail()).isPresent()) {
+  private void validateOnRegistration(RegistrationRequest request) {
+    userRepository.findByEmail(request.email()).ifPresent(user -> {
       throw new ApplicationException("User with this email already exists", HttpStatus.BAD_REQUEST);
-    }
+    });
+
+    roleRepository.findByName(request.role()).orElseThrow(() ->
+        new ApplicationException("Role not found", HttpStatus.BAD_REQUEST)
+    );
   }
 
 }
