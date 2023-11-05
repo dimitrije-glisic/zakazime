@@ -1,5 +1,6 @@
 package com.dglisic.zakazime.service;
 
+import com.dglisic.zakazime.domain.User;
 import com.dglisic.zakazime.repository.BusinessRepository;
 import model.tables.records.BusinessProfileRecord;
 import org.springframework.http.HttpStatus;
@@ -16,12 +17,13 @@ public class BusinessServiceImpl implements BusinessService {
     this.businessRepository = businessRepository;
   }
 
+  //add roles authorization
   @Override
   public BusinessProfileRecord getBusinessProfileForUser(String userEmail) {
-    var user = userService.findUserByEmailOrElseThrow(userEmail);
-    if (user.getUserType().equals(UserType.CUSTOMER.toString())) {
-      throw new ApplicationException("This is permitted only for business users", HttpStatus.BAD_REQUEST);
-    }
+    User user = userService.findUserByEmailOrElseThrow(userEmail);
+//    if (user.getUserType().equals(UserType.CUSTOMER.toString())) {
+//      throw new ApplicationException("This is permitted only for business users", HttpStatus.BAD_REQUEST);
+//    }
     return businessRepository.getBusinessProfile(user.getId())
         .orElseThrow(() -> new ApplicationException("Business profile not found for user " + userEmail, HttpStatus.NOT_FOUND));
   }

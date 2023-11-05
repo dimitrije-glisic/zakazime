@@ -1,78 +1,55 @@
 package com.dglisic.zakazime.controller;
 
-import com.dglisic.zakazime.config.JwtProvider;
-import com.dglisic.zakazime.service.BusinessService;
+import com.dglisic.zakazime.domain.User;
 import com.dglisic.zakazime.service.UserService;
-import com.dglisic.zakazime.service.UserType;
-import jakarta.validation.Valid;
-import java.net.URI;
-import model.tables.records.AccountRecord;
-import model.tables.records.BusinessProfileRecord;
-import org.springframework.http.ResponseEntity;
+import jakarta.servlet.http.HttpSession;
+import java.security.Principal;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequiredArgsConstructor
 public class UserController {
 
   private final UserService userService;
-  private final BusinessService businessService;
-  private final UserMapper userMapper;
-  private final BusinessProfileMapper businessProfileMapper;
-  private final JwtProvider jwtProvider;
 
-  public UserController(UserService userService, BusinessService businessService, UserMapper userMapper,
-                        BusinessProfileMapper businessProfileMapper,
-                        JwtProvider jwtProvider) {
-    this.userService = userService;
-    this.businessService = businessService;
-    this.userMapper = userMapper;
-    this.businessProfileMapper = businessProfileMapper;
-    this.jwtProvider = jwtProvider;
+  @GetMapping("/user")
+  @ResponseBody
+  public Principal user(Principal user) {
+    return user;
   }
 
-  @PostMapping("/register")
-  public ResponseEntity<UserDTO> registerUser(@Valid @RequestBody UserRegistrationDTO registrationDTO) {
-    AccountRecord registeredUser;
-    if (registrationDTO.userType().equals(UserType.BUSINESS)) {
-      registeredUser = userService.registerBusinessUser(userMapper.mapToAccount(registrationDTO));
-    } else {
-      registeredUser = userService.registerUser(userMapper.mapToAccount(registrationDTO));
-    }
-    String token = jwtProvider.generateToken(registeredUser.getEmail());
-    UserDTO user = userMapper.mapToUserDTOWithToken(registeredUser, token);
-    return ResponseEntity.created(URI.create("/users/" + user.getEmail())).body(user);
+  @GetMapping("/token")
+  public Map<String, String> token(HttpSession session) {
+    return Collections.singletonMap("token", session.getId());
   }
 
-  @PostMapping("/login")
-  public ResponseEntity<UserDTO> loginUser(@Valid @RequestBody CredentialsDTO credentials) {
-    AccountRecord account = userService.loginUser(credentials.email(), credentials.password());
-    String token = jwtProvider.generateToken(account.getEmail());
-    UserDTO user = userMapper.mapToUserDTOWithToken(account, token);
-    return ResponseEntity.ok(user);
+  @GetMapping("/resource")
+  @ResponseBody
+  public Map<String, Object> home() {
+    Map<String, Object> model = new HashMap<>();
+    model.put("id", UUID.randomUUID().toString());
+    model.put("content", "Hello World");
+    return model;
+  }
+
+  @PostMapping("/users/register")
+  public UserDTO registerUser(@RequestBody RegistrationRequest registrationRequest) {
+    return userService.registerUser(registrationRequest);
   }
 
   @GetMapping("/users/{email}")
-  public ResponseEntity<UserDTO> getUser(@PathVariable String email) {
-    AccountRecord userByEmail = userService.findUserByEmailOrElseThrow(email);
-    return ResponseEntity.ok(userMapper.mapToUserDTO(userByEmail));
-  }
-
-  @PostMapping("/users/{email}/finish-registration")
-  public ResponseEntity<MessageDTO> finishRegistration(@PathVariable String email,
-                                                       @Valid @RequestBody BusinessProfileRegistrationDTO businessProfileDTO) {
-    BusinessProfileRecord businessProfileRecord = businessProfileMapper.mapToBusinessProfile(businessProfileDTO);
-    userService.finishBusinessUserRegistration(email, businessProfileRecord);
-    return ResponseEntity.ok(new MessageDTO("Registration finished successfully"));
-  }
-
-  @GetMapping("/users/{email}/business-profile")
-  public ResponseEntity<BusinessProfileDTO> getBusinessProfile(@PathVariable String email) {
-    BusinessProfileRecord businessProfileRecord = businessService.getBusinessProfileForUser(email);
-    return ResponseEntity.ok(businessProfileMapper.mapToBusinessProfileDTO(businessProfileRecord));
+  public User fullUser(@PathVariable String email) {
+    return userService.findUserByEmailOrElseThrow(email);
   }
 
 }
