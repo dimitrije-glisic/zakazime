@@ -1,11 +1,12 @@
 package com.dglisic.zakazime.repository;
 
+import com.dglisic.zakazime.domain.BusinessProfile;
 import java.util.Optional;
-import model.tables.records.BusinessProfileRecord;
 
 public interface BusinessRepository {
 
-  int saveBusinessProfile(BusinessProfileRecord businessProfile);
-  Optional<BusinessProfileRecord> getBusinessProfile(int userEmail);
+//  int saveBusinessProfile(BusinessProfile businessProfile);
+  Optional<BusinessProfile> getBusinessProfile(int userEmail);
 
+  BusinessProfile createBusinessProfile(BusinessProfile businessProfile);
 }

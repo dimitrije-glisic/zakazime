@@ -3,8 +3,7 @@ package com.dglisic.zakazime.service;
 import com.dglisic.zakazime.controller.RegistrationRequest;
 import com.dglisic.zakazime.controller.UserDTO;
 import com.dglisic.zakazime.domain.User;
-import java.util.Map;
-import model.tables.records.BusinessProfileRecord;
+import model.tables.records.BusinessProfile;
 
 public interface UserService {
 
@@ -29,7 +28,7 @@ public interface UserService {
    */
   User loginUser(String email, String password) throws ApplicationException;
 
-  void finishBusinessUserRegistration(String ownerEmail, BusinessProfileRecord businessProfile);
+//  void finishBusinessUserRegistration(String ownerEmail, BusinessProfile businessProfile);
 
 //  User registerBusinessUser(User accountRecord);
 

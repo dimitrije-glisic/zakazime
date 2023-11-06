@@ -2,54 +2,78 @@ package com.dglisic.zakazime.repository;
 
 import static model.Tables.ACCOUNT;
 import static model.Tables.BUSINESS_ACCOUNT_MAP;
-import static model.Tables.BUSINESS_PROFILE;
+import static model.tables.BusinessProfile.BUSINESS_PROFILE;
 
+import com.dglisic.zakazime.service.ApplicationException;
 import java.time.LocalDateTime;
 import java.util.Optional;
-import model.tables.BusinessProfile;
-import model.tables.records.BusinessProfileRecord;
+import model.Tables;
+import model.tables.records.BusinessProfile;
 import org.jooq.DSLContext;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public class BusinessRepositoryImpl implements BusinessRepository {
 
-  private final DSLContext create;
+  private final DSLContext dsl;
 
   public BusinessRepositoryImpl(DSLContext create) {
-    this.create = create;
+    this.dsl = create;
+  }
+
+  public Optional<com.dglisic.zakazime.domain.BusinessProfile> getBusinessProfile(int userId) {
+    BusinessProfile businessProfileRecord = dsl.select()
+        .from(ACCOUNT)
+        .join(BUSINESS_ACCOUNT_MAP).on(ACCOUNT.ID.eq(BUSINESS_ACCOUNT_MAP.ACCOUNT_ID))
+        .join(Tables.BUSINESS_PROFILE).on(BUSINESS_ACCOUNT_MAP.BUSINESS_ID.eq(Tables.BUSINESS_PROFILE.ID))
+        .where(ACCOUNT.ID.eq(userId))
+        .fetchOneInto(BusinessProfile.class);
+
+    if (businessProfileRecord == null) {
+      return Optional.empty();
+    }
+
+    return Optional.of(new com.dglisic.zakazime.domain.BusinessProfile(businessProfileRecord));
   }
 
   @Override
-  public int saveBusinessProfile(BusinessProfileRecord businessProfile) {
-    BusinessProfileRecord businessProfileRecord = create.insertInto(BusinessProfile.BUSINESS_PROFILE)
-        .set(BusinessProfile.BUSINESS_PROFILE.STATUS, businessProfile.getStatus())
-        .set(BusinessProfile.BUSINESS_PROFILE.NAME, businessProfile.getName())
-        .set(BusinessProfile.BUSINESS_PROFILE.EMAIL, businessProfile.getEmail())
-        .set(BusinessProfile.BUSINESS_PROFILE.PHONE_NUMBER, businessProfile.getPhoneNumber())
-        .set(BusinessProfile.BUSINESS_PROFILE.CITY, businessProfile.getCity())
-        .set(BusinessProfile.BUSINESS_PROFILE.POSTAL_CODE, businessProfile.getPostalCode())
-        .set(BusinessProfile.BUSINESS_PROFILE.ADDRESS, businessProfile.getAddress())
-        .set(BusinessProfile.BUSINESS_PROFILE.CREATED_ON, LocalDateTime.now())
-        .returning(BusinessProfile.BUSINESS_PROFILE.ID)
-        .fetchOne();
-    if (businessProfileRecord != null) {
-      return businessProfileRecord.getId();
-    } else {
-      throw new RuntimeException("Business profile not saved");
+  @Transactional
+  public com.dglisic.zakazime.domain.BusinessProfile createBusinessProfile(
+      final com.dglisic.zakazime.domain.BusinessProfile businessProfile) {
+
+    model.tables.records.BusinessProfile businessProfileRecord =
+        dsl.insertInto(BUSINESS_PROFILE)
+            .set(BUSINESS_PROFILE.STATUS, businessProfile.getStatus())
+            .set(BUSINESS_PROFILE.NAME, businessProfile.getName())
+            .set(BUSINESS_PROFILE.PHONE_NUMBER, businessProfile.getPhoneNumber())
+            .set(BUSINESS_PROFILE.CITY, businessProfile.getCity())
+            .set(BUSINESS_PROFILE.POSTAL_CODE, businessProfile.getPostalCode())
+            .set(BUSINESS_PROFILE.ADDRESS, businessProfile.getAddress())
+            .set(BUSINESS_PROFILE.CREATED_ON, LocalDateTime.now())
+            .returning(BUSINESS_PROFILE.ID)
+            .fetchOne();
+
+    if (businessProfileRecord == null) {
+      throw new ApplicationException("Business profile not saved", HttpStatus.INTERNAL_SERVER_ERROR);
     }
-  }
 
-  public Optional<BusinessProfileRecord> getBusinessProfile(int userId) {
-    BusinessProfileRecord businessProfileRecord = create.select()
-        .from(ACCOUNT)
-        .join(BUSINESS_ACCOUNT_MAP).on(ACCOUNT.ID.eq(BUSINESS_ACCOUNT_MAP.ACCOUNT_ID))
-        .join(BUSINESS_PROFILE).on(BUSINESS_ACCOUNT_MAP.BUSINESS_ID.eq(BUSINESS_PROFILE.ID))
-        .where(ACCOUNT.ID.eq(userId))
-        .fetchOneInto(BusinessProfileRecord.class);
+    int ownerId = businessProfile.getOwner().getId();
+    int businessId = businessProfileRecord.getId();
 
-    return Optional.ofNullable(businessProfileRecord);
+    int rowsAffected = dsl.insertInto(BUSINESS_ACCOUNT_MAP)
+        .set(BUSINESS_ACCOUNT_MAP.BUSINESS_ID, businessId)
+        .set(BUSINESS_ACCOUNT_MAP.ACCOUNT_ID, ownerId)
+        .execute();
 
+    if (rowsAffected == 0) {
+      throw new ApplicationException("Business profile not saved", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    return businessProfile.toBuilder()
+        .id(businessId)
+        .build();
   }
 
 }

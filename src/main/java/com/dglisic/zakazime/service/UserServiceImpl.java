@@ -7,13 +7,8 @@ import com.dglisic.zakazime.domain.User;
 import com.dglisic.zakazime.repository.BusinessRepository;
 import com.dglisic.zakazime.repository.RoleRepository;
 import com.dglisic.zakazime.repository.UserRepository;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
-import model.tables.records.BusinessProfileRecord;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -72,30 +67,30 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  //add roles authorization
-  @Override
-  public void finishBusinessUserRegistration(String ownerEmail, BusinessProfileRecord businessProfile) {
-    Optional<User> userByEmail = userRepository.findByEmail(ownerEmail);
-    if (userByEmail.isPresent()) {
-      User user = userByEmail.get();
-
-//      if (user.getUserType().equals(UserType.CUSTOMER.toString())) {
-//        throw new ApplicationException("This is permitted only for business users", HttpStatus.BAD_REQUEST);
-//      }
-
-//      if (user.getRegistrationStatus().equals(UserRegistrationStatus.COMPLETED.toString())) {
-//        throw new ApplicationException("User is already registered", HttpStatus.BAD_REQUEST);
-//      }
-
-      businessProfile.setStatus(BusinessProfileStatus.PENDING.toString());
-      int businessProfileId = businessRepository.saveBusinessProfile(businessProfile);
-      final int userId = user.getId();
-      userRepository.linkBusinessProfileToUser(userId, businessProfileId);
-//      userRepository.updateRegistrationStatus(user.getId(), UserRegistrationStatus.COMPLETED);
-    } else {
-      throw new ApplicationException("User not found", HttpStatus.NOT_FOUND);
-    }
-  }
+//  //add roles authorization
+//  @Override
+//  public void finishBusinessUserRegistration(String ownerEmail, BusinessProfileRecord businessProfile) {
+//    Optional<User> userByEmail = userRepository.findByEmail(ownerEmail);
+//    if (userByEmail.isPresent()) {
+//      User user = userByEmail.get();
+//
+////      if (user.getUserType().equals(UserType.CUSTOMER.toString())) {
+////        throw new ApplicationException("This is permitted only for business users", HttpStatus.BAD_REQUEST);
+////      }
+//
+////      if (user.getRegistrationStatus().equals(UserRegistrationStatus.COMPLETED.toString())) {
+////        throw new ApplicationException("User is already registered", HttpStatus.BAD_REQUEST);
+////      }
+//
+//      businessProfile.setStatus(BusinessProfileStatus.PENDING.toString());
+//      int businessProfileId = businessRepository.saveBusinessProfile(businessProfile);
+//      final int userId = user.getId();
+//      userRepository.linkBusinessProfileToUser(userId, businessProfileId);
+////      userRepository.updateRegistrationStatus(user.getId(), UserRegistrationStatus.COMPLETED);
+//    } else {
+//      throw new ApplicationException("User not found", HttpStatus.NOT_FOUND);
+//    }
+//  }
 
   private void validateOnRegistration(RegistrationRequest request) {
     userRepository.findByEmail(request.email()).ifPresent(user -> {

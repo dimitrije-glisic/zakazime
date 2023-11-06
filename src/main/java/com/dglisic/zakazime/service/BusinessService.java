@@ -1,9 +1,11 @@
 package com.dglisic.zakazime.service;
 
-import model.tables.records.BusinessProfileRecord;
+import com.dglisic.zakazime.controller.CreateBusinessProfileRequest;
+import com.dglisic.zakazime.domain.BusinessProfile;
 
 public interface BusinessService {
 
-  BusinessProfileRecord getBusinessProfileForUser(String userEmail);
+  BusinessProfile getBusinessProfileForUser(String userEmail);
 
+  BusinessProfile createBusinessProfile(CreateBusinessProfileRequest createBusinessProfileRequest);
 }
