@@ -14,7 +14,7 @@ public class BusinessProfileMapper {
 
   public BusinessProfile mapToBusinessProfile(CreateBusinessProfileRequest createBusinessProfileRequest) {
     return BusinessProfile.builder()
-        .name(createBusinessProfileRequest.businessName())
+        .name(createBusinessProfileRequest.name())
         .phoneNumber(createBusinessProfileRequest.phoneNumber())
         .city(createBusinessProfileRequest.city())
         .postalCode(createBusinessProfileRequest.postalCode())
