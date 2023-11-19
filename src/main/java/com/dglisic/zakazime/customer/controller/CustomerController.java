@@ -1,11 +1,9 @@
 package com.dglisic.zakazime.customer.controller;
 
 import com.dglisic.zakazime.business.controller.BusinessProfileDTO;
-import com.dglisic.zakazime.business.controller.BusinessProfileMapper;
+import com.dglisic.zakazime.business.controller.BusinessMapper;
 import com.dglisic.zakazime.business.domain.BusinessProfile;
 import com.dglisic.zakazime.business.service.BusinessService;
-import com.dglisic.zakazime.user.domain.User;
-import com.dglisic.zakazime.user.service.UserService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CustomerController {
 
   private final BusinessService businessService;
-  private final BusinessProfileMapper businessMapper;
+  private final BusinessMapper businessMapper;
 
   @GetMapping("/service-providers")
   public ResponseEntity<List<BusinessProfileDTO>> getAllServiceProviders() {

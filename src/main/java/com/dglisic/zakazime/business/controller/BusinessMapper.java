@@ -4,7 +4,7 @@ import com.dglisic.zakazime.business.domain.BusinessProfile;
 import org.springframework.stereotype.Component;
 
 @Component
-public class BusinessProfileMapper {
+public class BusinessMapper {
 
   public CreateBusinessProfileResponse mapToCreateBusinessProfileResponse(BusinessProfile businessProfile) {
     return new CreateBusinessProfileResponse(businessProfile.getName(),
@@ -30,7 +30,9 @@ public class BusinessProfileMapper {
         .postalCode(businessProfile.getPostalCode())
         .address(businessProfile.getAddress())
         .status(businessProfile.getStatus())
+        .type(businessProfile.getType().getName())
         .ownerName(businessProfile.getOwner().getFirstName() + " " + businessProfile.getOwner().getLastName())
         .build();
   }
+
 }

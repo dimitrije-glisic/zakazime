@@ -1,11 +1,13 @@
 package com.dglisic.zakazime.user.controller;
 
+import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.domain.User;
 import com.dglisic.zakazime.user.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import java.security.Principal;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -31,27 +33,17 @@ public class UserController {
     }
     User user = userService.findUserByEmailOrElseThrow(authenticatedUser.getName());
     UserDTO userDTO = UserDTO.fromUser(user);
-    session.setAttribute("user", userDTO);
     return ResponseEntity.ok(userDTO);
   }
 
   @GetMapping("/user")
-  public ResponseEntity<UserDTO> getUser(HttpSession session) {
-    UserDTO user = (UserDTO) session.getAttribute("USER");
+  public ResponseEntity<UserDTO> getUser(Principal user) {
     if (user == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+      throw new ApplicationException("User not authenticated", HttpStatus.UNAUTHORIZED);
     }
-    return ResponseEntity.ok().body(user);
-  }
-
-  @GetMapping("/user/role")
-  public ResponseEntity<?> getUserRole(HttpSession session) {
-    User user = (User) session.getAttribute("USER");
-    if (user != null) {
-      return ResponseEntity.ok().body(user.getRole());
-    } else {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User Not Logged In");
-    }
+    String email = user.getName();
+    UserDTO userDTO = UserDTO.fromUser(userService.findUserByEmailOrElseThrow(email));
+    return ResponseEntity.ok().body(userDTO);
   }
 
   @GetMapping("/token")

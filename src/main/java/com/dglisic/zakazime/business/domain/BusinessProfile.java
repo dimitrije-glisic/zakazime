@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import model.tables.records.BusinessProfileRecord;
+import model.tables.records.BusinessTypeRecord;
 
 @Builder(toBuilder = true)
 @AllArgsConstructor
@@ -18,6 +20,9 @@ public class BusinessProfile {
   private final String city;
   private final String postalCode;
   private final String address;
+
+  @Setter
+  private BusinessType type;
   @Setter
   private User owner;
   @Setter
@@ -34,5 +39,10 @@ public class BusinessProfile {
     this.address = businessProfileRecord.getAddress();
     this.status = businessProfileRecord.getStatus();
     this.createdOn = businessProfileRecord.getCreatedOn();
+  }
+
+  public BusinessProfile(BusinessProfileRecord businessProfileRecord, BusinessTypeRecord businessTypeRecord) {
+    this(businessProfileRecord);
+    this.type = new BusinessType(businessTypeRecord);
   }
 }

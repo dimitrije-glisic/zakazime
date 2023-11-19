@@ -1,0 +1,22 @@
+INSERT INTO service (name, description, price, avg_duration, category_id, template)
+VALUES
+    ('Muška šišanja', 'Klasično muško šišanje.', 20, 30, 1, true),
+    ('Ženska šišanja', 'Stilizovano žensko šišanje.', 30, 45, 1, true),
+    ('Manikir', 'Nega ruku.', 25, 45, 2, true),
+    ('Pedikir', 'Nega stopala.', 30, 60, 2, true),
+    ('Francuski manikir', 'Klasični francuski manikir.', 35, 60, 2, true),
+    ('Šišanje brade', 'Precizno šišanje brade.', 15, 15, 1, true),
+    ('Šišanje i feniranje', 'Šišanje i feniranje za žene.', 45, 60, 1, true),
+    ('Nadogradnja noktiju', 'Nadogradnja i ukrašavanje noktiju.', 50, 90, 2, true),
+    ('Botoks tretman', 'Botoks tretman za osvežavanje kože.', 75, 45, 3, true),
+    ('Nadogradnja trepavica', 'Nadogradnja trepavica za duže i gušće trepavice.', 55, 90, 3, true),
+    ('Tretman lica', 'Tretman lica sa hranljivim maskama.', 50, 45, 3, true),
+    ('Pirsing obrva', 'Pirsing obrva po izboru.', 25, 30, 3, true),
+    ('Frizura za posebne prilike', 'Frizura za posebne prilike.', 50, 60, 1, true),
+    ('Manikir za posebne prilike', 'Manikir za posebne prilike.', 30, 45, 2, true),
+    ('Pedikir za posebne prilike', 'Pedicir za posebne prilike.', 35, 60, 2, true),
+    ('Šišanje za decu', 'Šišanje za najmlađe.', 15, 20, 1, true),
+    ('Nadogradnja i ukrašavanje noktiju', 'Nadogradnja i ukrašavanje noktiju po izboru.', 40, 75, 2, true),
+    ('Tretman lica sa voćnim kiselinama', 'Tretman lica sa voćnim kiselinama za revitalizaciju kože.', 60, 60, 3, true),
+    ('Pirsing usne', 'Pirsing usne po izboru.', 25, 30, 3, true),
+    ('Tretman lica', 'Tretman lica sa hranljivim maskama.', 50, 45, 3, true)

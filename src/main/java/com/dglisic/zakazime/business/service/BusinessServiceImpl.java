@@ -1,12 +1,14 @@
 package com.dglisic.zakazime.business.service;
 
-import com.dglisic.zakazime.business.controller.BusinessProfileMapper;
+import com.dglisic.zakazime.business.controller.BusinessMapper;
 import com.dglisic.zakazime.business.controller.CreateBusinessProfileRequest;
 import com.dglisic.zakazime.business.domain.BusinessProfile;
+import com.dglisic.zakazime.business.domain.BusinessType;
 import com.dglisic.zakazime.business.repository.BusinessRepository;
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.domain.User;
 import com.dglisic.zakazime.user.service.UserService;
+import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +20,7 @@ import org.springframework.stereotype.Service;
 public class BusinessServiceImpl implements BusinessService {
 
   private final UserService userService;
-  private final BusinessProfileMapper businessMapper;
+  private final BusinessMapper businessMapper;
   private final BusinessRepository businessRepository;
 
   //add roles authorization
@@ -37,18 +39,37 @@ public class BusinessServiceImpl implements BusinessService {
   public BusinessProfile createBusinessProfile(
       CreateBusinessProfileRequest createBusinessProfileRequest) {
     User user = userService.findUserByEmailOrElseThrow(createBusinessProfileRequest.ownerEmail());
+    BusinessType businessType = getBusinessType(createBusinessProfileRequest.type());
 
     BusinessProfile toBeSaved = businessMapper.mapToBusinessProfile(createBusinessProfileRequest);
     toBeSaved.setOwner(user);
+    toBeSaved.setType(businessType);
     toBeSaved.setStatus("CREATED");
     toBeSaved.setCreatedOn(LocalDateTime.now());
 
     return businessRepository.createBusinessProfile(toBeSaved);
   }
 
+  private BusinessType getBusinessType(@NotBlank final String typeName) {
+    return businessRepository.getBusinessTypes().stream()
+        .filter(type -> type.getName().equals(typeName.toUpperCase()))
+        .findFirst()
+        .orElseThrow(() -> new ApplicationException("Business type not found", HttpStatus.BAD_REQUEST));
+  }
+
   @Override
   public List<BusinessProfile> getAll() {
     return businessRepository.getAll();
+  }
+
+  @Override
+  public List<BusinessType> getBusinessTypes() {
+    return businessRepository.getBusinessTypes();
+  }
+
+  @Override
+  public List<com.dglisic.zakazime.business.domain.Service> getServicesForType(String type) {
+    return businessRepository.getServicesForType(type);
   }
 
 }
