@@ -4,7 +4,9 @@ import com.dglisic.zakazime.business.controller.BusinessMapper;
 import com.dglisic.zakazime.business.controller.CreateBusinessProfileRequest;
 import com.dglisic.zakazime.business.domain.BusinessProfile;
 import com.dglisic.zakazime.business.domain.BusinessType;
+import com.dglisic.zakazime.business.domain.Service;
 import com.dglisic.zakazime.business.repository.BusinessRepository;
+import com.dglisic.zakazime.business.repository.ServiceRepository;
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.domain.User;
 import com.dglisic.zakazime.user.service.UserService;
@@ -13,15 +15,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-@Service
+@org.springframework.stereotype.Service
 @RequiredArgsConstructor
 public class BusinessServiceImpl implements BusinessService {
 
   private final UserService userService;
   private final BusinessMapper businessMapper;
   private final BusinessRepository businessRepository;
+  private final ServiceRepository serviceRepository;
 
   //add roles authorization
   @Override
@@ -68,8 +71,33 @@ public class BusinessServiceImpl implements BusinessService {
   }
 
   @Override
-  public List<com.dglisic.zakazime.business.domain.Service> getServicesForType(String type) {
+  public List<Service> getServicesForType(String type) {
     return businessRepository.getServicesForType(type);
   }
+
+  @Override
+  public List<Service> getServicesOfBusiness(String businessName) {
+    BusinessProfile business = businessRepository.findBusinessByName(businessName)
+        .orElseThrow(() -> new ApplicationException("Business not found", HttpStatus.NOT_FOUND));
+    return serviceRepository.getServicesOfBusiness(business.getId());
+  }
+
+  @Override
+  @Transactional
+  public void saveServices(List<Service> services, String businessName) {
+    BusinessProfile business = businessRepository.findBusinessByName(businessName)
+        .orElseThrow(() -> new ApplicationException("Business not found", HttpStatus.NOT_FOUND));
+    fillServicesWithCategoryAndBusiness(services, business);
+    serviceRepository.saveServices(services);
+  }
+
+  private void fillServicesWithCategoryAndBusiness(List<Service> services, BusinessProfile business) {
+    for (Service service : services) {
+      service.setCategory(serviceRepository.findCategoryByName(service.getCategoryName())
+          .orElseThrow(() -> new ApplicationException("Category not found", HttpStatus.BAD_REQUEST)));
+      service.setBusinessProfile(business);
+    }
+  }
+
 
 }

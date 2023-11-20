@@ -5,6 +5,7 @@ import com.dglisic.zakazime.business.domain.BusinessType;
 import com.dglisic.zakazime.business.domain.Service;
 import com.dglisic.zakazime.business.service.BusinessService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import java.security.Principal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class BusinessController {
 
   private final BusinessService businessService;
   private final BusinessMapper businessMapper;
+  private final ServiceMapper serviceMapper;
 
   @PostMapping("/business")
   public ResponseEntity<CreateBusinessProfileResponse> createBusinessProfile(
@@ -46,6 +48,20 @@ public class BusinessController {
   @GetMapping("/business/types/{type}/services")
   public List<Service> getServicesForType(@PathVariable String type) {
     return businessService.getServicesForType(type);
+  }
+
+  @GetMapping("/business/{businessName}/services")
+  public List<Service> getServicesForBusiness(@PathVariable @Valid @NotBlank String businessName) {
+    return businessService.getServicesOfBusiness(businessName);
+  }
+
+  @PostMapping("/business/{businessName}/services")
+  public void saveServicesForBusiness(@PathVariable @Valid @NotBlank String businessName,
+                                      @RequestBody List<CreateServiceRequest> serviceRequests) {
+    List<Service> servicesToBeSaved = serviceRequests.stream()
+        .map(serviceMapper::mapToService)
+        .toList();
+    businessService.saveServices(servicesToBeSaved, businessName);
   }
 
 }

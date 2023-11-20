@@ -13,6 +13,7 @@ import com.dglisic.zakazime.common.ApplicationException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import model.Tables;
 import model.tables.records.BusinessProfileRecord;
 import model.tables.records.BusinessTypeRecord;
@@ -25,13 +26,10 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
+@RequiredArgsConstructor
 public class BusinessRepositoryImpl implements BusinessRepository {
 
   private final DSLContext dsl;
-
-  public BusinessRepositoryImpl(DSLContext create) {
-    this.dsl = create;
-  }
 
   public Optional<BusinessProfile> getBusinessProfile(int userId) {
     //this implicates that there is only one business profile per user
@@ -121,6 +119,19 @@ public class BusinessRepositoryImpl implements BusinessRepository {
             .categoryName(record.value2())
             .build()
     );
+  }
+
+  @Override
+  public Optional<BusinessProfile> findBusinessByName(String businessName) {
+    BusinessProfileRecord businessProfileRecord = dsl.selectFrom(BUSINESS_PROFILE)
+        .where(BUSINESS_PROFILE.NAME.eq(businessName))
+        .fetchOne();
+
+    if (businessProfileRecord == null) {
+      return Optional.empty();
+    }
+
+    return Optional.of(new BusinessProfile(businessProfileRecord));
   }
 
 }

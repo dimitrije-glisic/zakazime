@@ -5,6 +5,7 @@ import com.dglisic.zakazime.business.domain.BusinessProfile;
 import com.dglisic.zakazime.business.domain.BusinessType;
 import com.dglisic.zakazime.business.domain.Service;
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface BusinessService {
 
@@ -17,4 +18,9 @@ public interface BusinessService {
   List<BusinessType> getBusinessTypes();
 
   List<Service> getServicesForType(String type);
+
+  List<Service> getServicesOfBusiness(String businessName);
+
+  @Transactional
+  void saveServices(List<Service> services, String businessName);
 }

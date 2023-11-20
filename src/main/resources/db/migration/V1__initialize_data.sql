@@ -10,12 +10,12 @@ VALUES ('dimitrije', 'glisic', 'dimi96gm', 'dimitrije@gmail.com', true, 1, '2023
 -- 'SPORT', 'EDUCATION', 'HEALTH', 'CATERING', 'TRANSPORT', 'TOURISM', 'OTHER'
 
 INSERT INTO public.business_type (name)
-VALUES ('BEAUTY'),
-       ('HEALTH');
+VALUES ('ULEPSAVANJE'),
+       ('MEDICINA');
 
 INSERT INTO service_category (name, business_type_id)
-VALUES ('HAIR', 1),
-       ('NAILS', 1),
-       ('FACIAL', 1),
-       ('DENTAL', 2);
+VALUES ('KOSA', 1),
+       ('NOKTI', 1),
+       ('LICE', 1),
+       ('STOMATOLOGIJA', 2);
 

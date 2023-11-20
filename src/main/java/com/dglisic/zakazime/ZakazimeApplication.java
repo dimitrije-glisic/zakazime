@@ -15,7 +15,6 @@ public class ZakazimeApplication {
     SpringApplication.run(ZakazimeApplication.class, args);
   }
 
-
   //a workaround for the CSRF token issue
   @PostMapping("/dummy-post")
   public void csrfPost() {

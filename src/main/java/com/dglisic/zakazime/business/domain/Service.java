@@ -26,6 +26,11 @@ public class Service {
 
   @Setter
   private String categoryName;
+  @Setter
+  private Category category;
+  @Setter
+  private BusinessProfile businessProfile;
+
 
   public Service(model.tables.records.ServiceRecord serviceRecord) {
     this.id = serviceRecord.getId();

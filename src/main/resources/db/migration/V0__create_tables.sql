@@ -49,7 +49,8 @@ CREATE TABLE service_category
 CREATE TABLE service
 (
     id           INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    category_id  INT REFERENCES service_category (id),
+    category_id  INT REFERENCES service_category (id) NOT NULL,
+    business_id  INT REFERENCES business_profile (id),
     name         VARCHAR(255) NOT NULL,
     note         VARCHAR(255),
     price        DECIMAL      NOT NULL,
