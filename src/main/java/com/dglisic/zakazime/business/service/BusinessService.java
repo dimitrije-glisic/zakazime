@@ -1,7 +1,7 @@
 package com.dglisic.zakazime.business.service;
 
 import com.dglisic.zakazime.business.controller.CreateBusinessProfileRequest;
-import com.dglisic.zakazime.business.domain.BusinessProfile;
+import com.dglisic.zakazime.business.domain.Business;
 import com.dglisic.zakazime.business.domain.BusinessType;
 import com.dglisic.zakazime.business.domain.Service;
 import java.util.List;
@@ -9,11 +9,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface BusinessService {
 
-  BusinessProfile getBusinessProfileForUser(String userEmail);
+  Business getBusinessProfileForUser(String userEmail);
 
-  BusinessProfile createBusinessProfile(CreateBusinessProfileRequest createBusinessProfileRequest);
+  Business createBusinessProfile(CreateBusinessProfileRequest createBusinessProfileRequest);
 
-  List<BusinessProfile> getAll();
+  List<Business> getAll();
 
   List<BusinessType> getBusinessTypes();
 

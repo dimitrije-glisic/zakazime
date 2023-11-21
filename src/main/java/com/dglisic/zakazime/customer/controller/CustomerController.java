@@ -2,7 +2,7 @@ package com.dglisic.zakazime.customer.controller;
 
 import com.dglisic.zakazime.business.controller.BusinessProfileDTO;
 import com.dglisic.zakazime.business.controller.BusinessMapper;
-import com.dglisic.zakazime.business.domain.BusinessProfile;
+import com.dglisic.zakazime.business.domain.Business;
 import com.dglisic.zakazime.business.service.BusinessService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ public class CustomerController {
 
   @GetMapping("/service-providers")
   public ResponseEntity<List<BusinessProfileDTO>> getAllServiceProviders() {
-    List<BusinessProfile> all = businessService.getAll();
+    List<Business> all = businessService.getAll();
     List<BusinessProfileDTO> businessProfileDTOs = all.stream().map(businessMapper::mapToBusinessProfileDTO).toList();
     return ResponseEntity.ok(businessProfileDTOs);
   }

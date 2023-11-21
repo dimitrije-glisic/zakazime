@@ -1,12 +1,12 @@
 package com.dglisic.zakazime.business.repository;
 
 import static model.Tables.ACCOUNT;
+import static model.Tables.BUSINESS;
 import static model.Tables.BUSINESS_ACCOUNT_MAP;
 import static model.Tables.BUSINESS_TYPE;
 import static model.Tables.SERVICE_CATEGORY;
-import static model.tables.BusinessProfile.BUSINESS_PROFILE;
 
-import com.dglisic.zakazime.business.domain.BusinessProfile;
+import com.dglisic.zakazime.business.domain.Business;
 import com.dglisic.zakazime.business.domain.BusinessType;
 import com.dglisic.zakazime.business.domain.Service;
 import com.dglisic.zakazime.common.ApplicationException;
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import model.Tables;
-import model.tables.records.BusinessProfileRecord;
+import model.tables.records.BusinessRecord;
 import model.tables.records.BusinessTypeRecord;
 import model.tables.records.ServiceRecord;
 import org.jooq.DSLContext;
@@ -31,14 +31,14 @@ public class BusinessRepositoryImpl implements BusinessRepository {
 
   private final DSLContext dsl;
 
-  public Optional<BusinessProfile> getBusinessProfile(int userId) {
+  public Optional<Business> getBusinessProfile(int userId) {
     //this implicates that there is only one business profile per user
-    Record2<BusinessProfileRecord, BusinessTypeRecord>
-        record = dsl.select(BUSINESS_PROFILE, BUSINESS_TYPE)
+    Record2<BusinessRecord, BusinessTypeRecord>
+        record = dsl.select(BUSINESS, BUSINESS_TYPE)
         .from(ACCOUNT)
         .join(BUSINESS_ACCOUNT_MAP).on(ACCOUNT.ID.eq(BUSINESS_ACCOUNT_MAP.ACCOUNT_ID))
-        .join(Tables.BUSINESS_PROFILE).on(BUSINESS_ACCOUNT_MAP.BUSINESS_ID.eq(Tables.BUSINESS_PROFILE.ID))
-        .join(BUSINESS_TYPE).on(Tables.BUSINESS_PROFILE.TYPE_ID.eq(BUSINESS_TYPE.ID))
+        .join(BUSINESS).on(BUSINESS_ACCOUNT_MAP.BUSINESS_ID.eq(BUSINESS.ID))
+        .join(BUSINESS_TYPE).on(BUSINESS.TYPE_ID.eq(BUSINESS_TYPE.ID))
         .where(ACCOUNT.ID.eq(userId))
         .fetchOne();
 
@@ -46,32 +46,32 @@ public class BusinessRepositoryImpl implements BusinessRepository {
       return Optional.empty();
     }
 
-    return Optional.of(new BusinessProfile(record.value1(), record.value2()));
+    return Optional.of(new Business(record.value1(), record.value2()));
   }
 
   @Override
   @Transactional
-  public BusinessProfile createBusinessProfile(
-      final BusinessProfile businessProfile) {
+  public Business createBusinessProfile(
+      final Business business) {
 
-    BusinessProfileRecord businessProfileRecord =
-        dsl.insertInto(BUSINESS_PROFILE)
-            .set(BUSINESS_PROFILE.STATUS, businessProfile.getStatus())
-            .set(BUSINESS_PROFILE.NAME, businessProfile.getName())
-            .set(BUSINESS_PROFILE.TYPE_ID, businessProfile.getType().getId())
-            .set(BUSINESS_PROFILE.PHONE_NUMBER, businessProfile.getPhoneNumber())
-            .set(BUSINESS_PROFILE.CITY, businessProfile.getCity())
-            .set(BUSINESS_PROFILE.POSTAL_CODE, businessProfile.getPostalCode())
-            .set(BUSINESS_PROFILE.ADDRESS, businessProfile.getAddress())
-            .set(BUSINESS_PROFILE.CREATED_ON, LocalDateTime.now())
-            .returning(BUSINESS_PROFILE.ID)
+    BusinessRecord businessProfileRecord =
+        dsl.insertInto(BUSINESS)
+            .set(BUSINESS.STATUS, business.getStatus())
+            .set(BUSINESS.NAME, business.getName())
+            .set(BUSINESS.TYPE_ID, business.getType().getId())
+            .set(BUSINESS.PHONE_NUMBER, business.getPhoneNumber())
+            .set(BUSINESS.CITY, business.getCity())
+            .set(BUSINESS.POSTAL_CODE, business.getPostalCode())
+            .set(BUSINESS.ADDRESS, business.getAddress())
+            .set(BUSINESS.CREATED_ON, LocalDateTime.now())
+            .returning(BUSINESS.ID)
             .fetchOne();
 
     if (businessProfileRecord == null) {
       throw new ApplicationException("Business profile not saved", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    int ownerId = businessProfile.getOwner().getId();
+    int ownerId = business.getOwner().getId();
     int businessId = businessProfileRecord.getId();
 
     int rowsAffected = dsl.insertInto(BUSINESS_ACCOUNT_MAP)
@@ -83,15 +83,15 @@ public class BusinessRepositoryImpl implements BusinessRepository {
       throw new ApplicationException("Business profile not saved", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    return businessProfile.toBuilder()
+    return business.toBuilder()
         .id(businessId)
         .build();
   }
 
   @Override
-  public List<BusinessProfile> getAll() {
-    Result<BusinessProfileRecord> fetch = dsl.selectFrom(BUSINESS_PROFILE).fetch();
-    return fetch.map(BusinessProfile::new);
+  public List<Business> getAll() {
+    Result<BusinessRecord> fetch = dsl.selectFrom(BUSINESS).fetch();
+    return fetch.map(Business::new);
   }
 
   @Override
@@ -122,16 +122,16 @@ public class BusinessRepositoryImpl implements BusinessRepository {
   }
 
   @Override
-  public Optional<BusinessProfile> findBusinessByName(String businessName) {
-    BusinessProfileRecord businessProfileRecord = dsl.selectFrom(BUSINESS_PROFILE)
-        .where(BUSINESS_PROFILE.NAME.eq(businessName))
+  public Optional<Business> findBusinessByName(String businessName) {
+    BusinessRecord businessProfileRecord = dsl.selectFrom(BUSINESS)
+        .where(BUSINESS.NAME.eq(businessName))
         .fetchOne();
 
     if (businessProfileRecord == null) {
       return Optional.empty();
     }
 
-    return Optional.of(new BusinessProfile(businessProfileRecord));
+    return Optional.of(new Business(businessProfileRecord));
   }
 
 }

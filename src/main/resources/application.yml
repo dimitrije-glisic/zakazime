@@ -9,7 +9,3 @@ spring:
     user: postgres
     password: postgres
     validateMigrationNaming: true
-
-logging:
-  level:
-    org.springframework.security: DEBUG

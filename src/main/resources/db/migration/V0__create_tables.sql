@@ -23,7 +23,7 @@ CREATE TABLE business_type
     name VARCHAR(255) UNIQUE NOT NULL
 );
 
-CREATE TABLE business_profile
+CREATE TABLE business
 (
     id           INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     type_id      INT REFERENCES business_type (id),
@@ -50,7 +50,7 @@ CREATE TABLE service
 (
     id           INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     category_id  INT REFERENCES service_category (id) NOT NULL,
-    business_id  INT REFERENCES business_profile (id),
+    business_id  INT REFERENCES business (id),
     name         VARCHAR(255) NOT NULL,
     note         VARCHAR(255),
     price        DECIMAL      NOT NULL,
@@ -62,14 +62,6 @@ CREATE TABLE service
 CREATE TABLE business_account_map
 (
     account_id  INT REFERENCES account (id),
-    business_id INT REFERENCES business_profile (id),
+    business_id INT REFERENCES business (id),
     PRIMARY KEY (account_id, business_id)
 );
-
-CREATE TABLE business_service_map
-(
-    business_id INT REFERENCES business_profile (id),
-    service_id  INT REFERENCES service (id),
-    PRIMARY KEY (business_id, service_id)
-);
-

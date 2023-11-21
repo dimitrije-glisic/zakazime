@@ -2,7 +2,7 @@ package com.dglisic.zakazime.business.service;
 
 import com.dglisic.zakazime.business.controller.BusinessMapper;
 import com.dglisic.zakazime.business.controller.CreateBusinessProfileRequest;
-import com.dglisic.zakazime.business.domain.BusinessProfile;
+import com.dglisic.zakazime.business.domain.Business;
 import com.dglisic.zakazime.business.domain.BusinessType;
 import com.dglisic.zakazime.business.domain.Service;
 import com.dglisic.zakazime.business.repository.BusinessRepository;
@@ -28,23 +28,23 @@ public class BusinessServiceImpl implements BusinessService {
 
   //add roles authorization
   @Override
-  public BusinessProfile getBusinessProfileForUser(String userEmail) {
+  public Business getBusinessProfileForUser(String userEmail) {
     User user = userService.findUserByEmailOrElseThrow(userEmail);
-    BusinessProfile businessProfile = businessRepository.getBusinessProfile(user.getId())
+    Business business = businessRepository.getBusinessProfile(user.getId())
         .orElseThrow(() -> new ApplicationException("Business profile not found for user " + userEmail, HttpStatus.NOT_FOUND));
-
-    return businessProfile.toBuilder()
-        .owner(user)
-        .build();
+    business.setOwner(user);
+    List<Service> servicesOfBusiness = serviceRepository.getServicesOfBusiness(business.getId());
+    business.setServices(servicesOfBusiness);
+    return business;
   }
 
   @Override
-  public BusinessProfile createBusinessProfile(
+  public Business createBusinessProfile(
       CreateBusinessProfileRequest createBusinessProfileRequest) {
     User user = userService.findUserByEmailOrElseThrow(createBusinessProfileRequest.ownerEmail());
     BusinessType businessType = getBusinessType(createBusinessProfileRequest.type());
 
-    BusinessProfile toBeSaved = businessMapper.mapToBusinessProfile(createBusinessProfileRequest);
+    Business toBeSaved = businessMapper.mapToBusinessProfile(createBusinessProfileRequest);
     toBeSaved.setOwner(user);
     toBeSaved.setType(businessType);
     toBeSaved.setStatus("CREATED");
@@ -61,7 +61,7 @@ public class BusinessServiceImpl implements BusinessService {
   }
 
   @Override
-  public List<BusinessProfile> getAll() {
+  public List<Business> getAll() {
     return businessRepository.getAll();
   }
 
@@ -77,7 +77,7 @@ public class BusinessServiceImpl implements BusinessService {
 
   @Override
   public List<Service> getServicesOfBusiness(String businessName) {
-    BusinessProfile business = businessRepository.findBusinessByName(businessName)
+    Business business = businessRepository.findBusinessByName(businessName)
         .orElseThrow(() -> new ApplicationException("Business not found", HttpStatus.NOT_FOUND));
     return serviceRepository.getServicesOfBusiness(business.getId());
   }
@@ -85,19 +85,18 @@ public class BusinessServiceImpl implements BusinessService {
   @Override
   @Transactional
   public void saveServices(List<Service> services, String businessName) {
-    BusinessProfile business = businessRepository.findBusinessByName(businessName)
+    Business business = businessRepository.findBusinessByName(businessName)
         .orElseThrow(() -> new ApplicationException("Business not found", HttpStatus.NOT_FOUND));
     fillServicesWithCategoryAndBusiness(services, business);
     serviceRepository.saveServices(services);
   }
 
-  private void fillServicesWithCategoryAndBusiness(List<Service> services, BusinessProfile business) {
+  private void fillServicesWithCategoryAndBusiness(List<Service> services, Business business) {
     for (Service service : services) {
       service.setCategory(serviceRepository.findCategoryByName(service.getCategoryName())
           .orElseThrow(() -> new ApplicationException("Category not found", HttpStatus.BAD_REQUEST)));
-      service.setBusinessProfile(business);
+      service.setBusiness(business);
     }
   }
-
 
 }

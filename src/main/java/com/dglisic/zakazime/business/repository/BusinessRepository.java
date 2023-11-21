@@ -1,6 +1,6 @@
 package com.dglisic.zakazime.business.repository;
 
-import com.dglisic.zakazime.business.domain.BusinessProfile;
+import com.dglisic.zakazime.business.domain.Business;
 import com.dglisic.zakazime.business.domain.BusinessType;
 import com.dglisic.zakazime.business.domain.Service;
 import java.util.List;
@@ -9,16 +9,16 @@ import java.util.Optional;
 public interface BusinessRepository {
 
 //  int saveBusinessProfile(BusinessProfile businessProfile);
-  Optional<BusinessProfile> getBusinessProfile(int userEmail);
+  Optional<Business> getBusinessProfile(int userEmail);
 
-  BusinessProfile createBusinessProfile(BusinessProfile businessProfile);
+  Business createBusinessProfile(Business business);
 
-  List<BusinessProfile> getAll();
+  List<Business> getAll();
 
   List<BusinessType> getBusinessTypes();
 
   List<Service> getServicesForType(String type);
 
-  Optional<BusinessProfile> findBusinessByName(String businessName);
+  Optional<Business> findBusinessByName(String businessName);
 
 }

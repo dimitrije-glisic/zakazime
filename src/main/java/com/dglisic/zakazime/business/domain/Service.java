@@ -29,7 +29,7 @@ public class Service {
   @Setter
   private Category category;
   @Setter
-  private BusinessProfile businessProfile;
+  private Business business;
 
 
   public Service(model.tables.records.ServiceRecord serviceRecord) {

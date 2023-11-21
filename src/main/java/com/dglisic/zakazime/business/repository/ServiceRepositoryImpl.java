@@ -38,7 +38,7 @@ public class ServiceRepositoryImpl implements ServiceRepository {
     for (Service service : services) {
       queries.add(
           dsl.insertInto(SERVICE)
-              .set(SERVICE.BUSINESS_ID, service.getBusinessProfile().getId())
+              .set(SERVICE.BUSINESS_ID, service.getBusiness().getId())
               .set(SERVICE.CATEGORY_ID, service.getCategory().getId())
               .set(SERVICE.NAME, service.getName())
               .set(SERVICE.NOTE, service.getNote())

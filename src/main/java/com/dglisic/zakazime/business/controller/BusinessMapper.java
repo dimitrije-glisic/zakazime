@@ -1,19 +1,19 @@
 package com.dglisic.zakazime.business.controller;
 
-import com.dglisic.zakazime.business.domain.BusinessProfile;
+import com.dglisic.zakazime.business.domain.Business;
 import org.springframework.stereotype.Component;
 
 @Component
 public class BusinessMapper {
 
-  public CreateBusinessProfileResponse mapToCreateBusinessProfileResponse(BusinessProfile businessProfile) {
-    return new CreateBusinessProfileResponse(businessProfile.getName(),
-        businessProfile.getPhoneNumber(), businessProfile.getCity(), businessProfile.getPostalCode(),
-        businessProfile.getAddress(), businessProfile.getStatus());
+  public CreateBusinessProfileResponse mapToCreateBusinessProfileResponse(Business business) {
+    return new CreateBusinessProfileResponse(business.getName(),
+        business.getPhoneNumber(), business.getCity(), business.getPostalCode(),
+        business.getAddress(), business.getStatus());
   }
 
-  public BusinessProfile mapToBusinessProfile(CreateBusinessProfileRequest createBusinessProfileRequest) {
-    return BusinessProfile.builder()
+  public Business mapToBusinessProfile(CreateBusinessProfileRequest createBusinessProfileRequest) {
+    return Business.builder()
         .name(createBusinessProfileRequest.name())
         .phoneNumber(createBusinessProfileRequest.phoneNumber())
         .city(createBusinessProfileRequest.city())
@@ -22,16 +22,17 @@ public class BusinessMapper {
         .build();
   }
 
-  public BusinessProfileDTO mapToBusinessProfileDTO(BusinessProfile businessProfile) {
+  public BusinessProfileDTO mapToBusinessProfileDTO(Business business) {
     return BusinessProfileDTO.builder()
-        .name(businessProfile.getName())
-        .phoneNumber(businessProfile.getPhoneNumber())
-        .city(businessProfile.getCity())
-        .postalCode(businessProfile.getPostalCode())
-        .address(businessProfile.getAddress())
-        .status(businessProfile.getStatus())
-        .type(businessProfile.getType().getName())
-        .ownerName(businessProfile.getOwner().getFirstName() + " " + businessProfile.getOwner().getLastName())
+        .name(business.getName())
+        .phone(business.getPhoneNumber())
+        .city(business.getCity())
+        .postalCode(business.getPostalCode())
+        .address(business.getAddress())
+        .status(business.getStatus())
+        .type(business.getType().getName())
+        .ownerName(business.getOwner().getFirstName() + " " + business.getOwner().getLastName())
+        .services(business.getServices())
         .build();
   }
 
