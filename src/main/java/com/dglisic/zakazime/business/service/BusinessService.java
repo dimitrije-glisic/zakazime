@@ -3,6 +3,7 @@ package com.dglisic.zakazime.business.service;
 import com.dglisic.zakazime.business.controller.CreateBusinessProfileRequest;
 import com.dglisic.zakazime.business.domain.Business;
 import com.dglisic.zakazime.business.domain.BusinessType;
+import com.dglisic.zakazime.business.domain.Category;
 import com.dglisic.zakazime.business.domain.Service;
 import java.util.List;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,10 @@ public interface BusinessService {
 
   List<Service> getServicesOfBusiness(String businessName);
 
-  @Transactional
-  void saveServices(List<Service> services, String businessName);
+  void saveServices(List<Service> services);
+
+  Business getBusinessOrThrow(String businessName);
+
+  Category getCategoryOrThrow(String categoryName);
+
 }

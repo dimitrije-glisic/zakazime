@@ -22,8 +22,8 @@ public class BusinessMapper {
         .build();
   }
 
-  public BusinessProfileDTO mapToBusinessProfileDTO(Business business) {
-    return BusinessProfileDTO.builder()
+  public BusinessDTO mapToBusinessProfileDTO(Business business) {
+    return BusinessDTO.builder()
         .name(business.getName())
         .phone(business.getPhoneNumber())
         .city(business.getCity())

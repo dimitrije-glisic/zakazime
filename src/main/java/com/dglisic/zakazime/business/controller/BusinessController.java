@@ -36,7 +36,7 @@ public class BusinessController {
   }
 
   @GetMapping("/business")
-  public BusinessProfileDTO getBusinessProfileForUser(Principal user) {
+  public BusinessDTO getBusinessProfileForUser(Principal user) {
     String userEmail = user.getName();
     Business business = businessService.getBusinessProfileForUser(userEmail);
     return businessMapper.mapToBusinessProfileDTO(business);
@@ -55,10 +55,12 @@ public class BusinessController {
   }
 
   @GetMapping("/business/{businessName}/services")
-  public List<Service> getServicesForBusiness(@PathVariable @Valid @NotBlank String businessName) {
+  public List<ServiceDTO> getServicesForBusiness(@PathVariable @Valid @NotBlank String businessName) {
     List<Service> servicesOfBusiness = businessService.getServicesOfBusiness(businessName);
     logger.info("Getting Services ({}) of business {}: {}", servicesOfBusiness.size(), businessName, servicesOfBusiness);
-    return servicesOfBusiness;
+    return servicesOfBusiness.stream()
+        .map(serviceMapper::mapToServiceDTO)
+        .toList();
   }
 
   @PostMapping("/business/{businessName}/services")
@@ -66,9 +68,9 @@ public class BusinessController {
                                       @RequestBody List<CreateServiceRequest> serviceRequests) {
     logger.info("Saving services {} for business {}", serviceRequests, businessName);
     List<Service> servicesToBeSaved = serviceRequests.stream()
-        .map(serviceMapper::mapToService)
+        .map(request -> serviceMapper.mapToService(request, businessName))
         .toList();
-    businessService.saveServices(servicesToBeSaved, businessName);
+    businessService.saveServices(servicesToBeSaved);
   }
 
 }

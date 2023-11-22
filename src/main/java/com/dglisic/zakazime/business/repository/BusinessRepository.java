@@ -17,8 +17,6 @@ public interface BusinessRepository {
 
   List<BusinessType> getBusinessTypes();
 
-  List<Service> getServicesForType(String type);
-
   Optional<Business> findBusinessByName(String businessName);
 
 }

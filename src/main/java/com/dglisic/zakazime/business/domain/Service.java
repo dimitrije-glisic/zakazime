@@ -7,16 +7,17 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import model.tables.records.BusinessRecord;
+import model.tables.records.ServiceCategoryRecord;
+import model.tables.records.ServiceRecord;
 
 @AllArgsConstructor
 @Builder(toBuilder = true)
 @Getter
-@EqualsAndHashCode
+@EqualsAndHashCode(exclude = {"category", "business"})
 @ToString
 public class Service {
-
   private final int id;
-  private final int categoryId;
   private final String name;
   private final String note;
   private final BigDecimal price;
@@ -25,16 +26,14 @@ public class Service {
   private final boolean template;
 
   @Setter
-  private String categoryName;
-  @Setter
   private Category category;
   @Setter
   private Business business;
 
-
-  public Service(model.tables.records.ServiceRecord serviceRecord) {
+  public Service(ServiceRecord serviceRecord, ServiceCategoryRecord serviceCategoryRecord, BusinessRecord businessRecord) {
     this.id = serviceRecord.getId();
-    this.categoryId = serviceRecord.getCategoryId();
+    this.category = new Category(serviceCategoryRecord);
+    this.business = new Business(businessRecord);
     this.name = serviceRecord.getName();
     this.note = serviceRecord.getNote();
     this.price = serviceRecord.getPrice();

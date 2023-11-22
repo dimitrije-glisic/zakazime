@@ -4,8 +4,10 @@ import com.dglisic.zakazime.business.controller.BusinessMapper;
 import com.dglisic.zakazime.business.controller.CreateBusinessProfileRequest;
 import com.dglisic.zakazime.business.domain.Business;
 import com.dglisic.zakazime.business.domain.BusinessType;
+import com.dglisic.zakazime.business.domain.Category;
 import com.dglisic.zakazime.business.domain.Service;
 import com.dglisic.zakazime.business.repository.BusinessRepository;
+import com.dglisic.zakazime.business.repository.CategoryRepository;
 import com.dglisic.zakazime.business.repository.ServiceRepository;
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.domain.User;
@@ -25,8 +27,8 @@ public class BusinessServiceImpl implements BusinessService {
   private final BusinessMapper businessMapper;
   private final BusinessRepository businessRepository;
   private final ServiceRepository serviceRepository;
+  private final CategoryRepository categoryRepository;
 
-  //add roles authorization
   @Override
   public Business getBusinessProfileForUser(String userEmail) {
     User user = userService.findUserByEmailOrElseThrow(userEmail);
@@ -71,8 +73,16 @@ public class BusinessServiceImpl implements BusinessService {
   }
 
   @Override
-  public List<Service> getServicesForType(String type) {
-    return businessRepository.getServicesForType(type);
+  public Category getCategoryOrThrow(String categoryName) {
+    return categoryRepository.findCategory(categoryName).orElseThrow(
+        () -> new ApplicationException("Category with name " + categoryName + " does not exist", HttpStatus.BAD_REQUEST)
+    );
+  }
+
+  @Override
+  public List<com.dglisic.zakazime.business.domain.Service> getServicesForType(String type) {
+    // check if type exists
+    return serviceRepository.getServicesOfType(type);
   }
 
   @Override
@@ -84,19 +94,14 @@ public class BusinessServiceImpl implements BusinessService {
 
   @Override
   @Transactional
-  public void saveServices(List<Service> services, String businessName) {
-    Business business = businessRepository.findBusinessByName(businessName)
-        .orElseThrow(() -> new ApplicationException("Business not found", HttpStatus.NOT_FOUND));
-    fillServicesWithCategoryAndBusiness(services, business);
+  public void saveServices(List<Service> services) {
     serviceRepository.saveServices(services);
   }
 
-  private void fillServicesWithCategoryAndBusiness(List<Service> services, Business business) {
-    for (Service service : services) {
-      service.setCategory(serviceRepository.findCategoryByName(service.getCategoryName())
-          .orElseThrow(() -> new ApplicationException("Category not found", HttpStatus.BAD_REQUEST)));
-      service.setBusiness(business);
-    }
+  @Override
+  public Business getBusinessOrThrow(String businessName) {
+    return businessRepository.findBusinessByName(businessName)
+        .orElseThrow(() -> new ApplicationException("Business not found", HttpStatus.NOT_FOUND));
   }
 
 }

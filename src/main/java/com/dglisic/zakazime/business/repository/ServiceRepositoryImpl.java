@@ -1,20 +1,22 @@
 package com.dglisic.zakazime.business.repository;
 
+import static model.Tables.BUSINESS;
+import static model.Tables.BUSINESS_TYPE;
 import static model.tables.Service.SERVICE;
 import static model.tables.ServiceCategory.SERVICE_CATEGORY;
 
-import com.dglisic.zakazime.business.domain.Category;
 import com.dglisic.zakazime.business.domain.Service;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import model.tables.records.BusinessRecord;
 import model.tables.records.ServiceCategoryRecord;
 import model.tables.records.ServiceRecord;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Query;
+import org.jooq.Record3;
 import org.jooq.Result;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -25,10 +27,33 @@ public class ServiceRepositoryImpl implements ServiceRepository {
 
   @Override
   public List<Service> getServicesOfBusiness(int businessId) {
-    Result<ServiceRecord> result = dsl.selectFrom(SERVICE)
-        .where(SERVICE.BUSINESS_ID.eq(businessId))
+    Condition condition = SERVICE.BUSINESS_ID.eq(businessId);
+    return getServices(condition);
+  }
+
+  @Override
+  public List<Service> getServicesOfType(String type) {
+    Condition condition = BUSINESS_TYPE.NAME.eq(type.toUpperCase());
+    return getServices(condition);
+  }
+
+  private List<Service> getServices(Condition condition) {
+    Result<Record3<ServiceRecord, ServiceCategoryRecord, BusinessRecord>>
+        serviceRecords = dsl.select(SERVICE, SERVICE_CATEGORY, BUSINESS)
+        .from(SERVICE)
+        .join(SERVICE_CATEGORY).on(SERVICE.CATEGORY_ID.eq(SERVICE_CATEGORY.ID))
+        .join(BUSINESS_TYPE).on(SERVICE_CATEGORY.BUSINESS_TYPE_ID.eq(BUSINESS_TYPE.ID))
+        .join(BUSINESS).on(SERVICE.BUSINESS_ID.eq(BUSINESS.ID))
+        .where(condition)
         .fetch();
-    return result.map(Service::new);
+
+    if (serviceRecords.isEmpty()) {
+      return new ArrayList<>();
+    }
+
+    return serviceRecords.map(
+        record -> new Service(record.value1(), record.value2(), record.value3())
+    );
   }
 
   @Override
@@ -50,20 +75,6 @@ public class ServiceRepositoryImpl implements ServiceRepository {
     }
 
     dsl.batch(queries).execute();
-  }
-
-  @Override
-  @Cacheable("categories")
-  public Optional<Category> findCategoryByName(String categoryName) {
-    ServiceCategoryRecord categoryRecord = dsl.selectFrom(SERVICE_CATEGORY)
-        .where(SERVICE_CATEGORY.NAME.eq(categoryName))
-        .fetchOne();
-
-    if (categoryRecord == null) {
-      return Optional.empty();
-    } else {
-      return Optional.of(new Category(categoryRecord));
-    }
   }
 
 }

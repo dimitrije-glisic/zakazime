@@ -4,20 +4,16 @@ import static model.Tables.ACCOUNT;
 import static model.Tables.BUSINESS;
 import static model.Tables.BUSINESS_ACCOUNT_MAP;
 import static model.Tables.BUSINESS_TYPE;
-import static model.Tables.SERVICE_CATEGORY;
 
 import com.dglisic.zakazime.business.domain.Business;
 import com.dglisic.zakazime.business.domain.BusinessType;
-import com.dglisic.zakazime.business.domain.Service;
 import com.dglisic.zakazime.common.ApplicationException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import model.Tables;
 import model.tables.records.BusinessRecord;
 import model.tables.records.BusinessTypeRecord;
-import model.tables.records.ServiceRecord;
 import org.jooq.DSLContext;
 import org.jooq.Record2;
 import org.jooq.Result;
@@ -99,26 +95,6 @@ public class BusinessRepositoryImpl implements BusinessRepository {
     return dsl.selectDistinct(BUSINESS_TYPE)
         .from(BUSINESS_TYPE)
         .fetchInto(BusinessType.class);
-  }
-
-  @Override
-  public List<Service> getServicesForType(String type) {
-    Result<Record2<ServiceRecord, String>> serviceRecords = dsl.select(Tables.SERVICE, SERVICE_CATEGORY.NAME)
-        .from(Tables.SERVICE)
-        .join(SERVICE_CATEGORY).on(Tables.SERVICE.CATEGORY_ID.eq(SERVICE_CATEGORY.ID))
-        .join(BUSINESS_TYPE).on(SERVICE_CATEGORY.BUSINESS_TYPE_ID.eq(BUSINESS_TYPE.ID))
-        .where(BUSINESS_TYPE.NAME.eq(type))
-        .fetch();
-
-    if (serviceRecords.isEmpty()) {
-      throw new ApplicationException("No services found for type " + type, HttpStatus.NOT_FOUND);
-    }
-
-    return serviceRecords.map(
-        record -> new Service(record.value1()).toBuilder()
-            .categoryName(record.value2())
-            .build()
-    );
   }
 
   @Override

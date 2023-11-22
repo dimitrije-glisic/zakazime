@@ -9,7 +9,8 @@ public interface ServiceRepository {
 
   List<Service> getServicesOfBusiness(int businessId);
 
+  List<Service> getServicesOfType(String type);
+
   void saveServices(List<Service> services);
 
-  Optional<Category> findCategoryByName(String categoryName);
 }
