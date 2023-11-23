@@ -42,4 +42,14 @@ public class Service {
     this.template = serviceRecord.getTemplate();
   }
 
+  public Service(ServiceRecord serviceRecord, ServiceCategoryRecord serviceCategoryRecord) {
+    this.id = serviceRecord.getId();
+    this.category = new Category(serviceCategoryRecord);
+    this.name = serviceRecord.getName();
+    this.note = serviceRecord.getNote();
+    this.price = serviceRecord.getPrice();
+    this.avgDuration = serviceRecord.getAvgDuration();
+    this.description = serviceRecord.getDescription();
+    this.template = serviceRecord.getTemplate();
+  }
 }

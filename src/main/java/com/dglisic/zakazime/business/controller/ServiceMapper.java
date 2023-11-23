@@ -2,6 +2,7 @@ package com.dglisic.zakazime.business.controller;
 
 import com.dglisic.zakazime.business.domain.Service;
 import com.dglisic.zakazime.business.service.BusinessService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -25,17 +26,10 @@ public class ServiceMapper {
   }
 
   public ServiceDTO mapToServiceDTO(Service service) {
-    return ServiceDTO.builder()
-        .id(service.getId())
-        .name(service.getName())
-        .categoryName(service.getCategory().getName())
-        .businessName(service.getBusiness().getName())
-        .note(service.getNote())
-        .description(service.getDescription())
-        .price(service.getPrice())
-        .avgDuration(service.getAvgDuration())
-        .template(service.isTemplate())
-        .build();
+    return ServiceMapperUtil.mapToServiceDTO(service);
   }
 
+  public List<ServiceDTO> mapToServiceDTOs(List<Service> services) {
+    return ServiceMapperUtil.mapToServiceDTOs(services);
+  }
 }

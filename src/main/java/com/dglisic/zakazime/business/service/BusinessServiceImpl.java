@@ -15,6 +15,7 @@ import com.dglisic.zakazime.user.service.UserService;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
@@ -80,9 +81,14 @@ public class BusinessServiceImpl implements BusinessService {
   }
 
   @Override
-  public List<com.dglisic.zakazime.business.domain.Service> getServicesForType(String type) {
-    // check if type exists
-    return serviceRepository.getServicesOfType(type);
+  public void updateService(String serviceId, Service service) {
+    validateOnUpdate(serviceId, service);
+    serviceRepository.updateService(serviceId, service);
+  }
+
+  @Override
+  public List<Service> getServiceTemplatesOfType(String type) {
+    return serviceRepository.getServiceTemplatesOfType(type);
   }
 
   @Override
@@ -102,6 +108,20 @@ public class BusinessServiceImpl implements BusinessService {
   public Business getBusinessOrThrow(String businessName) {
     return businessRepository.findBusinessByName(businessName)
         .orElseThrow(() -> new ApplicationException("Business not found", HttpStatus.NOT_FOUND));
+  }
+
+  private void validateOnUpdate(String serviceId, Service service) {
+    Optional<Service> serviceFromDb = serviceRepository.findService(serviceId);
+    if (serviceFromDb.isEmpty()) {
+      throw new ApplicationException("Service with id " + serviceId + " does not exist", HttpStatus.BAD_REQUEST);
+    } else {
+      Service serviceFromDbValue = serviceFromDb.get();
+      if (!serviceFromDbValue.getBusiness().getName().equals(service.getBusiness().getName())) {
+        throw new ApplicationException(
+            "Service with id " + serviceId + " does not belong to business " + service.getBusiness().getName(),
+            HttpStatus.BAD_REQUEST);
+      }
+    }
   }
 
 }

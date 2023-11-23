@@ -1,9 +1,11 @@
 package com.dglisic.zakazime.business.controller;
 
 import com.dglisic.zakazime.business.domain.Business;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class BusinessMapper {
 
   public CreateBusinessProfileResponse mapToCreateBusinessProfileResponse(Business business) {
@@ -32,7 +34,7 @@ public class BusinessMapper {
         .status(business.getStatus())
         .type(business.getType().getName())
         .ownerName(business.getOwner().getFirstName() + " " + business.getOwner().getLastName())
-        .services(business.getServices())
+        .services(ServiceMapperUtil.mapToServiceDTOs(business.getServices()))
         .build();
   }
 
