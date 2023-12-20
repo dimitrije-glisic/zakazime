@@ -19,8 +19,8 @@ CREATE TABLE account
 
 CREATE TABLE business_type
 (
-    id   INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    name VARCHAR(255) UNIQUE NOT NULL
+    id    INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    title VARCHAR(255) UNIQUE NOT NULL
 );
 
 CREATE TABLE business
@@ -42,21 +42,29 @@ CREATE TABLE business
 CREATE TABLE service_category
 (
     id               INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    name             VARCHAR(255) UNIQUE NOT NULL,
+    title            VARCHAR(255) UNIQUE NOT NULL,
     business_type_id INT REFERENCES business_type (id)
+);
+
+CREATE TABLE service_subcategory
+(
+    id                  INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    title               VARCHAR(255) UNIQUE NOT NULL,
+    service_category_id INT REFERENCES service_category (id),
+    description         TEXT
 );
 
 CREATE TABLE service
 (
-    id           INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    category_id  INT REFERENCES service_category (id) NOT NULL,
-    business_id  INT REFERENCES business (id),
-    name         VARCHAR(255) NOT NULL,
-    note         VARCHAR(255),
-    price        DECIMAL      NOT NULL,
-    avg_duration INT          NOT NULL,
-    description  TEXT,
-    template     BOOLEAN      NOT NULL
+    id             INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    subcategory_id INT REFERENCES service_subcategory (id) NOT NULL,
+    business_id    INT REFERENCES business (id),
+    title           VARCHAR(255)                            NOT NULL,
+    note           VARCHAR(255),
+    price          DECIMAL                                 NOT NULL,
+    avg_duration   INT                                     NOT NULL,
+    description    TEXT,
+    template       BOOLEAN                                 NOT NULL
 );
 
 CREATE TABLE business_account_map
