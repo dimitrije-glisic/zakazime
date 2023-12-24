@@ -1,15 +1,16 @@
 package com.dglisic.zakazime.user.repository;
 
-import static model.Tables.ACCOUNT;
-import static model.Tables.ROLE;
+import static jooq.Tables.ACCOUNT;
+import static jooq.Tables.ROLE;
 
+import com.dglisic.zakazime.user.domain.Role;
 import com.dglisic.zakazime.user.domain.User;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import model.tables.BusinessAccountMap;
-import model.tables.records.AccountRecord;
-import model.tables.records.RoleRecord;
+import jooq.tables.BusinessAccountMap;
+import jooq.tables.records.AccountRecord;
+import jooq.tables.records.RoleRecord;
 import org.jooq.DSLContext;
 import org.jooq.Record2;
 import org.jooq.Result;
@@ -69,7 +70,7 @@ public class UserRepositoryImpl implements UserRepository {
 
     AccountRecord account = fetch.value1();
     RoleRecord role = fetch.value2();
-    User user = new User(account, roleRecordMapper.map(role));
+    User user = new User(account, new Role(role.getId(), role.getName()));
     return Optional.of(user);
   }
 
@@ -92,6 +93,6 @@ public class UserRepositoryImpl implements UserRepository {
         .on(ACCOUNT.ROLE_ID.eq(ROLE.ID))
         .fetch();
 
-    return fetch.map(record -> new User(record.value1(), roleRecordMapper.map(record.value2())));
+    return fetch.map(record -> new User(record.value1(), new Role(record.value2().getId(), record.value2().getName())));
   }
 }

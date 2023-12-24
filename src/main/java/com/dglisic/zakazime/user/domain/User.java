@@ -4,7 +4,7 @@ import com.dglisic.zakazime.user.controller.RegistrationRequest;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import model.tables.records.AccountRecord;
+import jooq.tables.records.AccountRecord;
 
 @Builder
 @AllArgsConstructor

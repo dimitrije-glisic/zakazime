@@ -1,11 +1,10 @@
 package com.dglisic.zakazime.business.repository;
 
-import static model.tables.ServiceCategory.SERVICE_CATEGORY;
+import static jooq.tables.ServiceCategory.SERVICE_CATEGORY;
 
-import com.dglisic.zakazime.business.domain.Category;
 import java.util.Optional;
+import jooq.tables.pojos.ServiceCategory;
 import lombok.RequiredArgsConstructor;
-import model.tables.records.ServiceCategoryRecord;
 import org.jooq.DSLContext;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
@@ -18,11 +17,11 @@ public class CategoryRepositoryImpl implements CategoryRepository {
 
   @Override
   @Cacheable("categories")
-  public Optional<Category> findCategory(String categoryName) {
-    ServiceCategoryRecord categoryRecord = dsl.selectFrom(SERVICE_CATEGORY)
-        .where(SERVICE_CATEGORY.NAME.eq(categoryName))
-        .fetchOne();
-    return Optional.ofNullable(categoryRecord).map(Category::new);
+  public Optional<ServiceCategory> findCategory(String categoryName) {
+    ServiceCategory category = dsl.selectFrom(SERVICE_CATEGORY)
+        .where(SERVICE_CATEGORY.TITLE.eq(categoryName))
+        .fetchOneInto(ServiceCategory.class);
+    return Optional.ofNullable(category);
   }
 
 }

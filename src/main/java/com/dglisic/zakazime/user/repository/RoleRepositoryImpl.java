@@ -1,10 +1,10 @@
 package com.dglisic.zakazime.user.repository;
 
-import static model.tables.Role.ROLE;
+import static jooq.tables.Role.ROLE;
 
 import com.dglisic.zakazime.user.domain.Role;
 import java.util.Optional;
-import model.tables.records.RoleRecord;
+import jooq.tables.records.RoleRecord;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
 

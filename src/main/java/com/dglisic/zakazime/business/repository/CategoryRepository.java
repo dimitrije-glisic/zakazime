@@ -1,9 +1,9 @@
 package com.dglisic.zakazime.business.repository;
 
-import com.dglisic.zakazime.business.domain.Category;
 import java.util.Optional;
+import jooq.tables.pojos.ServiceCategory;
 
 public interface CategoryRepository {
 
-  Optional<Category> findCategory(String categoryName);
+  Optional<ServiceCategory> findCategory(String categoryName);
 }

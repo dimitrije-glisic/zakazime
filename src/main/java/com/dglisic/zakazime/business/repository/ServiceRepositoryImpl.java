@@ -1,24 +1,17 @@
 package com.dglisic.zakazime.business.repository;
 
-import static model.Tables.BUSINESS;
-import static model.Tables.BUSINESS_TYPE;
-import static model.tables.Service.SERVICE;
-import static model.tables.ServiceCategory.SERVICE_CATEGORY;
+import static jooq.tables.BusinessType.BUSINESS_TYPE;
+import static jooq.tables.Service.SERVICE;
+import static jooq.tables.ServiceCategory.SERVICE_CATEGORY;
+import static jooq.tables.ServiceSubcategory.SERVICE_SUBCATEGORY;
 
-import com.dglisic.zakazime.business.domain.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import jooq.tables.pojos.Service;
 import lombok.RequiredArgsConstructor;
-import model.tables.records.BusinessRecord;
-import model.tables.records.ServiceCategoryRecord;
-import model.tables.records.ServiceRecord;
-import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Query;
-import org.jooq.Record2;
-import org.jooq.Record3;
-import org.jooq.Result;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -28,55 +21,34 @@ public class ServiceRepositoryImpl implements ServiceRepository {
   private final DSLContext dsl;
 
   @Override
-  public List<Service> getServiceTemplatesOfType(String type) {
-    Result<Record2<ServiceRecord, ServiceCategoryRecord>>
-        serviceRecords = dsl.select(SERVICE, SERVICE_CATEGORY)
+  public List<Service> getServiceTemplatesOfBusinessType(String businessType) {
+    return dsl.select(SERVICE)
         .from(SERVICE)
-        .join(SERVICE_CATEGORY).on(SERVICE.CATEGORY_ID.eq(SERVICE_CATEGORY.ID))
+        .join(SERVICE_SUBCATEGORY).on(SERVICE.SUBCATEGORY_ID.eq(SERVICE_SUBCATEGORY.ID))
+        .join(SERVICE_CATEGORY).on(SERVICE_SUBCATEGORY.SERVICE_CATEGORY_ID.eq(SERVICE_CATEGORY.ID))
         .join(BUSINESS_TYPE).on(SERVICE_CATEGORY.BUSINESS_TYPE_ID.eq(BUSINESS_TYPE.ID))
-        .where(BUSINESS_TYPE.NAME.eq(type.toUpperCase()))
+        .where(BUSINESS_TYPE.TITLE.eq(businessType.toUpperCase()))
         .and(SERVICE.TEMPLATE.eq(true))
-        .fetch();
-
-    if (serviceRecords.isEmpty()) {
-      return new ArrayList<>();
-    }
-
-    return serviceRecords.map(
-        record -> new Service(record.value1(), record.value2())
-    );
+        .fetchInto(Service.class);
   }
 
   @Override
   public List<Service> getServicesOfBusiness(int businessId) {
-    Condition condition = SERVICE.BUSINESS_ID.eq(businessId);
-    return findServices(condition);
+    return dsl.select(SERVICE)
+        .from(SERVICE)
+        .where(SERVICE.BUSINESS_ID.eq(businessId))
+        .fetchInto(Service.class);
   }
 
   @Override
-  public Optional<Service> findService(String serviceId) {
-    Condition condition = SERVICE.ID.eq(Integer.parseInt(serviceId));
-    List<Service> services = findServices(condition);
-    return services.isEmpty() ? Optional.empty() : Optional.of(services.get(0));
-  }
-
-  private List<Service> findServices(Condition condition) {
-    Result<Record3<ServiceRecord, ServiceCategoryRecord, BusinessRecord>>
-        serviceRecords = dsl.select(SERVICE, SERVICE_CATEGORY, BUSINESS)
+  public Optional<Service> findServiceById(int serviceId) {
+    Service service = dsl.select(SERVICE)
         .from(SERVICE)
-        .join(SERVICE_CATEGORY).on(SERVICE.CATEGORY_ID.eq(SERVICE_CATEGORY.ID))
-        .join(BUSINESS_TYPE).on(SERVICE_CATEGORY.BUSINESS_TYPE_ID.eq(BUSINESS_TYPE.ID))
-        .join(BUSINESS).on(SERVICE.BUSINESS_ID.eq(BUSINESS.ID))
-        .where(condition)
-        .fetch();
+        .where(SERVICE.ID.eq(serviceId))
+        .fetchOneInto(Service.class);
 
-    if (serviceRecords.isEmpty()) {
-      return new ArrayList<>();
-    }
+    return Optional.ofNullable(service);
 
-    return serviceRecords.map(
-        record -> new Service(record.value1(), record.value2(), record.value3())
-    );
   }
 
   @Override
@@ -86,36 +58,30 @@ public class ServiceRepositoryImpl implements ServiceRepository {
     for (Service service : services) {
       queries.add(
           dsl.insertInto(SERVICE)
-              .set(SERVICE.BUSINESS_ID, service.getBusiness().getId())
-              .set(SERVICE.CATEGORY_ID, service.getCategory().getId())
-              .set(SERVICE.NAME, service.getName())
+              .set(SERVICE.BUSINESS_ID, service.getBusinessId())
+              .set(SERVICE.SUBCATEGORY_ID, service.getSubcategoryId())
+              .set(SERVICE.TITLE, service.getTitle())
               .set(SERVICE.NOTE, service.getNote())
               .set(SERVICE.PRICE, service.getPrice())
               .set(SERVICE.AVG_DURATION, service.getAvgDuration())
               .set(SERVICE.DESCRIPTION, service.getDescription())
-              .set(SERVICE.TEMPLATE, service.isTemplate())
+              .set(SERVICE.TEMPLATE, service.getTemplate())
       );
     }
-
     dsl.batch(queries).execute();
   }
 
   @Override
-  public boolean serviceExists(String serviceId) {
-    return dsl.fetchExists(dsl.selectFrom(SERVICE).where(SERVICE.ID.eq(Integer.parseInt(serviceId))));
-  }
-
-  @Override
-  public void updateService(String serviceId, Service service) {
+  public void updateService(int serviceId, Service service) {
     dsl.update(SERVICE)
-        .set(SERVICE.NAME, service.getName())
-        .set(SERVICE.CATEGORY_ID, service.getCategory().getId())
+        .set(SERVICE.TITLE, service.getTitle())
+        .set(SERVICE.SUBCATEGORY_ID, service.getSubcategoryId())
         .set(SERVICE.NOTE, service.getNote())
         .set(SERVICE.DESCRIPTION, service.getDescription())
         .set(SERVICE.PRICE, service.getPrice())
         .set(SERVICE.AVG_DURATION, service.getAvgDuration())
-        .set(SERVICE.TEMPLATE, service.isTemplate())
-        .where(SERVICE.ID.eq(Integer.parseInt(serviceId)))
+        .set(SERVICE.TEMPLATE, service.getTemplate())
+        .where(SERVICE.ID.eq(serviceId))
         .execute();
   }
 
