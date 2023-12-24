@@ -58,7 +58,7 @@ public class BusinessServiceImpl implements BusinessService {
 
   private BusinessType getBusinessType(@NotBlank final String typeName) {
     return businessRepository.getBusinessTypes().stream()
-        .filter(type -> type.getName().equals(typeName.toUpperCase()))
+        .filter(type -> type.getTitle().equals(typeName.toUpperCase()))
         .findFirst()
         .orElseThrow(() -> new ApplicationException("Business type not found", HttpStatus.BAD_REQUEST));
   }

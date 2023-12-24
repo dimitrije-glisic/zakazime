@@ -34,8 +34,8 @@ public class BusinessController {
   public ResponseEntity<CreateBusinessProfileResponse> createBusinessProfile(
       @RequestBody @Valid CreateBusinessProfileRequest createBusinessProfileRequest) {
     logger.info("Creating business profile {}", createBusinessProfileRequest);
-    Business business = businessService.createBusinessProfile(createBusinessProfileRequest);
-    return ResponseEntity.ok(businessMapper.mapToCreateBusinessProfileResponse(business));
+    Business created = businessService.createBusinessProfile(createBusinessProfileRequest);
+    return ResponseEntity.ok(businessMapper.mapToCreateBusinessProfileResponse(created));
   }
 
   @GetMapping
@@ -50,7 +50,7 @@ public class BusinessController {
   public List<String> getBusinessTypes() {
     logger.info("Getting business types");
     return businessService.getBusinessTypes().stream()
-        .map(BusinessType::getName)
+        .map(BusinessType::getTitle)
         .toList();
   }
 

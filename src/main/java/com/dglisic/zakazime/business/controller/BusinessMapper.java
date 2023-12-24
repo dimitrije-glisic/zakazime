@@ -32,7 +32,7 @@ public class BusinessMapper {
         .postalCode(business.getPostalCode())
         .address(business.getAddress())
         .status(business.getStatus())
-        .type(business.getType().getName())
+        .type(business.getType().getTitle())
         .ownerName(business.getOwner().getFirstName() + " " + business.getOwner().getLastName())
         .services(ServiceMapperUtil.mapToServiceDTOs(business.getServices()))
         .build();

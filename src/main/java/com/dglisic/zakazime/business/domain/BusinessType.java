@@ -8,10 +8,10 @@ import model.tables.records.BusinessTypeRecord;
 @Getter
 public class BusinessType {
   private final int id;
-  private final String name;
+  private final String title;
 
   public BusinessType(BusinessTypeRecord businessTypeRecord) {
     this.id = businessTypeRecord.getId();
-    this.name = businessTypeRecord.getName();
+    this.title = businessTypeRecord.getName();
   }
 }
