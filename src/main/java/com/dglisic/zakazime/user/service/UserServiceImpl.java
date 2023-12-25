@@ -3,13 +3,13 @@ package com.dglisic.zakazime.user.service;
 import com.dglisic.zakazime.business.repository.BusinessRepository;
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.controller.RegistrationRequest;
-import com.dglisic.zakazime.user.controller.UserDTO;
-import com.dglisic.zakazime.user.domain.Role;
-import com.dglisic.zakazime.user.domain.User;
 import com.dglisic.zakazime.user.repository.RoleRepository;
 import com.dglisic.zakazime.user.repository.UserRepository;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import jooq.tables.pojos.Account;
+import jooq.tables.pojos.Role;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -27,12 +27,26 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public UserDTO registerUser(final RegistrationRequest registrationRequest) {
+  public Account registerUser(final RegistrationRequest registrationRequest) {
     validateOnRegistration(registrationRequest);
+    final Account newUserAccount = fromRegistrationRequest(registrationRequest);
+    return userRepository.saveUser(newUserAccount);
+  }
+
+  private Account fromRegistrationRequest(final RegistrationRequest registrationRequest) {
     final Role role = fromString(registrationRequest.role());
-    final User user = new User(registrationRequest, role);
-    final User savedUser = userRepository.saveUser(user);
-    return UserDTO.fromUser(savedUser);
+    final LocalDateTime createdOn = LocalDateTime.now();
+    return new Account(
+        null,
+        registrationRequest.firstName(),
+        registrationRequest.lastName(),
+        registrationRequest.password(),
+        registrationRequest.email(),
+        true,
+        role.getId(),
+        createdOn,
+        null
+    );
   }
 
   private Role fromString(String roleName) {
@@ -42,21 +56,14 @@ public class UserServiceImpl implements UserService {
     );
   }
 
-//  @Override
-//  public User registerBusinessUser(User account) {
-//    validateOnRegistration(account);
-//    account.setRegistrationStatus(UserRegistrationStatus.INITIAL.toString());
-//    return userRepository.saveUser(account);
-//  }
-
   @Override
-  public User findUserByEmailOrElseThrow(String email) {
-    Optional<User> user = userRepository.findByEmail(email);
+  public Account findUserByEmailOrElseThrow(String email) {
+    Optional<Account> user = userRepository.findByEmail(email);
     return user.orElseThrow(() -> new ApplicationException("User not found", HttpStatus.NOT_FOUND));
   }
 
   @Override
-  public User loginUser(String email, String password) throws ApplicationException {
+  public Account loginUser(String email, String password) throws ApplicationException {
     var user = userRepository.findByEmail(email);
     if (user.isPresent()) {
       if (user.get().getPassword().equals(password)) {
@@ -70,7 +77,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public List<User> getAllUsers() {
+  public List<Account> getAllUsers() {
     return userRepository.getAllUsers();
   }
 

@@ -2,9 +2,8 @@ package com.dglisic.zakazime.user.repository;
 
 import static jooq.tables.Role.ROLE;
 
-import com.dglisic.zakazime.user.domain.Role;
 import java.util.Optional;
-import jooq.tables.records.RoleRecord;
+import jooq.tables.pojos.Role;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
 
@@ -13,28 +12,20 @@ import org.springframework.stereotype.Repository;
 public class RoleRepositoryImpl implements RoleRepository {
 
   private final DSLContext dsl;
-  private final RoleRecordMapper roleRecordMapper;
 
-  public RoleRepositoryImpl(DSLContext dsl, RoleRecordMapper roleRecordMapper) {
+  public RoleRepositoryImpl(final DSLContext dsl) {
     this.dsl = dsl;
-    this.roleRecordMapper = roleRecordMapper;
   }
 
   @Override
-  public Optional<Role> findByName(String role) {
-    RoleRecord roleRecord = dsl.selectFrom(ROLE).where(ROLE.NAME.eq(role)).fetchOne();
-    if (roleRecord != null) {
-      return Optional.of(roleRecordMapper.map(roleRecord));
-    }
-    return Optional.empty();
+  public Optional<Role> findByName(final String roleName) {
+    final Role role = dsl.selectFrom(ROLE).where(ROLE.NAME.eq(roleName)).fetchOneInto(Role.class);
+    return Optional.ofNullable(role);
   }
 
   @Override
-  public Optional<Role> findById(Integer roleId) {
-    RoleRecord roleRecord = dsl.selectFrom(ROLE).where(ROLE.ID.eq(roleId)).fetchOne();
-    if (roleRecord != null) {
-      return Optional.of(roleRecordMapper.map(roleRecord));
-    }
-    return Optional.empty();
+  public Optional<Role> findById(final Integer roleId) {
+    final Role role = dsl.selectFrom(ROLE).where(ROLE.ID.eq(roleId)).fetchOneInto(Role.class);
+    return Optional.ofNullable(role);
   }
 }

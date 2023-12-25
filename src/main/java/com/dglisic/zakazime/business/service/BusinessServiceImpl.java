@@ -4,11 +4,11 @@ import com.dglisic.zakazime.business.repository.BusinessRepository;
 import com.dglisic.zakazime.business.repository.CategoryRepository;
 import com.dglisic.zakazime.business.repository.ServiceRepository;
 import com.dglisic.zakazime.common.ApplicationException;
-import com.dglisic.zakazime.user.domain.User;
 import com.dglisic.zakazime.user.service.UserService;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.BusinessType;
 import jooq.tables.pojos.Service;
@@ -28,7 +28,7 @@ public class BusinessServiceImpl implements BusinessService {
 
   @Override
   public Business getBusinessProfileForUser(String userEmail) {
-    User user = userService.findUserByEmailOrElseThrow(userEmail);
+    Account user = userService.findUserByEmailOrElseThrow(userEmail);
     return businessRepository.getBusinessProfile(user.getId())
         .orElseThrow(() -> new ApplicationException("Business profile not found for user " + userEmail, HttpStatus.NOT_FOUND));
   }

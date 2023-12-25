@@ -1,6 +1,6 @@
 package com.dglisic.zakazime.user.repository;
 
-import com.dglisic.zakazime.user.domain.Role;
+import jooq.tables.pojos.Role;
 import jooq.tables.records.RoleRecord;
 import org.jooq.RecordMapper;
 import org.springframework.stereotype.Component;

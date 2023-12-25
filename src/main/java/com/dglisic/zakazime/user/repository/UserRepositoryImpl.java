@@ -1,19 +1,13 @@
 package com.dglisic.zakazime.user.repository;
 
 import static jooq.Tables.ACCOUNT;
-import static jooq.Tables.ROLE;
 
-import com.dglisic.zakazime.user.domain.Role;
-import com.dglisic.zakazime.user.domain.User;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import jooq.tables.BusinessAccountMap;
+import jooq.tables.pojos.Account;
 import jooq.tables.records.AccountRecord;
-import jooq.tables.records.RoleRecord;
 import org.jooq.DSLContext;
-import org.jooq.Record2;
-import org.jooq.Result;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,57 +15,26 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserRepositoryImpl implements UserRepository {
 
   private final DSLContext dsl;
-  private final RoleRecordMapper roleRecordMapper;
-  private final RoleRepository roleRepository;
 
-  public UserRepositoryImpl(DSLContext dslContext, RoleRecordMapper roleRecordMapper, RoleRepository roleRepository) {
+  public UserRepositoryImpl(DSLContext dslContext) {
     this.dsl = dslContext;
-    this.roleRecordMapper = roleRecordMapper;
-    this.roleRepository = roleRepository;
   }
 
   @Override
   @Transactional
-  public User saveUser(User user) {
-    var newUserAccount = dsl.newRecord(ACCOUNT);
-    newUserAccount.setFirstName(user.getFirstName());
-    newUserAccount.setLastName(user.getLastName());
-    newUserAccount.setEmail(user.getEmail());
-    newUserAccount.setPassword(user.getPassword());
-    newUserAccount.setRoleId(user.getRole().getId());
-    newUserAccount.setIsEnabled(true);
-    newUserAccount.setCreatedOn(LocalDateTime.now());
+  public Account saveUser(Account user) {
+    final AccountRecord newUserAccount = dsl.newRecord(ACCOUNT, user);
     newUserAccount.store();
 
-    return new User(newUserAccount, roleRepository.findById(newUserAccount.getRoleId()).get());
+    return newUserAccount.into(Account.class);
   }
 
-//  @Override
-//  public void updateRegistrationStatus(Integer accountId, UserRegistrationStatus status) {
-//    create.update(Account.ACCOUNT)
-//        .set(Account.ACCOUNT.REGISTRATION_STATUS, status.toString())
-//        .where(Account.ACCOUNT.ID.eq(accountId))
-//        .execute();
-//  }
-
   @Override
-  public Optional<User> findByEmail(String email) {
-    Record2<AccountRecord, RoleRecord> fetch = dsl
-        .select(ACCOUNT, ROLE)
-        .from(ACCOUNT)
-        .join(ROLE)
-        .on(ACCOUNT.ROLE_ID.equal(ROLE.ID))
-        .where(ACCOUNT.EMAIL.equal(email))
-        .fetchOne();
-
-    if (fetch == null) {
-      return Optional.empty();
-    }
-
-    AccountRecord account = fetch.value1();
-    RoleRecord role = fetch.value2();
-    User user = new User(account, new Role(role.getId(), role.getName()));
-    return Optional.of(user);
+  public Optional<Account> findByEmail(final String email) {
+    Account user = dsl.selectFrom(ACCOUNT)
+        .where(ACCOUNT.EMAIL.eq(email))
+        .fetchOneInto(Account.class);
+    return Optional.ofNullable(user);
   }
 
   @Override
@@ -86,13 +49,7 @@ public class UserRepositoryImpl implements UserRepository {
   }
 
   @Override
-  public List<User> getAllUsers() {
-    Result<Record2<AccountRecord, RoleRecord>> fetch = dsl.select(ACCOUNT, ROLE)
-        .from(ACCOUNT)
-        .join(ROLE)
-        .on(ACCOUNT.ROLE_ID.eq(ROLE.ID))
-        .fetch();
-
-    return fetch.map(record -> new User(record.value1(), new Role(record.value2().getId(), record.value2().getName())));
+  public List<Account> getAllUsers() {
+    return dsl.selectFrom(ACCOUNT).fetchInto(Account.class);
   }
 }
