@@ -17,4 +17,7 @@ public interface UserService {
    */
   Account findUserByEmailOrElseThrow(String email) throws ApplicationException;
 
+  Account getLoggedInUser();
+
+  void setRoleToServiceProvider(Account user);
 }

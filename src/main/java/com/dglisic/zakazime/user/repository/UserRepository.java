@@ -4,6 +4,7 @@ package com.dglisic.zakazime.user.repository;
 import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Account;
+import jooq.tables.pojos.Role;
 
 public interface UserRepository {
 
@@ -14,4 +15,6 @@ public interface UserRepository {
   void linkBusinessProfileToUser(int userId, int businessProfileId);
 
   List<Account> getAllUsers();
+
+  void updateRole(Account user, Role role);
 }

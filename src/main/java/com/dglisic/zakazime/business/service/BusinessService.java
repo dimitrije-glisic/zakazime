@@ -1,16 +1,15 @@
 package com.dglisic.zakazime.business.service;
 
+import com.dglisic.zakazime.business.controller.CreateBusinessProfileRequest;
 import java.util.List;
+import java.util.Optional;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.BusinessType;
 import jooq.tables.pojos.Service;
-import jooq.tables.pojos.ServiceCategory;
 
 public interface BusinessService {
 
   Business getBusinessProfileForUser(String userEmail);
-
-  Business createBusinessProfile(Business toBeCreated);
 
   List<Business> getAll();
 
@@ -24,8 +23,7 @@ public interface BusinessService {
 
   void saveServicesForBusiness(List<Service> services,int businessId);
 
-  Business getBusinessOrThrow(int businessId);
+  Business create(CreateBusinessProfileRequest createBusinessProfileRequest);
 
-  ServiceCategory getCategoryOrThrow(String categoryName);
-
+  Optional<Business> findBusinessById(int businessId);
 }

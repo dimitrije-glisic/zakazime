@@ -1,7 +1,8 @@
 package com.dglisic.zakazime.business.service;
 
+import com.dglisic.zakazime.business.controller.BusinessMapper;
+import com.dglisic.zakazime.business.controller.CreateBusinessProfileRequest;
 import com.dglisic.zakazime.business.repository.BusinessRepository;
-import com.dglisic.zakazime.business.repository.CategoryRepository;
 import com.dglisic.zakazime.business.repository.ServiceRepository;
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.service.UserService;
@@ -12,7 +13,6 @@ import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.BusinessType;
 import jooq.tables.pojos.Service;
-import jooq.tables.pojos.ServiceCategory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,10 +21,36 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BusinessServiceImpl implements BusinessService {
 
+  private final BusinessMapper businessMapper;
   private final UserService userService;
   private final BusinessRepository businessRepository;
   private final ServiceRepository serviceRepository;
-  private final CategoryRepository categoryRepository;
+
+  @Override
+  @Transactional
+  public Business create(final CreateBusinessProfileRequest request) {
+    validateOnCreate(request);
+    final Business toBeCreated = businessMapper.map(request);
+    toBeCreated.setStatus(BusinessStatus.CREATED.toString());
+    toBeCreated.setCreatedOn(LocalDateTime.now());
+    final Account user = userService.getLoggedInUser();
+    final Business businessProfile = businessRepository.storeBusinessProfile(toBeCreated, user);
+    businessRepository.linkBusinessToOwner(toBeCreated.getId(), user.getId());
+    userService.setRoleToServiceProvider(user);
+    return businessProfile;
+  }
+
+  @Override
+  public Optional<Business> findBusinessById(int businessId) {
+    return businessRepository.findBusinessById(businessId);
+  }
+
+  private void validateOnCreate(CreateBusinessProfileRequest request) {
+    // name must be unique
+    if (businessRepository.findBusinessByName(request.name()).isPresent()) {
+      throw new ApplicationException("Business with name " + request.name() + " already exists", HttpStatus.BAD_REQUEST);
+    }
+  }
 
   @Override
   public Business getBusinessProfileForUser(String userEmail) {
@@ -32,19 +58,7 @@ public class BusinessServiceImpl implements BusinessService {
     return businessRepository.getBusinessProfile(user.getId())
         .orElseThrow(() -> new ApplicationException("Business profile not found for user " + userEmail, HttpStatus.NOT_FOUND));
   }
-
   // todo - check if logged in user is owner of business (or admin) before saving
-  @Override
-  public Business createBusinessProfile(
-      Business toBeCreated) {
-    //todo - validate
-//    validateOnCreate(toBeCreated);
-    toBeCreated.setStatus("CREATED");
-    toBeCreated.setCreatedOn(LocalDateTime.now());
-    // todo - set ownerId to logged in user id
-    // something like this: authService.getLoggedInUser().getId()
-    return businessRepository.createBusinessProfile(toBeCreated, 1);
-  }
 
   @Override
   public List<Business> getAll() {
@@ -54,13 +68,6 @@ public class BusinessServiceImpl implements BusinessService {
   @Override
   public List<BusinessType> getBusinessTypes() {
     return businessRepository.getBusinessTypes();
-  }
-
-  @Override
-  public ServiceCategory getCategoryOrThrow(String categoryName) {
-    return categoryRepository.findCategory(categoryName).orElseThrow(
-        () -> new ApplicationException("Category with name " + categoryName + " does not exist", HttpStatus.BAD_REQUEST)
-    );
   }
 
   @Override
@@ -87,12 +94,6 @@ public class BusinessServiceImpl implements BusinessService {
     // todo validate that services belong to business
     //    validateOnSave(services, businessId);
     serviceRepository.saveServices(services);
-  }
-
-  @Override
-  public Business getBusinessOrThrow(int businessId) {
-    return businessRepository.findBusinessById(businessId)
-        .orElseThrow(() -> new ApplicationException("Business not found", HttpStatus.NOT_FOUND));
   }
 
   // todo - check if logged in user is owner of business (or admin) before saving

@@ -1,6 +1,7 @@
 package com.dglisic.zakazime.business.controller;
 
 import com.dglisic.zakazime.business.service.BusinessService;
+import com.dglisic.zakazime.common.ApplicationException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import java.security.Principal;
@@ -11,6 +12,7 @@ import jooq.tables.pojos.Service;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,7 +30,6 @@ public class BusinessController {
   private static final Logger logger = LoggerFactory.getLogger(BusinessController.class);
 
   private final BusinessService businessService;
-  private final BusinessMapper businessMapper;
   private final ServiceMapper serviceMapper;
 
   @PostMapping
@@ -36,9 +37,23 @@ public class BusinessController {
       @RequestBody @Valid CreateBusinessProfileRequest createBusinessProfileRequest
   ) {
     logger.info("Creating business profile {}", createBusinessProfileRequest);
-    Business toBeCreated = businessMapper.map(createBusinessProfileRequest);
-    Business created = businessService.createBusinessProfile(toBeCreated);
+    Business created = businessService.create(createBusinessProfileRequest);
     return ResponseEntity.ok(created);
+  }
+
+  @GetMapping("all")
+  public ResponseEntity<List<Business>> getAllBusinesses() {
+    logger.info("Getting all businesses");
+    List<Business> allBusinesses = businessService.getAll();
+    return ResponseEntity.ok(allBusinesses);
+  }
+
+  @GetMapping("{businessId}")
+  public ResponseEntity<Business> getBusinessProfile(@PathVariable @Valid @NotBlank int businessId) {
+    logger.info("Getting business profile for business {}", businessId);
+    Business business = businessService.findBusinessById(businessId)
+        .orElseThrow(() -> new ApplicationException("Business not found", HttpStatus.NOT_FOUND));
+    return ResponseEntity.ok(business);
   }
 
   @GetMapping

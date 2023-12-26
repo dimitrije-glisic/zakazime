@@ -33,7 +33,6 @@ CREATE TABLE business
     city         VARCHAR(50)        NOT NULL,
     postal_code  VARCHAR(50)        NOT NULL,
     address      VARCHAR(50),
-    email        VARCHAR(255),
     description  TEXT,
     created_on   TIMESTAMP          NOT NULL,
     updated_on   TIMESTAMP
@@ -59,7 +58,7 @@ CREATE TABLE service
     id             INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     subcategory_id INT REFERENCES service_subcategory (id) NOT NULL,
     business_id    INT REFERENCES business (id),
-    title           VARCHAR(255)                            NOT NULL,
+    title          VARCHAR(255)                            NOT NULL,
     note           VARCHAR(255),
     price          DECIMAL                                 NOT NULL,
     avg_duration   INT                                     NOT NULL,

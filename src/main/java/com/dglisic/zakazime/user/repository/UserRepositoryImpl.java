@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import jooq.tables.BusinessAccountMap;
 import jooq.tables.pojos.Account;
+import jooq.tables.pojos.Role;
 import jooq.tables.records.AccountRecord;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
@@ -51,5 +52,13 @@ public class UserRepositoryImpl implements UserRepository {
   @Override
   public List<Account> getAllUsers() {
     return dsl.selectFrom(ACCOUNT).fetchInto(Account.class);
+  }
+
+  @Override
+  public void updateRole(Account user, Role role) {
+    dsl.update(ACCOUNT)
+        .set(ACCOUNT.ROLE_ID, role.getId())
+        .where(ACCOUNT.ID.eq(user.getId()))
+        .execute();
   }
 }
