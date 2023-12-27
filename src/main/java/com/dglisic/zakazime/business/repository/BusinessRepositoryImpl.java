@@ -83,4 +83,15 @@ public class BusinessRepositoryImpl implements BusinessRepository {
     return Optional.ofNullable(business);
   }
 
+  @Override
+  public boolean isUserRelatedToBusiness(Integer id, int businessId) {
+    Integer count = dsl.selectCount()
+        .from(BUSINESS_ACCOUNT_MAP)
+        .where(BUSINESS_ACCOUNT_MAP.BUSINESS_ID.eq(businessId))
+        .and(BUSINESS_ACCOUNT_MAP.ACCOUNT_ID.eq(id))
+        .fetchOneInto(Integer.class);
+
+    return count != null && count > 0;
+  }
+
 }

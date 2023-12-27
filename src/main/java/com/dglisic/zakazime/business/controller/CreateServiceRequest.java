@@ -4,9 +4,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
-record CreateServiceRequest(
+public record CreateServiceRequest(
     @NotBlank String title,
-    @NotBlank String subCategoryId,
+    @NotBlank Integer subcategoryId,
     @NotBlank String note,
     @NotBlank String description,
     @NotNull BigDecimal price,

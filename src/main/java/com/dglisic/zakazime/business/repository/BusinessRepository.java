@@ -21,4 +21,6 @@ public interface BusinessRepository {
   Optional<Business> findBusinessById(int businessId);
 
   Optional<Business> findBusinessByName(String name);
+
+  boolean isUserRelatedToBusiness(Integer id, int businessId);
 }

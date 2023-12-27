@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 //TODO - add DEDICATED ServiceController and/or ServiceService
@@ -30,7 +31,6 @@ public class BusinessController {
   private static final Logger logger = LoggerFactory.getLogger(BusinessController.class);
 
   private final BusinessService businessService;
-  private final ServiceMapper serviceMapper;
 
   @PostMapping
   public ResponseEntity<Business> createBusinessProfile(
@@ -69,41 +69,37 @@ public class BusinessController {
     return businessService.getBusinessTypes();
   }
 
-  @GetMapping("types/{businessType}/services")
-  public List<Service> getServicesOfType(@PathVariable String businessType) {
-    logger.info("Getting services of type {}", businessType);
-    List<Service> serviceTemplatesOfType = businessService.getServiceTemplatesOfType(businessType);
-    logger.info("Found {} services of type {}", serviceTemplatesOfType.size(), businessType);
-    return serviceTemplatesOfType;
+  @GetMapping("services/templates")
+  public List<Service> getServiceTemplates(@RequestParam(required = false) @Valid @NotBlank String businessType,
+                                           @RequestParam(required = false) @Valid @NotBlank String category,
+                                           @RequestParam(required = false) @Valid @NotBlank String subcategory) {
+    logger.info("Getting services of type {}, category {}, subcategory {}", businessType, category, subcategory);
+    List<Service> serviceTemplates = businessService.searchServiceTemplates(businessType, category, subcategory);
+    logger.info("Found {} services of type {}, category {}, subcategory {}", serviceTemplates.size(), businessType, category,
+        subcategory);
+    return serviceTemplates;
   }
 
   @GetMapping("{businessId}/services")
-  public List<Service> getServicesForBusiness(@PathVariable @Valid @NotBlank int businessId) {
+  public List<Service> getServicesOfBusiness(@PathVariable @Valid @NotBlank int businessId) {
     List<Service> servicesOfBusiness = businessService.getServicesOfBusiness(businessId);
     logger.info("Getting Services ({}) of business {}: {}", servicesOfBusiness.size(), businessId, servicesOfBusiness);
     return servicesOfBusiness;
   }
 
-
-  // todo - check if logged in user is owner of business (or admin) before saving
   @PostMapping("{businessId}/services")
-  public void saveServicesForBusiness(@PathVariable @Valid @NotBlank int businessId,
-                                      @RequestBody List<CreateServiceRequest> serviceRequests) {
+  public void addServicesToBusiness(@PathVariable @Valid @NotBlank int businessId,
+                                    @RequestBody @Valid List<CreateServiceRequest> serviceRequests) {
     logger.info("Saving services {} for business {}", serviceRequests, businessId);
-    List<Service> servicesToBeSaved = serviceRequests.stream()
-        .map(serviceMapper::map)
-        .toList();
-    businessService.saveServicesForBusiness(servicesToBeSaved, businessId);
+    businessService.addServicesToBusiness(serviceRequests, businessId);
   }
 
-  // todo - check if logged in user is owner of business (or admin) before updating
   @PutMapping("{businessId}/services/{serviceId}")
-  public void updateService(@PathVariable @Valid @NotBlank int businessId,
-                            @PathVariable @Valid @NotBlank int serviceId,
-                            @RequestBody CreateServiceRequest serviceRequest) {
+  public void updateService(@PathVariable @Valid @NotBlank final int businessId,
+                            @PathVariable @Valid @NotBlank final int serviceId,
+                            @RequestBody @Valid final UpdateServiceRequest serviceRequest) {
     logger.info("Updating service {} for business {}", serviceRequest, businessId);
-    Service service = serviceMapper.map(serviceRequest);
-    businessService.updateService(serviceId, service, businessId);
+    businessService.updateService(businessId, serviceId, serviceRequest);
   }
 
 }

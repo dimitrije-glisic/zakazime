@@ -20,6 +20,7 @@
         <jooq.version>3.19.1</jooq.version>
         <lombok.version>1.18.30</lombok.version>
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
+        <commons-lang3.version>3.14.0</commons-lang3.version>
     </properties>
     <dependencies>
         <dependency>
@@ -72,6 +73,11 @@
             <groupId>org.hibernate.validator</groupId>
             <artifactId>hibernate-validator</artifactId>
             <version>8.0.1.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang3.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -153,6 +159,7 @@
                         </target>
                         <generate>
                             <pojos>true</pojos>
+                            <daos>true</daos>
                             <pojosEqualsAndHashCode>true</pojosEqualsAndHashCode>
                             <javaTimeTypes>true</javaTimeTypes>
                             <fluentSetters>true</fluentSetters>

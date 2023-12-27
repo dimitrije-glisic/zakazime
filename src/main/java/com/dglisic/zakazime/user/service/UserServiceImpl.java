@@ -12,7 +12,6 @@ import java.util.Optional;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Role;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -41,8 +40,14 @@ public class UserServiceImpl implements UserService {
     return user.orElseThrow(() -> new ApplicationException("User not found", HttpStatus.NOT_FOUND));
   }
 
+  /**
+   * Retrieves the logged-in user.
+   *
+   * @return The logged-in user's account information.
+   * @throws ApplicationException If the user is not authenticated, or if the user is not found.
+   */
   @Override
-  public Account getLoggedInUser() {
+  public Account requireLoggedInUser() throws ApplicationException {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (authentication == null) {
       throw new ApplicationException("User not authenticated", HttpStatus.UNAUTHORIZED);
@@ -59,7 +64,7 @@ public class UserServiceImpl implements UserService {
     Role serviceProviderRole = roleRepository.findByName(SERVICE_PROVIDER.value).get();
 
     if (USER.value.equals(currentRole.getName())) {
-        userRepository.updateRole(user, serviceProviderRole);
+      userRepository.updateRole(user, serviceProviderRole);
     }
   }
 
