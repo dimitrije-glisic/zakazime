@@ -2,20 +2,17 @@ package com.dglisic.zakazime.business.service;
 
 import com.dglisic.zakazime.business.controller.BusinessMapper;
 import com.dglisic.zakazime.business.controller.CreateBusinessProfileRequest;
-import com.dglisic.zakazime.business.domain.Business;
-import com.dglisic.zakazime.business.domain.BusinessType;
-import com.dglisic.zakazime.business.domain.Category;
-import com.dglisic.zakazime.business.domain.Service;
 import com.dglisic.zakazime.business.repository.BusinessRepository;
-import com.dglisic.zakazime.business.repository.CategoryRepository;
 import com.dglisic.zakazime.business.repository.ServiceRepository;
 import com.dglisic.zakazime.common.ApplicationException;
-import com.dglisic.zakazime.user.domain.User;
 import com.dglisic.zakazime.user.service.UserService;
-import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import jooq.tables.pojos.Account;
+import jooq.tables.pojos.Business;
+import jooq.tables.pojos.BusinessType;
+import jooq.tables.pojos.Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,44 +21,44 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BusinessServiceImpl implements BusinessService {
 
-  private final UserService userService;
   private final BusinessMapper businessMapper;
+  private final UserService userService;
   private final BusinessRepository businessRepository;
   private final ServiceRepository serviceRepository;
-  private final CategoryRepository categoryRepository;
+
+  @Override
+  @Transactional
+  public Business create(final CreateBusinessProfileRequest request) {
+    validateOnCreate(request);
+    final Business toBeCreated = businessMapper.map(request);
+    toBeCreated.setStatus(BusinessStatus.CREATED.toString());
+    toBeCreated.setCreatedOn(LocalDateTime.now());
+    final Account user = userService.getLoggedInUser();
+    final Business businessProfile = businessRepository.storeBusinessProfile(toBeCreated, user);
+    businessRepository.linkBusinessToOwner(toBeCreated.getId(), user.getId());
+    userService.setRoleToServiceProvider(user);
+    return businessProfile;
+  }
+
+  @Override
+  public Optional<Business> findBusinessById(int businessId) {
+    return businessRepository.findBusinessById(businessId);
+  }
+
+  private void validateOnCreate(CreateBusinessProfileRequest request) {
+    // name must be unique
+    if (businessRepository.findBusinessByName(request.name()).isPresent()) {
+      throw new ApplicationException("Business with name " + request.name() + " already exists", HttpStatus.BAD_REQUEST);
+    }
+  }
 
   @Override
   public Business getBusinessProfileForUser(String userEmail) {
-    User user = userService.findUserByEmailOrElseThrow(userEmail);
-    Business business = businessRepository.getBusinessProfile(user.getId())
+    Account user = userService.findUserByEmailOrElseThrow(userEmail);
+    return businessRepository.getBusinessProfile(user.getId())
         .orElseThrow(() -> new ApplicationException("Business profile not found for user " + userEmail, HttpStatus.NOT_FOUND));
-    business.setOwner(user);
-    List<Service> servicesOfBusiness = serviceRepository.getServicesOfBusiness(business.getId());
-    business.setServices(servicesOfBusiness);
-    return business;
   }
-
-  @Override
-  public Business createBusinessProfile(
-      CreateBusinessProfileRequest createBusinessProfileRequest) {
-    User user = userService.findUserByEmailOrElseThrow(createBusinessProfileRequest.ownerEmail());
-    BusinessType businessType = getBusinessType(createBusinessProfileRequest.type());
-
-    Business toBeSaved = businessMapper.mapToBusinessProfile(createBusinessProfileRequest);
-    toBeSaved.setOwner(user);
-    toBeSaved.setType(businessType);
-    toBeSaved.setStatus("CREATED");
-    toBeSaved.setCreatedOn(LocalDateTime.now());
-
-    return businessRepository.createBusinessProfile(toBeSaved);
-  }
-
-  private BusinessType getBusinessType(@NotBlank final String typeName) {
-    return businessRepository.getBusinessTypes().stream()
-        .filter(type -> type.getName().equals(typeName.toUpperCase()))
-        .findFirst()
-        .orElseThrow(() -> new ApplicationException("Business type not found", HttpStatus.BAD_REQUEST));
-  }
+  // todo - check if logged in user is owner of business (or admin) before saving
 
   @Override
   public List<Business> getAll() {
@@ -74,51 +71,41 @@ public class BusinessServiceImpl implements BusinessService {
   }
 
   @Override
-  public Category getCategoryOrThrow(String categoryName) {
-    return categoryRepository.findCategory(categoryName).orElseThrow(
-        () -> new ApplicationException("Category with name " + categoryName + " does not exist", HttpStatus.BAD_REQUEST)
-    );
-  }
-
-  @Override
-  public void updateService(String serviceId, Service service) {
-    validateOnUpdate(serviceId, service);
+  public void updateService(final int serviceId, final Service service, final int businessId) {
+    validateOnUpdate(serviceId, businessId);
     serviceRepository.updateService(serviceId, service);
   }
 
   @Override
   public List<Service> getServiceTemplatesOfType(String type) {
-    return serviceRepository.getServiceTemplatesOfType(type);
+    return serviceRepository.getServiceTemplatesOfBusinessType(type);
   }
 
   @Override
-  public List<Service> getServicesOfBusiness(String businessName) {
-    Business business = businessRepository.findBusinessByName(businessName)
+  public List<Service> getServicesOfBusiness(int businessId) {
+    Business business = businessRepository.findBusinessById(businessId)
         .orElseThrow(() -> new ApplicationException("Business not found", HttpStatus.NOT_FOUND));
     return serviceRepository.getServicesOfBusiness(business.getId());
   }
 
   @Override
   @Transactional
-  public void saveServices(List<Service> services) {
+  public void saveServicesForBusiness(List<Service> services, int businessId) {
+    // todo validate that services belong to business
+    //    validateOnSave(services, businessId);
     serviceRepository.saveServices(services);
   }
 
-  @Override
-  public Business getBusinessOrThrow(String businessName) {
-    return businessRepository.findBusinessByName(businessName)
-        .orElseThrow(() -> new ApplicationException("Business not found", HttpStatus.NOT_FOUND));
-  }
-
-  private void validateOnUpdate(String serviceId, Service service) {
-    Optional<Service> serviceFromDb = serviceRepository.findService(serviceId);
+  // todo - check if logged in user is owner of business (or admin) before saving
+  private void validateOnUpdate(final int serviceId, final int businessId) {
+    final Optional<Service> serviceFromDb = serviceRepository.findServiceById(serviceId);
     if (serviceFromDb.isEmpty()) {
       throw new ApplicationException("Service with id " + serviceId + " does not exist", HttpStatus.BAD_REQUEST);
     } else {
       Service serviceFromDbValue = serviceFromDb.get();
-      if (!serviceFromDbValue.getBusiness().getName().equals(service.getBusiness().getName())) {
+      if (!serviceFromDbValue.getBusinessId().equals(businessId)) {
         throw new ApplicationException(
-            "Service with id " + serviceId + " does not belong to business " + service.getBusiness().getName(),
+            "Service with id " + serviceId + " does not belong to business with id " + businessId,
             HttpStatus.BAD_REQUEST);
       }
     }

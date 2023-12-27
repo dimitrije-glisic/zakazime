@@ -1,7 +1,7 @@
 package com.dglisic.zakazime.user.repository;
 
-import com.dglisic.zakazime.user.domain.Role;
 import java.util.Optional;
+import jooq.tables.pojos.Role;
 
 public interface RoleRepository {
   Optional<Role> findByName(String role);

@@ -1,20 +1,19 @@
 package com.dglisic.zakazime.business.repository;
 
-import com.dglisic.zakazime.business.domain.Service;
+
 import java.util.List;
 import java.util.Optional;
+import jooq.tables.pojos.Service;
 
 public interface ServiceRepository {
 
   List<Service> getServicesOfBusiness(int businessId);
 
-  List<Service> getServiceTemplatesOfType(String type);
+  List<Service> getServiceTemplatesOfBusinessType(String type);
+
+  Optional<Service> findServiceById(int serviceId);
 
   void saveServices(List<Service> services);
 
-  boolean serviceExists(String serviceId);
-
-  Optional<Service> findService(String serviceId);
-
-  void updateService(String serviceId, Service service);
+  void updateService(int serviceId, Service service);
 }

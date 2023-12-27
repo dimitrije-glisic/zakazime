@@ -1,22 +1,24 @@
 package com.dglisic.zakazime.business.repository;
 
-import com.dglisic.zakazime.business.domain.Business;
-import com.dglisic.zakazime.business.domain.BusinessType;
-import com.dglisic.zakazime.business.domain.Service;
 import java.util.List;
 import java.util.Optional;
+import jooq.tables.pojos.Account;
+import jooq.tables.pojos.Business;
+import jooq.tables.pojos.BusinessType;
 
 public interface BusinessRepository {
 
-//  int saveBusinessProfile(BusinessProfile businessProfile);
   Optional<Business> getBusinessProfile(int userEmail);
 
-  Business createBusinessProfile(Business business);
+  Business storeBusinessProfile(Business business, Account owner);
+
+  void linkBusinessToOwner(int businessId, int ownerId);
 
   List<Business> getAll();
 
   List<BusinessType> getBusinessTypes();
 
-  Optional<Business> findBusinessByName(String businessName);
+  Optional<Business> findBusinessById(int businessId);
 
+  Optional<Business> findBusinessByName(String name);
 }

@@ -44,8 +44,6 @@ Thumbs.db
 
 /node
 
-/src/main/java/model
-
-/src/main/java/model/tables
+/src/main/java/jooq
 
 /target

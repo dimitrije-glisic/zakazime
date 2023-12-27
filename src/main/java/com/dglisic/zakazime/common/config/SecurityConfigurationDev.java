@@ -18,9 +18,6 @@ public class SecurityConfigurationDev {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-    CookieCsrfTokenRepository tokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
-    XorCsrfTokenRequestAttributeHandler delegate = new XorCsrfTokenRequestAttributeHandler();
-
     return http
         .httpBasic(basic -> basic.securityContextRepository(new HttpSessionSecurityContextRepository()))
         .authorizeHttpRequests(authorize ->

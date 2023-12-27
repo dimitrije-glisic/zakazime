@@ -14,9 +14,9 @@ public class GlobalRestExceptionHandler {
 
   @ExceptionHandler(ApplicationException.class)
   @ResponseBody
-  public ResponseEntity<ErrorDTO> handleApplicationException(ApplicationException ex) {
+  public ResponseEntity<ErrorResponse> handleApplicationException(ApplicationException ex) {
     logger.warn("Application exception occurred: {}", ex.getMessage());
-    return ResponseEntity.status(ex.getResponseStatus()).body(new ErrorDTO(ex.getMessage()));
+    return ResponseEntity.status(ex.getResponseStatus()).body(new ErrorResponse(ex.getMessage()));
   }
 
 }

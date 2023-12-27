@@ -1,17 +1,20 @@
 package com.dglisic.zakazime.user.repository;
 
 
-import com.dglisic.zakazime.user.domain.User;
 import java.util.List;
 import java.util.Optional;
+import jooq.tables.pojos.Account;
+import jooq.tables.pojos.Role;
 
 public interface UserRepository {
 
-  User saveUser(User account);
+  Account saveUser(Account user);
 
-  Optional<User> findByEmail(String email);
+  Optional<Account> findByEmail(String email);
 
   void linkBusinessProfileToUser(int userId, int businessProfileId);
 
-  List<User> getAllUsers();
+  List<Account> getAllUsers();
+
+  void updateRole(Account user, Role role);
 }

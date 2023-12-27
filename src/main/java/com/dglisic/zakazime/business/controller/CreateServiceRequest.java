@@ -5,8 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 record CreateServiceRequest(
-    @NotBlank String name,
-    @NotBlank String categoryName,
+    @NotBlank String title,
+    @NotBlank String subCategoryId,
     @NotBlank String note,
     @NotBlank String description,
     @NotNull BigDecimal price,

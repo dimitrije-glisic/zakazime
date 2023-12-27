@@ -25,9 +25,7 @@ public class SecurityConfiguration {
         .authorizeHttpRequests(authorize ->
             authorize
                 .requestMatchers("/", "/home", "/login", "/register", "/user", "/error", "/dummy-post").permitAll()
-                .requestMatchers(request -> request.getServletPath().startsWith("/public/**")).hasRole("USER")
                 .requestMatchers(request -> request.getServletPath().startsWith("/admin/**")).hasRole("ADMIN")
-                .requestMatchers(request -> request.getServletPath().startsWith("/business/**")).hasRole("SERVICE_PROVIDER")
                 .anyRequest().authenticated()
         )
         .csrf(csrf -> csrf
