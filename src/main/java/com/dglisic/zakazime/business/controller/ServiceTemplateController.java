@@ -24,9 +24,9 @@ public class ServiceTemplateController {
   private final ServiceService serviceService;
 
   @GetMapping
-  public List<Service> getServiceTemplates(@RequestParam(required = false) @Valid @NotBlank String businessType,
-                                           @RequestParam(required = false) @Valid @NotBlank String category,
-                                           @RequestParam(required = false) @Valid @NotBlank String subcategory) {
+  public List<Service> getServiceTemplates(@RequestParam(required = false) String businessType,
+                                           @RequestParam(required = false) String category,
+                                           @RequestParam(required = false) String subcategory) {
     logger.info("Fetching services of type {}, category {}, subcategory {}", businessType, category, subcategory);
     List<Service> serviceTemplates = serviceService.searchServiceTemplates(businessType, category, subcategory);
     logger.info("Found {} services of type {}, category {}, subcategory {}", serviceTemplates.size(), businessType, category,
