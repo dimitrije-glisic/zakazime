@@ -1,4 +1,4 @@
-package com.dglisic.zakazime.business.repository;
+package com.dglisic.zakazime.business.repository.impl;
 
 import static jooq.tables.BusinessType.BUSINESS_TYPE;
 import static jooq.tables.Service.SERVICE;
@@ -6,6 +6,7 @@ import static jooq.tables.ServiceCategory.SERVICE_CATEGORY;
 import static jooq.tables.ServiceSubcategory.SERVICE_SUBCATEGORY;
 import static org.jooq.impl.DSL.upper;
 
+import com.dglisic.zakazime.business.repository.ServiceRepository;
 import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;

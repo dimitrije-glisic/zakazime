@@ -1,8 +1,8 @@
 package com.dglisic.zakazime.business.service;
 
-import com.dglisic.zakazime.business.controller.CreateServiceRequest;
-import com.dglisic.zakazime.business.controller.CreateBusinessProfileRequest;
-import com.dglisic.zakazime.business.controller.UpdateServiceRequest;
+import com.dglisic.zakazime.business.controller.dto.CreateServiceRequest;
+import com.dglisic.zakazime.business.controller.dto.CreateBusinessProfileRequest;
+import com.dglisic.zakazime.business.controller.dto.UpdateServiceRequest;
 import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -30,10 +30,12 @@ public interface BusinessService {
 
   List<Service> getServicesOfBusiness(int businessId);
 
-  void addServicesToBusiness(@NotEmpty @Valid final List<CreateServiceRequest> createServiceRequestList,
-                             @NotNull final Integer businessId);
+  void addServiceToBusiness(@NotEmpty @Valid final List<CreateServiceRequest> createServiceRequestList,
+                            @NotNull final Integer businessId);
 
   Business create(final CreateBusinessProfileRequest createBusinessProfileRequest);
 
-  Optional<Business> findBusinessById(int businessId);
+  Optional<Business> findBusinessById(@NotNull final Integer businessId);
+
+  void addServiceToBusiness(final @NotNull @Valid CreateServiceRequest serviceRequest, @NotNull final Integer businessId);
 }

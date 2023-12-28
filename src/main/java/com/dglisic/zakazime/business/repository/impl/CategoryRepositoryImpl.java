@@ -1,7 +1,8 @@
-package com.dglisic.zakazime.business.repository;
+package com.dglisic.zakazime.business.repository.impl;
 
 import static jooq.tables.ServiceCategory.SERVICE_CATEGORY;
 
+import com.dglisic.zakazime.business.repository.CategoryRepository;
 import java.util.Optional;
 import jooq.tables.pojos.ServiceCategory;
 import lombok.RequiredArgsConstructor;

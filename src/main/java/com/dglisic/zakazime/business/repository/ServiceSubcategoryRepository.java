@@ -1,28 +1,12 @@
 package com.dglisic.zakazime.business.repository;
 
-import java.util.List;
+import jakarta.validation.constraints.NotNull;
 import java.util.Set;
-import jooq.tables.ServiceSubcategory;
-import jooq.tables.daos.ServiceSubcategoryDao;
-import lombok.RequiredArgsConstructor;
-import org.jooq.DSLContext;
-import org.springframework.stereotype.Repository;
 
-@Repository
-@RequiredArgsConstructor
-public class ServiceSubcategoryRepository extends ServiceSubcategoryDao {
+public interface ServiceSubcategoryRepository {
 
-  private final DSLContext dsl;
+  boolean allExist(@NotNull final Set<Integer> subCategoryIds);
 
-  public boolean allExist(Set<Integer> subCategoryIds) {
-    List<Integer> fetch = dsl.select(ServiceSubcategory.SERVICE_SUBCATEGORY.ID)
-        .from(ServiceSubcategory.SERVICE_SUBCATEGORY)
-        .where(ServiceSubcategory.SERVICE_SUBCATEGORY.ID.in(subCategoryIds))
-        .fetchInto(Integer.class);
-    return fetch.size() != subCategoryIds.size();
-  }
+  boolean exists(@NotNull final Integer integer);
 
-  public boolean exists(Integer integer) {
-    return this.findById(integer) != null;
-  }
 }

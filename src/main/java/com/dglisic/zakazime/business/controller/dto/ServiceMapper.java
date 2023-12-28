@@ -1,4 +1,4 @@
-package com.dglisic.zakazime.business.controller;
+package com.dglisic.zakazime.business.controller.dto;
 
 import jooq.tables.pojos.Service;
 import org.mapstruct.Mapper;

@@ -1,4 +1,4 @@
-package com.dglisic.zakazime.business.repository;
+package com.dglisic.zakazime.business.repository.impl;
 
 
 import static jooq.tables.Account.ACCOUNT;
@@ -7,6 +7,7 @@ import static jooq.tables.BusinessAccountMap.BUSINESS_ACCOUNT_MAP;
 import static jooq.tables.BusinessType.BUSINESS_TYPE;
 import static org.jooq.impl.DSL.upper;
 
+import com.dglisic.zakazime.business.repository.BusinessRepository;
 import com.dglisic.zakazime.user.repository.RoleRepository;
 import java.util.List;
 import java.util.Optional;

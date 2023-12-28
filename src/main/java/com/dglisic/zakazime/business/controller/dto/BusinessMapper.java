@@ -1,4 +1,4 @@
-package com.dglisic.zakazime.business.controller;
+package com.dglisic.zakazime.business.controller.dto;
 
 import jooq.tables.pojos.Business;
 import org.mapstruct.Mapper;
@@ -10,6 +10,6 @@ public interface BusinessMapper {
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "status", ignore = true)
   @Mapping(target = "typeId", source = "businessTypeId")
-  Business map(CreateBusinessProfileRequest createBusinessProfileRequest);
+  Business map(final CreateBusinessProfileRequest createBusinessProfileRequest);
 
 }

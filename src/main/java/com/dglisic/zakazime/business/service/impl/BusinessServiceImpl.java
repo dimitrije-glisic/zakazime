@@ -1,13 +1,14 @@
-package com.dglisic.zakazime.business.service;
+package com.dglisic.zakazime.business.service.impl;
 
-import com.dglisic.zakazime.business.controller.BusinessMapper;
-import com.dglisic.zakazime.business.controller.CreateBusinessProfileRequest;
-import com.dglisic.zakazime.business.controller.CreateServiceRequest;
-import com.dglisic.zakazime.business.controller.ServiceMapper;
-import com.dglisic.zakazime.business.controller.UpdateServiceRequest;
+import com.dglisic.zakazime.business.controller.dto.BusinessMapper;
+import com.dglisic.zakazime.business.controller.dto.CreateBusinessProfileRequest;
+import com.dglisic.zakazime.business.controller.dto.CreateServiceRequest;
+import com.dglisic.zakazime.business.controller.dto.ServiceMapper;
+import com.dglisic.zakazime.business.controller.dto.UpdateServiceRequest;
 import com.dglisic.zakazime.business.repository.BusinessRepository;
 import com.dglisic.zakazime.business.repository.ServiceRepository;
-import com.dglisic.zakazime.business.repository.ServiceSubcategoryRepository;
+import com.dglisic.zakazime.business.repository.impl.ServiceSubcategoryRepositoryImpl;
+import com.dglisic.zakazime.business.service.BusinessService;
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.service.UserService;
 import jakarta.annotation.Nullable;
@@ -33,7 +34,7 @@ public class BusinessServiceImpl implements BusinessService {
   private final UserService userService;
   private final BusinessRepository businessRepository;
   private final ServiceRepository serviceRepository;
-  private final ServiceSubcategoryRepository subcategoryRepository;
+  private final ServiceSubcategoryRepositoryImpl subcategoryRepository;
 
   @Override
   @Transactional
@@ -50,7 +51,7 @@ public class BusinessServiceImpl implements BusinessService {
   }
 
   @Override
-  public Optional<Business> findBusinessById(int businessId) {
+  public Optional<Business> findBusinessById(Integer businessId) {
     return businessRepository.findBusinessById(businessId);
   }
 
@@ -95,8 +96,15 @@ public class BusinessServiceImpl implements BusinessService {
   }
 
   @Override
+  public void addServiceToBusiness(final CreateServiceRequest serviceRequest, final Integer businessId) {
+    validateOnSaveService(serviceRequest, businessId);
+    final Service serviceToBeSaved = fromRequest(serviceRequest, businessId);
+    serviceRepository.store(serviceToBeSaved);
+  }
+
+  @Override
   @Transactional
-  public void addServicesToBusiness(final List<CreateServiceRequest> createServiceRequestList, final Integer businessId) {
+  public void addServiceToBusiness(final List<CreateServiceRequest> createServiceRequestList, final Integer businessId) {
     validateOnSaveServices(createServiceRequestList, businessId);
     final List<Service> servicesToBeSaved = fromRequest(createServiceRequestList, businessId);
     serviceRepository.saveServices(servicesToBeSaved);
@@ -123,56 +131,38 @@ public class BusinessServiceImpl implements BusinessService {
   }
 
   private void validateOnSaveServices(final List<CreateServiceRequest> createServiceRequestList, int businessId) {
-    // business must exist
-    businessRepository.findBusinessById(businessId).orElseThrow(
-        () -> new ApplicationException("Business with id " + businessId + " does not exist", HttpStatus.BAD_REQUEST)
-    );
-
-    // logged-in user must be related to business
+    requireBusinessExists(businessId);
     requireUserPermittedToChangeBusiness(businessId);
-
-    // subcategory must exist
+    // all subcategories must exist
     final Set<Integer> subCategoryIds =
         createServiceRequestList.stream().map(CreateServiceRequest::subcategoryId).collect(Collectors.toSet());
     final boolean allExist = subcategoryRepository.allExist(subCategoryIds);
     if (!allExist) {
       throw new ApplicationException("Subcategory does not exist", HttpStatus.BAD_REQUEST);
     }
-
   }
 
-  // todo - check if logged in user is owner of business (or admin) before saving
+  private void validateOnSaveService(final CreateServiceRequest serviceRequest, final Integer businessId) {
+    requireBusinessExists(businessId);
+    requireUserPermittedToChangeBusiness(businessId);
+    requireSubcategoryExists(serviceRequest.subcategoryId());
+  }
 
-  private void validateOnUpdate(final int serviceId, final int businessId, final UpdateServiceRequest changeServiceRequest) {
-    // business must exist
+  private void validateOnUpdate(final Integer serviceId, final Integer businessId, final UpdateServiceRequest changeServiceRequest) {
+    requireBusinessExists(businessId);
+    requireUserPermittedToChangeBusiness(businessId);
+    requireServiceExistsAndBelongsToBusiness(serviceId, businessId);
+    requireSubcategoryExists(changeServiceRequest.subcategoryId());
+  }
+
+  private void requireBusinessExists(final Integer businessId) {
     businessRepository.findBusinessById(businessId).orElseThrow(
         () -> new ApplicationException("Business with id " + businessId + " does not exist", HttpStatus.BAD_REQUEST)
     );
-
-    requireUserPermittedToChangeBusiness(businessId);
-
-    final Optional<Service> serviceFromDb = serviceRepository.findServiceById(serviceId);
-    if (serviceFromDb.isEmpty()) {
-      throw new ApplicationException("Service with id " + serviceId + " does not exist", HttpStatus.BAD_REQUEST);
-    }
-
-    final Service serviceFromDbValue = serviceFromDb.get();
-    if (!serviceFromDbValue.getBusinessId().equals(businessId)) {
-      throw new ApplicationException(
-          "Service with id " + serviceId + " does not belong to business with id " + businessId,
-          HttpStatus.BAD_REQUEST);
-    }
-
-    //subcategory must exist
-    final boolean subcategoryExists = subcategoryRepository.exists(changeServiceRequest.subcategoryId());
-    if (!subcategoryExists) {
-      throw new ApplicationException("Subcategory does not exist", HttpStatus.BAD_REQUEST);
-    }
-
   }
 
   // todo - add business_role table and check if logged in user has role of owner/business_admin for business
-  private void requireUserPermittedToChangeBusiness(int businessId) {
+  private void requireUserPermittedToChangeBusiness(final Integer businessId) {
     Account loggedInUser = userService.requireLoggedInUser();
     if (!businessRepository.isUserRelatedToBusiness(loggedInUser.getId(), businessId)) {
       throw new ApplicationException("User " + loggedInUser.getEmail() + " is not related to business " + businessId,
@@ -180,4 +170,23 @@ public class BusinessServiceImpl implements BusinessService {
     }
   }
 
+  private void requireServiceExistsAndBelongsToBusiness(final Integer serviceId, final Integer businessId) {
+    final Optional<Service> serviceFromDb = serviceRepository.findServiceById(serviceId);
+    if (serviceFromDb.isEmpty()) {
+      throw new ApplicationException("Service with id " + serviceId + " does not exist", HttpStatus.BAD_REQUEST);
+    }
+    final Service serviceFromDbValue = serviceFromDb.get();
+    if (!serviceFromDbValue.getBusinessId().equals(businessId)) {
+      throw new ApplicationException(
+          "Service with id " + serviceId + " does not belong to business with id " + businessId,
+          HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  private void requireSubcategoryExists(final Integer subcategoryId) {
+    final boolean subcategoryExists = subcategoryRepository.exists(subcategoryId);
+    if (!subcategoryExists) {
+      throw new ApplicationException("Subcategory does not exist", HttpStatus.BAD_REQUEST);
+    }
+  }
 }
