@@ -1,13 +1,16 @@
 package com.dglisic.zakazime.business.controller;
 
+import com.dglisic.zakazime.business.controller.dto.CreateBusinessProfileRequest;
+import com.dglisic.zakazime.business.controller.dto.CreateServiceRequest;
+import com.dglisic.zakazime.business.controller.dto.UpdateServiceRequest;
 import com.dglisic.zakazime.business.service.BusinessService;
 import com.dglisic.zakazime.common.ApplicationException;
+import com.dglisic.zakazime.common.MessageResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import java.security.Principal;
 import java.util.List;
 import jooq.tables.pojos.Business;
-import jooq.tables.pojos.BusinessType;
 import jooq.tables.pojos.Service;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -22,7 +25,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-//TODO - add DEDICATED ServiceController and/or ServiceService
 @RestController
 @RequestMapping("/business")
 @RequiredArgsConstructor
@@ -30,7 +32,6 @@ public class BusinessController {
   private static final Logger logger = LoggerFactory.getLogger(BusinessController.class);
 
   private final BusinessService businessService;
-  private final ServiceMapper serviceMapper;
 
   @PostMapping
   public ResponseEntity<Business> createBusinessProfile(
@@ -63,47 +64,36 @@ public class BusinessController {
     return businessService.getBusinessProfileForUser(userEmail);
   }
 
-  @GetMapping("business-types")
-  public List<BusinessType> getBusinessTypes() {
-    logger.info("Getting business types");
-    return businessService.getBusinessTypes();
-  }
-
-  @GetMapping("types/{businessType}/services")
-  public List<Service> getServicesOfType(@PathVariable String businessType) {
-    logger.info("Getting services of type {}", businessType);
-    List<Service> serviceTemplatesOfType = businessService.getServiceTemplatesOfType(businessType);
-    logger.info("Found {} services of type {}", serviceTemplatesOfType.size(), businessType);
-    return serviceTemplatesOfType;
-  }
-
   @GetMapping("{businessId}/services")
-  public List<Service> getServicesForBusiness(@PathVariable @Valid @NotBlank int businessId) {
+  public List<Service> getServicesOfBusiness(@PathVariable @Valid @NotBlank int businessId) {
     List<Service> servicesOfBusiness = businessService.getServicesOfBusiness(businessId);
     logger.info("Getting Services ({}) of business {}: {}", servicesOfBusiness.size(), businessId, servicesOfBusiness);
     return servicesOfBusiness;
   }
 
-
-  // todo - check if logged in user is owner of business (or admin) before saving
   @PostMapping("{businessId}/services")
-  public void saveServicesForBusiness(@PathVariable @Valid @NotBlank int businessId,
-                                      @RequestBody List<CreateServiceRequest> serviceRequests) {
+  public ResponseEntity<MessageResponse> addServicesToBusiness(@PathVariable @Valid @NotBlank int businessId,
+                                                               @RequestBody @Valid List<CreateServiceRequest> serviceRequests) {
     logger.info("Saving services {} for business {}", serviceRequests, businessId);
-    List<Service> servicesToBeSaved = serviceRequests.stream()
-        .map(serviceMapper::map)
-        .toList();
-    businessService.saveServicesForBusiness(servicesToBeSaved, businessId);
+    businessService.addServiceToBusiness(serviceRequests, businessId);
+    return ResponseEntity.status(HttpStatus.CREATED).body(new MessageResponse("Services saved successfully"));
   }
 
-  // todo - check if logged in user is owner of business (or admin) before updating
+  @PostMapping("{businessId}/single-service")
+  public ResponseEntity<MessageResponse> addServiceToBusiness(@PathVariable @Valid @NotBlank int businessId,
+                                                              @RequestBody @Valid CreateServiceRequest serviceRequest) {
+    logger.info("Saving service {} for business {}", serviceRequest, businessId);
+    businessService.addServiceToBusiness(serviceRequest, businessId);
+    return ResponseEntity.status(HttpStatus.CREATED).body(new MessageResponse("Service saved successfully"));
+  }
+
   @PutMapping("{businessId}/services/{serviceId}")
-  public void updateService(@PathVariable @Valid @NotBlank int businessId,
-                            @PathVariable @Valid @NotBlank int serviceId,
-                            @RequestBody CreateServiceRequest serviceRequest) {
+  public ResponseEntity<MessageResponse> updateService(@PathVariable @Valid @NotBlank final int businessId,
+                                                       @PathVariable @Valid @NotBlank final int serviceId,
+                                                       @RequestBody @Valid final UpdateServiceRequest serviceRequest) {
     logger.info("Updating service {} for business {}", serviceRequest, businessId);
-    Service service = serviceMapper.map(serviceRequest);
-    businessService.updateService(serviceId, service, businessId);
+    businessService.updateService(businessId, serviceId, serviceRequest);
+    return ResponseEntity.ok(new MessageResponse("Service updated successfully"));
   }
 
 }

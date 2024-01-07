@@ -1,17 +1,24 @@
-package com.dglisic.zakazime.business.repository;
+package com.dglisic.zakazime.business.repository.impl;
 
 import static jooq.tables.BusinessType.BUSINESS_TYPE;
 import static jooq.tables.Service.SERVICE;
 import static jooq.tables.ServiceCategory.SERVICE_CATEGORY;
 import static jooq.tables.ServiceSubcategory.SERVICE_SUBCATEGORY;
+import static org.jooq.impl.DSL.upper;
 
+import com.dglisic.zakazime.business.repository.ServiceRepository;
+import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Service;
+import jooq.tables.records.ServiceRecord;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Query;
+import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -21,14 +28,25 @@ public class ServiceRepositoryImpl implements ServiceRepository {
   private final DSLContext dsl;
 
   @Override
-  public List<Service> getServiceTemplatesOfBusinessType(String businessType) {
+  public List<Service> searchServiceTemplates(final @Nullable String businessType, final @Nullable String category,
+                                              final @Nullable String subcategory) {
+
+    final Condition businessTypeCondition =
+        StringUtils.isBlank(businessType) ? DSL.trueCondition() : upper(BUSINESS_TYPE.TITLE).eq(upper(businessType));
+    final Condition categoryCondition =
+        StringUtils.isBlank(category) ? DSL.trueCondition() : upper(SERVICE_CATEGORY.TITLE).eq(upper(category));
+    final Condition subcategoryCondition =
+        StringUtils.isBlank(subcategory) ? DSL.trueCondition() : upper(SERVICE_SUBCATEGORY.TITLE).eq(upper(subcategory));
+
     return dsl.select(SERVICE)
         .from(SERVICE)
         .join(SERVICE_SUBCATEGORY).on(SERVICE.SUBCATEGORY_ID.eq(SERVICE_SUBCATEGORY.ID))
         .join(SERVICE_CATEGORY).on(SERVICE_SUBCATEGORY.SERVICE_CATEGORY_ID.eq(SERVICE_CATEGORY.ID))
         .join(BUSINESS_TYPE).on(SERVICE_CATEGORY.BUSINESS_TYPE_ID.eq(BUSINESS_TYPE.ID))
-        .where(BUSINESS_TYPE.TITLE.eq(businessType.toUpperCase()))
-        .and(SERVICE.TEMPLATE.eq(true))
+        .where(SERVICE.TEMPLATE.eq(true))
+        .and(businessTypeCondition)
+        .and(categoryCondition)
+        .and(subcategoryCondition)
         .fetchInto(Service.class);
   }
 
@@ -72,17 +90,10 @@ public class ServiceRepositoryImpl implements ServiceRepository {
   }
 
   @Override
-  public void updateService(int serviceId, Service service) {
-    dsl.update(SERVICE)
-        .set(SERVICE.TITLE, service.getTitle())
-        .set(SERVICE.SUBCATEGORY_ID, service.getSubcategoryId())
-        .set(SERVICE.NOTE, service.getNote())
-        .set(SERVICE.DESCRIPTION, service.getDescription())
-        .set(SERVICE.PRICE, service.getPrice())
-        .set(SERVICE.AVG_DURATION, service.getAvgDuration())
-        .set(SERVICE.TEMPLATE, service.getTemplate())
-        .where(SERVICE.ID.eq(serviceId))
-        .execute();
+  public void store(final Service service) {
+    final ServiceRecord serviceRecord = dsl.newRecord(SERVICE, service);
+    serviceRecord.store();
+
   }
 
 }

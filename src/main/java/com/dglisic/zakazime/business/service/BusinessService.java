@@ -1,6 +1,13 @@
 package com.dglisic.zakazime.business.service;
 
-import com.dglisic.zakazime.business.controller.CreateBusinessProfileRequest;
+import com.dglisic.zakazime.business.controller.dto.CreateServiceRequest;
+import com.dglisic.zakazime.business.controller.dto.CreateBusinessProfileRequest;
+import com.dglisic.zakazime.business.controller.dto.UpdateServiceRequest;
+import jakarta.annotation.Nullable;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Business;
@@ -15,15 +22,20 @@ public interface BusinessService {
 
   List<BusinessType> getBusinessTypes();
 
-  void updateService(int serviceId, Service service, int businessId);
+  void updateService(@NotBlank final int businessId, @NotBlank final int serviceId,
+                     final @Valid UpdateServiceRequest updateServiceRequest);
 
-  List<Service> getServiceTemplatesOfType(String type);
+  List<Service> searchServiceTemplates(@Nullable String businessType, @Nullable String category,
+                                       @Nullable String subcategory);
 
   List<Service> getServicesOfBusiness(int businessId);
 
-  void saveServicesForBusiness(List<Service> services,int businessId);
+  void addServiceToBusiness(@NotEmpty @Valid final List<CreateServiceRequest> createServiceRequestList,
+                            @NotNull final Integer businessId);
 
-  Business create(CreateBusinessProfileRequest createBusinessProfileRequest);
+  Business create(final CreateBusinessProfileRequest createBusinessProfileRequest);
 
-  Optional<Business> findBusinessById(int businessId);
+  Optional<Business> findBusinessById(@NotNull final Integer businessId);
+
+  void addServiceToBusiness(final @NotNull @Valid CreateServiceRequest serviceRequest, @NotNull final Integer businessId);
 }

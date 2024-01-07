@@ -8,17 +8,19 @@ import jooq.tables.pojos.BusinessType;
 
 public interface BusinessRepository {
 
-  Optional<Business> getBusinessProfile(int userEmail);
+  Optional<Business> getBusinessProfile(final Integer userEmail);
 
-  Business storeBusinessProfile(Business business, Account owner);
+  Business storeBusinessProfile(final Business business, final Account owner);
 
-  void linkBusinessToOwner(int businessId, int ownerId);
+  void linkBusinessToOwner(final Integer businessId, final Integer ownerId);
 
   List<Business> getAll();
 
   List<BusinessType> getBusinessTypes();
 
-  Optional<Business> findBusinessById(int businessId);
+  Optional<Business> findBusinessById(final Integer businessId);
 
-  Optional<Business> findBusinessByName(String name);
+  Optional<Business> findBusinessByName(final String name);
+
+  boolean isUserRelatedToBusiness(final Integer id, final Integer businessId);
 }

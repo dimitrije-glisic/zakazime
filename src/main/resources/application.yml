@@ -9,3 +9,7 @@ spring:
     user: postgres
     password: postgres
     validateMigrationNaming: true
+
+springdoc:
+  api-docs:
+    path: /api-docs
