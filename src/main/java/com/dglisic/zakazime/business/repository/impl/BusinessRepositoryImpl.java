@@ -26,9 +26,10 @@ public class BusinessRepositoryImpl implements BusinessRepository {
   private final DSLContext dsl;
   private final RoleRepository roleRepository;
 
-  public Optional<Business> getBusinessProfile(int userId) {
+  @Override
+  public Optional<Business> getBusinessProfile(final Integer userId) {
     // this implicates that there is only one business profile per user - is this ok?
-    Business record = dsl.select(BUSINESS, BUSINESS_TYPE)
+    Business record = dsl.select(BUSINESS)
         .from(ACCOUNT)
         .join(BUSINESS_ACCOUNT_MAP).on(ACCOUNT.ID.eq(BUSINESS_ACCOUNT_MAP.ACCOUNT_ID))
         .join(BUSINESS).on(BUSINESS_ACCOUNT_MAP.BUSINESS_ID.eq(BUSINESS.ID))
@@ -42,11 +43,12 @@ public class BusinessRepositoryImpl implements BusinessRepository {
   @Override
   public Business storeBusinessProfile(final Business business, final Account owner) {
     BusinessRecord businessRecord = dsl.newRecord(BUSINESS, business);
+    businessRecord.store();
     return businessRecord.into(Business.class);
   }
 
   @Override
-  public void linkBusinessToOwner(int ownerId, int businessId) {
+  public void linkBusinessToOwner(final Integer businessId, final Integer ownerId) {
     dsl.insertInto(BUSINESS_ACCOUNT_MAP)
         .set(BUSINESS_ACCOUNT_MAP.BUSINESS_ID, businessId)
         .set(BUSINESS_ACCOUNT_MAP.ACCOUNT_ID, ownerId)
@@ -66,7 +68,7 @@ public class BusinessRepositoryImpl implements BusinessRepository {
   }
 
   @Override
-  public Optional<Business> findBusinessById(int businessId) {
+  public Optional<Business> findBusinessById(final Integer businessId) {
     Business businessProfileRecord = dsl.selectFrom(BUSINESS)
         .where(BUSINESS.ID.eq(businessId))
         .fetchOneInto(Business.class);
@@ -85,7 +87,7 @@ public class BusinessRepositoryImpl implements BusinessRepository {
   }
 
   @Override
-  public boolean isUserRelatedToBusiness(Integer id, int businessId) {
+  public boolean isUserRelatedToBusiness(final Integer id, final Integer businessId) {
     Integer count = dsl.selectCount()
         .from(BUSINESS_ACCOUNT_MAP)
         .where(BUSINESS_ACCOUNT_MAP.BUSINESS_ID.eq(businessId))

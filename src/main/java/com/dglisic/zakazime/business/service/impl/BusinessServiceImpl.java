@@ -44,10 +44,10 @@ public class BusinessServiceImpl implements BusinessService {
     toBeCreated.setStatus(BusinessStatus.CREATED.toString());
     toBeCreated.setCreatedOn(LocalDateTime.now());
     final Account user = userService.requireLoggedInUser();
-    final Business businessProfile = businessRepository.storeBusinessProfile(toBeCreated, user);
-    businessRepository.linkBusinessToOwner(toBeCreated.getId(), user.getId());
+    final Business created = businessRepository.storeBusinessProfile(toBeCreated, user);
+    businessRepository.linkBusinessToOwner(created.getId(), user.getId());
     userService.setRoleToServiceProvider(user);
-    return businessProfile;
+    return created;
   }
 
   @Override
@@ -148,7 +148,8 @@ public class BusinessServiceImpl implements BusinessService {
     requireSubcategoryExists(serviceRequest.subcategoryId());
   }
 
-  private void validateOnUpdate(final Integer serviceId, final Integer businessId, final UpdateServiceRequest changeServiceRequest) {
+  private void validateOnUpdate(final Integer serviceId, final Integer businessId,
+                                final UpdateServiceRequest changeServiceRequest) {
     requireBusinessExists(businessId);
     requireUserPermittedToChangeBusiness(businessId);
     requireServiceExistsAndBelongsToBusiness(serviceId, businessId);

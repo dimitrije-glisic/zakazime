@@ -4,6 +4,8 @@ import com.dglisic.zakazime.user.service.UserService;
 import java.security.Principal;
 import jooq.tables.pojos.Account;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,26 +16,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 public class UserController {
+  private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
   private final UserService userService;
 
   @PostMapping("/register")
   public Account registerUser(@RequestBody final RegistrationRequest registrationRequest) {
+    logger.info("Registering user: {}", registrationRequest);
     return userService.registerUser(registrationRequest);
   }
 
   @GetMapping("/login")
-  public ResponseEntity<Account> login(Principal authenticatedUser) {
+  public ResponseEntity<Account> login(final Principal authenticatedUser) {
+    logger.info("Login user: {}", authenticatedUser);
     if (authenticatedUser == null) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
-    Account user = userService.findUserByEmailOrElseThrow(authenticatedUser.getName());
+    final Account user = userService.findUserByEmailOrElseThrow(authenticatedUser.getName());
     return ResponseEntity.ok(user);
   }
-
-//  @GetMapping("/token")
-//  public Map<String, String> token(HttpSession session) {
-//    return Collections.singletonMap("token", session.getId());
-//  }
 
 }
