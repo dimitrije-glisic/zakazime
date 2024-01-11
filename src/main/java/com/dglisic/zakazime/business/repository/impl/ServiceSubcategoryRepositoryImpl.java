@@ -23,7 +23,7 @@ public class ServiceSubcategoryRepositoryImpl implements ServiceSubcategoryRepos
         .from(jooq.tables.ServiceSubcategory.SERVICE_SUBCATEGORY)
         .where(jooq.tables.ServiceSubcategory.SERVICE_SUBCATEGORY.ID.in(subCategoryIds))
         .fetchInto(Integer.class);
-    return fetch.size() != subCategoryIds.size();
+    return fetch.size() == subCategoryIds.size();
   }
 
   public boolean exists(final Integer integer) {

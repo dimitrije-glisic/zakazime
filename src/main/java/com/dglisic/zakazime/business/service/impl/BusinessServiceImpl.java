@@ -133,7 +133,6 @@ public class BusinessServiceImpl implements BusinessService {
   private void validateOnSaveServices(final List<CreateServiceRequest> createServiceRequestList, int businessId) {
     requireBusinessExists(businessId);
     requireUserPermittedToChangeBusiness(businessId);
-    // all subcategories must exist
     final Set<Integer> subCategoryIds =
         createServiceRequestList.stream().map(CreateServiceRequest::subcategoryId).collect(Collectors.toSet());
     final boolean allExist = subcategoryRepository.allExist(subCategoryIds);

@@ -6,10 +6,10 @@ import java.math.BigDecimal;
 
 public record CreateServiceRequest(
     @NotBlank String title,
-    @NotBlank Integer subcategoryId,
     @NotBlank String note,
     @NotBlank String description,
-    @NotNull BigDecimal price,
-    @NotNull int avgDuration
+    @NotNull Integer subcategoryId,
+    @NotNull Integer avgDuration,
+    @NotNull BigDecimal price
 ) {
 }
