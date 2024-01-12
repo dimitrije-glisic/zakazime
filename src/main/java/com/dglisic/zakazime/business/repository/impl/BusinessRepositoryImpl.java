@@ -42,7 +42,7 @@ public class BusinessRepositoryImpl implements BusinessRepository {
 
   @Override
   public Business storeBusinessProfile(final Business business, final Account owner) {
-    BusinessRecord businessRecord = dsl.newRecord(BUSINESS, business);
+    final BusinessRecord businessRecord = dsl.newRecord(BUSINESS, business);
     businessRecord.store();
     return businessRecord.into(Business.class);
   }

@@ -1,4 +1,4 @@
-package com.dglisic.zakazime.common.config;
+package com.dglisic.zakazime.common.config.security;
 
 import com.dglisic.zakazime.user.repository.RoleRepository;
 import com.dglisic.zakazime.user.repository.UserRepository;
