@@ -15,7 +15,9 @@ public interface ServiceRepository {
 
   Optional<Service> findServiceById(int serviceId);
 
-  void saveServices(List<Service> services);
+  void saveServices(final List<Service> services);
 
-  void store(final Service service);
+  void create(final Service service);
+
+  void update(final Service service);
 }

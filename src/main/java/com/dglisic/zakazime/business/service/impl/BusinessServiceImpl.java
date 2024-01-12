@@ -79,7 +79,7 @@ public class BusinessServiceImpl implements BusinessService {
     // this is safe because we validated that service exists and belongs to business
     service.setId(serviceId);
     service.setBusinessId(businessId);
-    serviceRepository.store(service);
+    serviceRepository.update(service);
   }
 
   @Override
@@ -99,7 +99,7 @@ public class BusinessServiceImpl implements BusinessService {
   public void addServiceToBusiness(final CreateServiceRequest serviceRequest, final Integer businessId) {
     validateOnSaveService(serviceRequest, businessId);
     final Service serviceToBeSaved = fromRequest(serviceRequest, businessId);
-    serviceRepository.store(serviceToBeSaved);
+    serviceRepository.create(serviceToBeSaved);
   }
 
   @Override

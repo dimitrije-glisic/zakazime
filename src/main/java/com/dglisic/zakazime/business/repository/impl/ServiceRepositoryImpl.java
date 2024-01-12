@@ -90,10 +90,21 @@ public class ServiceRepositoryImpl implements ServiceRepository {
   }
 
   @Override
-  public void store(final Service service) {
+  public void create(final Service service) {
     final ServiceRecord serviceRecord = dsl.newRecord(SERVICE, service);
     serviceRecord.store();
+  }
 
+  @Override
+  public void update(final Service service) {
+    dsl.update(SERVICE)
+        .set(SERVICE.TITLE, service.getTitle())
+        .set(SERVICE.NOTE, service.getNote())
+        .set(SERVICE.PRICE, service.getPrice())
+        .set(SERVICE.AVG_DURATION, service.getAvgDuration())
+        .set(SERVICE.DESCRIPTION, service.getDescription())
+        .where(SERVICE.ID.eq(service.getId()))
+        .execute();
   }
 
 }
