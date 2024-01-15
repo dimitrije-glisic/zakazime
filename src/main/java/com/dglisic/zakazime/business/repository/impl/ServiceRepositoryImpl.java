@@ -7,10 +7,12 @@ import static jooq.tables.ServiceSubcategory.SERVICE_SUBCATEGORY;
 import static org.jooq.impl.DSL.upper;
 
 import com.dglisic.zakazime.business.repository.ServiceRepository;
+import com.dglisic.zakazime.common.ApplicationException;
 import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import jooq.tables.daos.ServiceDao;
 import jooq.tables.pojos.Service;
 import jooq.tables.records.ServiceRecord;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Query;
 import org.jooq.impl.DSL;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -26,6 +29,7 @@ import org.springframework.stereotype.Repository;
 public class ServiceRepositoryImpl implements ServiceRepository {
 
   private final DSLContext dsl;
+  private final ServiceDao serviceDao;
 
   @Override
   public List<Service> searchServiceTemplates(final @Nullable String businessType, final @Nullable String category,
@@ -51,7 +55,7 @@ public class ServiceRepositoryImpl implements ServiceRepository {
   }
 
   @Override
-  public List<Service> getServicesOfBusiness(int businessId) {
+  public List<Service> getServicesOfBusiness(final Integer businessId) {
     return dsl.select(SERVICE)
         .from(SERVICE)
         .where(SERVICE.BUSINESS_ID.eq(businessId))
@@ -59,14 +63,9 @@ public class ServiceRepositoryImpl implements ServiceRepository {
   }
 
   @Override
-  public Optional<Service> findServiceById(int serviceId) {
-    Service service = dsl.select(SERVICE)
-        .from(SERVICE)
-        .where(SERVICE.ID.eq(serviceId))
-        .fetchOneInto(Service.class);
-
+  public Optional<Service> findServiceById(final Integer serviceId) {
+    Service service = serviceDao.findById(serviceId);
     return Optional.ofNullable(service);
-
   }
 
   @Override
@@ -90,9 +89,10 @@ public class ServiceRepositoryImpl implements ServiceRepository {
   }
 
   @Override
-  public void create(final Service service) {
+  public Service create(final Service service) {
     final ServiceRecord serviceRecord = dsl.newRecord(SERVICE, service);
     serviceRecord.store();
+    return serviceRecord.into(Service.class);
   }
 
   @Override
@@ -104,6 +104,36 @@ public class ServiceRepositoryImpl implements ServiceRepository {
         .set(SERVICE.AVG_DURATION, service.getAvgDuration())
         .set(SERVICE.DESCRIPTION, service.getDescription())
         .where(SERVICE.ID.eq(service.getId()))
+        .execute();
+  }
+
+  @Override
+  public Optional<Service> findByTitle(String title) {
+    List<Service> services = serviceDao.fetchByTitle(title);
+    if (services.size() > 1) {
+      // this should never happen
+      throw new ApplicationException("Multiple services with title " + title + " found", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    return Optional.ofNullable(services.isEmpty() ? null : services.get(0));
+  }
+
+  @Override
+  public void updateServiceTemplate(final Service request) {
+    dsl.update(SERVICE)
+        .set(SERVICE.TITLE, request.getTitle())
+        .set(SERVICE.SUBCATEGORY_ID, request.getSubcategoryId())
+        .set(SERVICE.NOTE, request.getNote())
+        .set(SERVICE.PRICE, request.getPrice())
+        .set(SERVICE.AVG_DURATION, request.getAvgDuration())
+        .set(SERVICE.DESCRIPTION, request.getDescription())
+        .where(SERVICE.ID.eq(request.getId()))
+        .execute();
+  }
+
+  @Override
+  public void deleteServiceTemplate(final Integer id) {
+    dsl.deleteFrom(SERVICE)
+        .where(SERVICE.ID.eq(id))
         .execute();
   }
 

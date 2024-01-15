@@ -49,7 +49,7 @@ public class BusinessTypeController {
   }
 
   @PutMapping("/{id}")
-  @PreAuthorize("hasRole('SERVICE_PROVIDER')")
+  @PreAuthorize("hasRole('ADMIN')")
   public MessageResponse updateBusinessType(@PathVariable final Integer id,
                                             @RequestBody final UpdateBusinessTypeRequest businessType) {
     logger.info("Updating business type with id {} to {}", id, businessType);

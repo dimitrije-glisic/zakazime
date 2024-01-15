@@ -10,6 +10,7 @@ import java.util.List;
 import jooq.tables.pojos.ServiceSubcategory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +29,7 @@ public class ServiceSubcategoryController {
 
 
   @PostMapping
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ServiceSubcategory> create(
       @RequestBody @Valid final CreateServiceSubcategoryRequest createRequest) {
     return ResponseEntity.ok(serviceSubcategoryService.save(createRequest));
@@ -39,12 +41,14 @@ public class ServiceSubcategoryController {
   }
 
   @PutMapping("/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ServiceSubcategory> update(@RequestBody final UpdateServiceSubcategoryRequest updateRequest,
                                                    @PathVariable final Integer id) {
     return ResponseEntity.ok(serviceSubcategoryService.update(updateRequest, id));
   }
 
   @DeleteMapping("/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> delete(@PathVariable @NotNull final Integer id) {
     serviceSubcategoryService.delete(id);
     return ResponseEntity.ok().build();
