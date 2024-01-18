@@ -46,6 +46,7 @@ public class BusinessTypeRepositoryImpl implements BusinessTypeRepository {
   public void update(final BusinessType inUpdate) {
     dsl.update(BUSINESS_TYPE)
         .set(BUSINESS_TYPE.TITLE, inUpdate.getTitle())
+        .set(BUSINESS_TYPE.IMAGE_URL, inUpdate.getImageUrl())
         .where(BUSINESS_TYPE.ID.eq(inUpdate.getId()))
         .execute();
   }
@@ -54,6 +55,23 @@ public class BusinessTypeRepositoryImpl implements BusinessTypeRepository {
   public void deleteById(Integer id) {
     dsl.deleteFrom(BUSINESS_TYPE)
         .where(BUSINESS_TYPE.ID.eq(id))
+        .execute();
+  }
+
+  @Override
+  public void updateImage(final Integer id, final String pathFromRoot) {
+    dsl.update(BUSINESS_TYPE)
+        .set(BUSINESS_TYPE.IMAGE_URL, pathFromRoot)
+        .where(BUSINESS_TYPE.ID.eq(id))
+        .execute();
+  }
+
+  @Override
+  public void update(final BusinessType inUpdate, final String url) {
+    dsl.update(BUSINESS_TYPE)
+        .set(BUSINESS_TYPE.TITLE, inUpdate.getTitle())
+        .set(BUSINESS_TYPE.IMAGE_URL, url)
+        .where(BUSINESS_TYPE.ID.eq(inUpdate.getId()))
         .execute();
   }
 

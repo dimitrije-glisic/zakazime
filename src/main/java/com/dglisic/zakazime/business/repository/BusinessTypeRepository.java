@@ -20,4 +20,8 @@ public interface BusinessTypeRepository {
   void update(@NotNull @Valid final BusinessType inUpdate);
 
   void deleteById(@NotNull final Integer id);
+
+  void updateImage(@NotNull final Integer id, @NotBlank final String pathFromRoot);
+
+  void update(@NotNull final BusinessType inUpdate, @NotNull final String url);
 }

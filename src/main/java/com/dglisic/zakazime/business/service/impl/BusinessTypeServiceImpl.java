@@ -5,14 +5,23 @@ import com.dglisic.zakazime.business.controller.dto.UpdateBusinessTypeRequest;
 import com.dglisic.zakazime.business.repository.BusinessTypeRepository;
 import com.dglisic.zakazime.business.service.BusinessTypeService;
 import com.dglisic.zakazime.common.ApplicationException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import jooq.tables.pojos.BusinessType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BusinessTypeServiceImpl implements BusinessTypeService {
 
   private final BusinessTypeRepository businessTypeRepository;
@@ -37,6 +46,19 @@ public class BusinessTypeServiceImpl implements BusinessTypeService {
   }
 
   @Override
+  @Transactional
+  public BusinessType createWithFile(final CreateBusinessTypeRequest createRequest, final MultipartFile file) throws IOException {
+    validateOnCreate(createRequest);
+    final BusinessType toBeCreated = new BusinessType();
+    toBeCreated.setTitle(createRequest.title());
+    final BusinessType newBType = businessTypeRepository.create(toBeCreated);
+    final String url = storeImage(newBType.getId(), file);
+    businessTypeRepository.updateImage(newBType.getId(), url);
+    newBType.setImageUrl(url);
+    return newBType;
+  }
+
+  @Override
   public void update(final Integer id, final UpdateBusinessTypeRequest updateRequest) {
     final BusinessType inUpdate = validateOnUpdate(id);
     if (updateRequest.title().equalsIgnoreCase(inUpdate.getTitle())) {
@@ -48,9 +70,61 @@ public class BusinessTypeServiceImpl implements BusinessTypeService {
   }
 
   @Override
+  @Transactional
+  public void update(final Integer id, final UpdateBusinessTypeRequest businessType, final MultipartFile file)
+      throws IOException {
+    final BusinessType inUpdate = validateOnUpdate(id);
+    if (businessType.title().equalsIgnoreCase(inUpdate.getTitle()) && file.isEmpty()) {
+      // nothing to update
+      return;
+    }
+
+    final String url = makeUrl(id, file);
+    if (inUpdate.getImageUrl().equalsIgnoreCase(url)) {
+      // nothing to update
+      return;
+    }
+
+    inUpdate.setTitle(businessType.title());
+    inUpdate.setImageUrl(url);
+    businessTypeRepository.update(inUpdate);
+  }
+
+  @Override
   public void delete(final Integer id) {
     validateOnDelete(id);
     businessTypeRepository.deleteById(id);
+  }
+
+  final static String IMAGE_DIRECTORY_ROOT = "C:\\Users\\dglisic\\personal-projects\\storage\\images\\";
+
+  @Override
+  @Transactional
+  public String uploadImage(final Integer id, final MultipartFile file) throws IOException {
+    final String url = storeImage(id, file);
+    businessTypeRepository.updateImage(id, url);
+    return url;
+  }
+
+  @Override
+  public byte[] getImage(final Integer id) throws IOException {
+    final Path relativePath = Paths.get(requireById(id).getImageUrl());
+    final Path fullPath = Paths.get(IMAGE_DIRECTORY_ROOT).resolve(relativePath);
+    return Files.readAllBytes(fullPath);
+  }
+
+  private String storeImage(final Integer id, final MultipartFile file) throws IOException {
+    final Path relativePath = Paths.get(makeUrl(id, file));
+    final Path fullPath = Paths.get(IMAGE_DIRECTORY_ROOT).resolve(relativePath);
+    Files.createDirectories(fullPath.getParent());
+    Files.write(fullPath, file.getBytes(), StandardOpenOption.CREATE);
+    System.out.println("Stored image at relative path: " + relativePath);
+    return relativePath.toString();
+  }
+
+  private String makeUrl(final Integer id, final MultipartFile file) {
+    final String idPartOfPath = String.format("id_%d", id);
+    return "business-types" + "/" + idPartOfPath + "/" + file.getOriginalFilename();
   }
 
   private void validateOnCreate(final CreateBusinessTypeRequest businessType) {

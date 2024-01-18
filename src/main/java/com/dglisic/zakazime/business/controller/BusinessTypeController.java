@@ -7,17 +7,14 @@ import com.dglisic.zakazime.business.controller.dto.ImageUploadResponse;
 import com.dglisic.zakazime.business.controller.dto.UpdateBusinessTypeRequest;
 import com.dglisic.zakazime.business.service.BusinessTypeService;
 import com.dglisic.zakazime.common.MessageResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
-import java.util.Objects;
 import jooq.tables.pojos.BusinessType;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +24,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,6 +35,7 @@ public class BusinessTypeController {
   private static final Logger logger = getLogger(BusinessTypeController.class);
 
   private final BusinessTypeService businessTypeService;
+  private final ObjectMapper objectMapper;
 
   @GetMapping
   public List<BusinessType> getBusinessTypes() {
@@ -57,12 +56,31 @@ public class BusinessTypeController {
     return businessTypeService.create(createRequest);
   }
 
+  @PostMapping(value = "/with-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PreAuthorize("hasRole('ADMIN')")
+  public BusinessType createBusinessTypeWithImage(
+      @RequestPart("businessType") String businessTypeJson,
+      @RequestPart("image") MultipartFile image) throws IOException {
+    final CreateBusinessTypeRequest createRequest = objectMapper.readValue(businessTypeJson, CreateBusinessTypeRequest.class);
+    return businessTypeService.createWithFile(createRequest, image);
+  }
+
   @PutMapping("/{id}")
   @PreAuthorize("hasRole('ADMIN')")
   public MessageResponse updateBusinessType(@PathVariable final Integer id,
                                             @RequestBody final UpdateBusinessTypeRequest businessType) {
     logger.info("Updating business type with id {} to {}", id, businessType);
     businessTypeService.update(id, businessType);
+    return new MessageResponse("Business type updated successfully");
+  }
+
+  @PutMapping(value = "/{id}/with-image", consumes = {"multipart/form-data", "application/json"})
+  @PreAuthorize("hasRole('ADMIN')")
+  public MessageResponse updateBusinessType(@PathVariable final Integer id,
+                                            @RequestBody final UpdateBusinessTypeRequest businessType,
+                                            @RequestParam("image") final MultipartFile file) throws IOException {
+    logger.info("Updating business type with id {} to {}", id, businessType);
+    businessTypeService.update(id, businessType, file);
     return new MessageResponse("Business type updated successfully");
   }
 
@@ -74,16 +92,17 @@ public class BusinessTypeController {
     return new MessageResponse("Business type deleted successfully");
   }
 
-  final static String UPLOAD_DIRECTORY = "C:\\Users\\dglisic\\personal-projects\\storage\\images\\";
+  @PostMapping(value = "/{id}/upload-image", consumes = {"multipart/form-data"})
+  @PreAuthorize("hasRole('ADMIN')")
+  public ImageUploadResponse uploadImage(@PathVariable final Integer id, @RequestParam("image") final MultipartFile file)
+      throws IOException {
+    final String url = businessTypeService.uploadImage(id, file);
+    return new ImageUploadResponse(url);
+  }
 
-  @PostMapping(value = "/upload-image", consumes = {"multipart/form-data"}, produces = {"application/json"})
-  public ImageUploadResponse uploadImage(@RequestParam("image") final MultipartFile file) throws IOException {
-    final Path directoryPath = Paths.get(UPLOAD_DIRECTORY, "business-types");
-    Files.createDirectories(directoryPath);
-    final Path fileNameAndPath = directoryPath.resolve(Objects.requireNonNull(file.getOriginalFilename()));
-    logger.info("Saving image to: {}", fileNameAndPath);
-    Files.write(fileNameAndPath, file.getBytes(), StandardOpenOption.CREATE);
-    return new ImageUploadResponse("business-types/" + file.getOriginalFilename());
+  @GetMapping("/{id}/image")
+  public byte[] getImage(@PathVariable final Integer id) throws IOException {
+    return businessTypeService.getImage(id);
   }
 
 }
