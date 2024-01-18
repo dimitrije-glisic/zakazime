@@ -4,12 +4,10 @@ import com.dglisic.zakazime.business.controller.dto.CreateBusinessTypeRequest;
 import com.dglisic.zakazime.business.controller.dto.UpdateBusinessTypeRequest;
 import com.dglisic.zakazime.business.repository.BusinessTypeRepository;
 import com.dglisic.zakazime.business.service.BusinessTypeService;
+import com.dglisic.zakazime.business.service.ImageStorage;
 import com.dglisic.zakazime.common.ApplicationException;
+import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
 import jooq.tables.pojos.BusinessType;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class BusinessTypeServiceImpl implements BusinessTypeService {
 
   private final BusinessTypeRepository businessTypeRepository;
+  private final ImageStorage imageStorage;
 
   @Override
   public List<BusinessType> getAll() {
@@ -52,7 +51,8 @@ public class BusinessTypeServiceImpl implements BusinessTypeService {
     final BusinessType toBeCreated = new BusinessType();
     toBeCreated.setTitle(createRequest.title());
     final BusinessType newBType = businessTypeRepository.create(toBeCreated);
-    final String url = storeImage(newBType.getId(), file);
+    final String url = makeUrl(newBType.getId(), file);
+    storeImage(url, file);
     businessTypeRepository.updateImage(newBType.getId(), url);
     newBType.setImageUrl(url);
     return newBType;
@@ -78,13 +78,12 @@ public class BusinessTypeServiceImpl implements BusinessTypeService {
       // nothing to update
       return;
     }
-
     final String url = makeUrl(id, file);
-    if (inUpdate.getImageUrl().equalsIgnoreCase(url)) {
+    if (url.equalsIgnoreCase(inUpdate.getImageUrl())) {
       // nothing to update
       return;
     }
-
+    storeImage(url, file);
     inUpdate.setTitle(businessType.title());
     inUpdate.setImageUrl(url);
     businessTypeRepository.update(inUpdate);
@@ -101,28 +100,37 @@ public class BusinessTypeServiceImpl implements BusinessTypeService {
   @Override
   @Transactional
   public String uploadImage(final Integer id, final MultipartFile file) throws IOException {
-    final String url = storeImage(id, file);
+    final String url = makeUrl(id, file);
+    storeImage(url, file);
     businessTypeRepository.updateImage(id, url);
     return url;
   }
 
   @Override
-  public byte[] getImage(final Integer id) throws IOException {
-    final Path relativePath = Paths.get(requireById(id).getImageUrl());
-    final Path fullPath = Paths.get(IMAGE_DIRECTORY_ROOT).resolve(relativePath);
-    return Files.readAllBytes(fullPath);
+  public byte[] getImage(final Integer id) {
+    final BusinessType businessType = requireById(id);
+    if (businessType.getImageUrl() == null) {
+      throw new ApplicationException("Business type with id " + id + " does not have an image",
+          HttpStatus.NOT_FOUND);
+    }
+    try {
+      return imageStorage.getImage(businessType.getImageUrl());
+    } catch (IOException e) {
+      log.error("Failed to read image", e);
+      throw new ApplicationException("Failed to read image", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
-  private String storeImage(final Integer id, final MultipartFile file) throws IOException {
-    final Path relativePath = Paths.get(makeUrl(id, file));
-    final Path fullPath = Paths.get(IMAGE_DIRECTORY_ROOT).resolve(relativePath);
-    Files.createDirectories(fullPath.getParent());
-    Files.write(fullPath, file.getBytes(), StandardOpenOption.CREATE);
-    System.out.println("Stored image at relative path: " + relativePath);
-    return relativePath.toString();
+  private void storeImage(final String url, final MultipartFile file) {
+    try {
+      imageStorage.storeImage(url, file);
+    } catch (IOException e) {
+      log.error("Failed to store image", e);
+      throw new ApplicationException("Failed to store image", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
-  private String makeUrl(final Integer id, final MultipartFile file) {
+  private @NotNull String makeUrl(final Integer id, final MultipartFile file) {
     final String idPartOfPath = String.format("id_%d", id);
     return "business-types" + "/" + idPartOfPath + "/" + file.getOriginalFilename();
   }

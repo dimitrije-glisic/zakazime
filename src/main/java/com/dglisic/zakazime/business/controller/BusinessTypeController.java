@@ -59,8 +59,8 @@ public class BusinessTypeController {
   @PostMapping(value = "/with-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @PreAuthorize("hasRole('ADMIN')")
   public BusinessType createBusinessTypeWithImage(
-      @RequestPart("businessType") String businessTypeJson,
-      @RequestPart("image") MultipartFile image) throws IOException {
+      @RequestPart("businessType") final String businessTypeJson,
+      @RequestPart("image") final MultipartFile image) throws IOException {
     final CreateBusinessTypeRequest createRequest = objectMapper.readValue(businessTypeJson, CreateBusinessTypeRequest.class);
     return businessTypeService.createWithFile(createRequest, image);
   }
@@ -77,10 +77,11 @@ public class BusinessTypeController {
   @PutMapping(value = "/{id}/with-image", consumes = {"multipart/form-data", "application/json"})
   @PreAuthorize("hasRole('ADMIN')")
   public MessageResponse updateBusinessType(@PathVariable final Integer id,
-                                            @RequestBody final UpdateBusinessTypeRequest businessType,
-                                            @RequestParam("image") final MultipartFile file) throws IOException {
-    logger.info("Updating business type with id {} to {}", id, businessType);
-    businessTypeService.update(id, businessType, file);
+                                            @RequestPart("businessType") final String businessTypeJson,
+                                            @RequestPart("image") final MultipartFile file) throws IOException {
+    final UpdateBusinessTypeRequest updateRequest = objectMapper.readValue(businessTypeJson, UpdateBusinessTypeRequest.class);
+    logger.info("Updating business type with id {} to {}", id, updateRequest);
+    businessTypeService.update(id, updateRequest, file);
     return new MessageResponse("Business type updated successfully");
   }
 
