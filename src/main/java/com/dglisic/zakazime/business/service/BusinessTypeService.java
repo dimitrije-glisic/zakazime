@@ -23,9 +23,9 @@ public interface BusinessTypeService {
 
   String uploadImage(@NotNull final Integer id, @NotNull final MultipartFile file) throws IOException;
 
-  byte[] getImage(@NotNull final Integer id) throws IOException;
+  byte[] getImage(@NotNull final Integer id);
 
-  BusinessType createWithFile(@NotNull @Valid final CreateBusinessTypeRequest createRequest, @NotNull final MultipartFile file)
+  BusinessType createWithImage(@NotNull @Valid final CreateBusinessTypeRequest createRequest, @NotNull final MultipartFile file)
       throws IOException;
 
   void update(@NotNull final Integer id, @NotNull final UpdateBusinessTypeRequest businessType, @NotNull final MultipartFile file)

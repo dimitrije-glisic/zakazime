@@ -46,7 +46,7 @@ public class BusinessTypeServiceImpl implements BusinessTypeService {
 
   @Override
   @Transactional
-  public BusinessType createWithFile(final CreateBusinessTypeRequest createRequest, final MultipartFile file) throws IOException {
+  public BusinessType createWithImage(final CreateBusinessTypeRequest createRequest, final MultipartFile file) throws IOException {
     validateOnCreate(createRequest);
     final BusinessType toBeCreated = new BusinessType();
     toBeCreated.setTitle(createRequest.title());

@@ -62,7 +62,7 @@ public class BusinessTypeController {
       @RequestPart("businessType") final String businessTypeJson,
       @RequestPart("image") final MultipartFile image) throws IOException {
     final CreateBusinessTypeRequest createRequest = objectMapper.readValue(businessTypeJson, CreateBusinessTypeRequest.class);
-    return businessTypeService.createWithFile(createRequest, image);
+    return businessTypeService.createWithImage(createRequest, image);
   }
 
   @PutMapping("/{id}")
@@ -102,7 +102,7 @@ public class BusinessTypeController {
   }
 
   @GetMapping("/{id}/image")
-  public byte[] getImage(@PathVariable final Integer id) throws IOException {
+  public byte[] getImage(@PathVariable final Integer id) {
     return businessTypeService.getImage(id);
   }
 

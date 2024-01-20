@@ -59,9 +59,9 @@ public class BusinessTypeRepositoryImpl implements BusinessTypeRepository {
   }
 
   @Override
-  public void updateImage(final Integer id, final String pathFromRoot) {
+  public void updateImage(final Integer id, final String url) {
     dsl.update(BUSINESS_TYPE)
-        .set(BUSINESS_TYPE.IMAGE_URL, pathFromRoot)
+        .set(BUSINESS_TYPE.IMAGE_URL, url)
         .where(BUSINESS_TYPE.ID.eq(id))
         .execute();
   }

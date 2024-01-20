@@ -1,5 +1,7 @@
 package com.dglisic.zakazime.business.repository.impl;
 
+import static jooq.tables.ServiceCategory.SERVICE_CATEGORY;
+
 import com.dglisic.zakazime.business.repository.ServiceCategoryRepository;
 import java.util.List;
 import java.util.Optional;
@@ -7,6 +9,7 @@ import jooq.tables.daos.ServiceCategoryDao;
 import jooq.tables.pojos.ServiceCategory;
 import jooq.tables.records.ServiceCategoryRecord;
 import lombok.RequiredArgsConstructor;
+import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -14,6 +17,7 @@ import org.springframework.stereotype.Repository;
 public class ServiceCategoryRepositoryImpl implements ServiceCategoryRepository {
 
   private final ServiceCategoryDao serviceCategoryDao;
+  private final DSLContext dsl;
 
   @Override
   public List<ServiceCategory> getAll() {
@@ -27,7 +31,7 @@ public class ServiceCategoryRepositoryImpl implements ServiceCategoryRepository 
 
   @Override
   public ServiceCategory store(final ServiceCategory serviceCategory) {
-    final ServiceCategoryRecord serviceCategoryRecord = new ServiceCategoryRecord(serviceCategory);
+    final ServiceCategoryRecord serviceCategoryRecord = dsl.newRecord(SERVICE_CATEGORY, serviceCategory);
     serviceCategoryRecord.store();
     return serviceCategoryRecord.into(ServiceCategory.class);
   }
@@ -42,4 +46,13 @@ public class ServiceCategoryRepositoryImpl implements ServiceCategoryRepository 
     final ServiceCategory serviceCategories = serviceCategoryDao.fetchOneByTitle(title.toUpperCase());
     return Optional.ofNullable(serviceCategories);
   }
+
+  @Override
+  public void updateImage(final Integer id, final String url) {
+    dsl.update(SERVICE_CATEGORY)
+        .set(SERVICE_CATEGORY.IMAGE_URL, url)
+        .where(SERVICE_CATEGORY.ID.eq(id))
+        .execute();
+  }
+
 }
