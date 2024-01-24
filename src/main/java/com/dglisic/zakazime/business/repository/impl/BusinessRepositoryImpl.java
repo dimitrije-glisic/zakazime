@@ -8,12 +8,10 @@ import static jooq.tables.BusinessType.BUSINESS_TYPE;
 import static org.jooq.impl.DSL.upper;
 
 import com.dglisic.zakazime.business.repository.BusinessRepository;
-import com.dglisic.zakazime.user.repository.RoleRepository;
 import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
-import jooq.tables.pojos.BusinessType;
 import jooq.tables.records.BusinessRecord;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
@@ -24,7 +22,6 @@ import org.springframework.stereotype.Repository;
 public class BusinessRepositoryImpl implements BusinessRepository {
 
   private final DSLContext dsl;
-  private final RoleRepository roleRepository;
 
   @Override
   public Optional<Business> getBusinessProfile(final Integer userId) {
@@ -61,20 +58,11 @@ public class BusinessRepositoryImpl implements BusinessRepository {
   }
 
   @Override
-  public List<BusinessType> getBusinessTypes() {
-    return dsl.selectDistinct(BUSINESS_TYPE)
-        .from(BUSINESS_TYPE)
-        .fetchInto(BusinessType.class);
-  }
-
-  @Override
   public Optional<Business> findBusinessById(final Integer businessId) {
     Business businessProfileRecord = dsl.selectFrom(BUSINESS)
         .where(BUSINESS.ID.eq(businessId))
         .fetchOneInto(Business.class);
-
     return Optional.ofNullable(businessProfileRecord);
-
   }
 
   @Override

@@ -3,14 +3,14 @@ package com.dglisic.zakazime.business.service.impl;
 import com.dglisic.zakazime.business.controller.dto.CreateServiceCategoryRequest;
 import com.dglisic.zakazime.business.controller.dto.UpdateServiceCategoryRequest;
 import com.dglisic.zakazime.business.repository.BusinessTypeRepository;
-import com.dglisic.zakazime.business.repository.ServiceCategoryRepository;
+import com.dglisic.zakazime.business.repository.PredefinedCategoryRepository;
 import com.dglisic.zakazime.business.service.ImageStorage;
-import com.dglisic.zakazime.business.service.ServiceCategoryService;
+import com.dglisic.zakazime.business.service.PredefinedCategoryService;
 import com.dglisic.zakazime.common.ApplicationException;
 import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.List;
-import jooq.tables.pojos.ServiceCategory;
+import jooq.tables.pojos.PredefinedCategory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -21,65 +21,61 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ServiceCategoryServiceImpl implements ServiceCategoryService {
+public class PredefinedCategoryServiceImpl implements PredefinedCategoryService {
 
-  private final ServiceCategoryRepository serviceCategoryRepository;
+  private final PredefinedCategoryRepository predefinedCategoryRepository;
   private final BusinessTypeRepository businessTypeRepository;
   private final ImageStorage imageStorage;
 
   @Override
-  public ServiceCategory create(final CreateServiceCategoryRequest createServiceCategoryRequest) {
+  public PredefinedCategory create(final CreateServiceCategoryRequest createServiceCategoryRequest) {
     validateOnSave(createServiceCategoryRequest);
-    final ServiceCategory serviceCategory = new ServiceCategory();
-    serviceCategory.setTitle(createServiceCategoryRequest.title());
-    serviceCategory.setBusinessTypeId(createServiceCategoryRequest.businessTypeId());
-    return serviceCategoryRepository.store(serviceCategory);
+    PredefinedCategory toBeCreated = fromRequest(createServiceCategoryRequest);
+    return predefinedCategoryRepository.store(toBeCreated);
   }
 
   @Override
   @Transactional
-  public ServiceCategory createWithImage(final CreateServiceCategoryRequest createRequest, final MultipartFile image) {
+  public PredefinedCategory createWithImage(final CreateServiceCategoryRequest createRequest, final MultipartFile image) {
     validateOnSave(createRequest);
-    final ServiceCategory toBeCreated = new ServiceCategory();
-    toBeCreated.setTitle(createRequest.title());
-    toBeCreated.setBusinessTypeId(createRequest.businessTypeId());
-    final ServiceCategory newCategory = serviceCategoryRepository.store(toBeCreated);
+    final PredefinedCategory toBeCreated = fromRequest(createRequest);
+    final PredefinedCategory newCategory = predefinedCategoryRepository.store(toBeCreated);
     final String url = makeUrl(newCategory.getId(), image);
+    predefinedCategoryRepository.updateImage(newCategory.getId(), url);
     storeImage(url, image);
-    serviceCategoryRepository.updateImage(newCategory.getId(), url);
     newCategory.setImageUrl(url);
     return newCategory;
   }
 
   @Override
-  public ServiceCategory requireById(final Integer id) {
-    return serviceCategoryRepository.findById(id).orElseThrow(
+  public PredefinedCategory requireById(final Integer id) {
+    return predefinedCategoryRepository.findById(id).orElseThrow(
         () -> new ApplicationException("Service category with id " + id + " does not exist.", HttpStatus.NOT_FOUND));
   }
 
   @Override
-  public ServiceCategory update(final UpdateServiceCategoryRequest updateServiceCategoryRequest, final Integer categoryId) {
+  public void update(final UpdateServiceCategoryRequest updateServiceCategoryRequest, final Integer categoryId) {
     validateOnUpdate(updateServiceCategoryRequest, categoryId);
-    final ServiceCategory serviceCategory = new ServiceCategory();
-    serviceCategory.setId(categoryId);
-    serviceCategory.setTitle(updateServiceCategoryRequest.title());
-    serviceCategory.setBusinessTypeId(updateServiceCategoryRequest.businessTypeId());
-    return serviceCategoryRepository.store(serviceCategory);
+    final PredefinedCategory category = new PredefinedCategory();
+    category.setId(categoryId);
+    category.setTitle(updateServiceCategoryRequest.title());
+    category.setBusinessTypeId(updateServiceCategoryRequest.businessTypeId());
+    predefinedCategoryRepository.update(category);
   }
 
   @Override
   public void delete(final Integer id) {
-    serviceCategoryRepository.delete(id);
+    predefinedCategoryRepository.delete(id);
   }
 
   @Override
-  public List<ServiceCategory> getAll() {
-    return serviceCategoryRepository.getAll();
+  public List<PredefinedCategory> getAll() {
+    return predefinedCategoryRepository.getAll();
   }
 
   @Override
   public byte[] getImage(Integer id) {
-    final ServiceCategory category = requireById(id);
+    final PredefinedCategory category = requireById(id);
     if (category.getImageUrl() == null) {
       throw new ApplicationException("Category id " + id + " does not have an image",
           HttpStatus.NOT_FOUND);
@@ -92,9 +88,26 @@ public class ServiceCategoryServiceImpl implements ServiceCategoryService {
     }
   }
 
+  @Override
+  public String uploadImage(Integer id, MultipartFile file) {
+    final String url = makeUrl(id, file);
+    storeImage(url, file);
+    predefinedCategoryRepository.updateImage(id, url);
+    return url;
+  }
+
   private void validateOnSave(final CreateServiceCategoryRequest createServiceCategoryRequest) {
     requireUniqueCategoryTitle(createServiceCategoryRequest.title());
     requireBusinessTypeExists(createServiceCategoryRequest.businessTypeId());
+  }
+
+  private PredefinedCategory fromRequest(CreateServiceCategoryRequest request) {
+    PredefinedCategory category = new PredefinedCategory();
+    category.setTitle(request.title());
+    final String slug = request.title().toLowerCase().replace(" ", "-");
+    category.setSlug(slug);
+    category.setBusinessTypeId(request.businessTypeId());
+    return category;
   }
 
   private void validateOnUpdate(final UpdateServiceCategoryRequest updateServiceCategoryRequest, final Integer categoryId) {
@@ -107,13 +120,13 @@ public class ServiceCategoryServiceImpl implements ServiceCategoryService {
   }
 
   private void requireUniqueCategoryTitle(String title) {
-    serviceCategoryRepository.findByTitle(title).ifPresent(serviceCategory -> {
+    predefinedCategoryRepository.findByTitle(title).ifPresent(category -> {
       throw new ApplicationException("Service category with title " + title + " already exists.", HttpStatus.BAD_REQUEST);
     });
   }
 
   private void requireCategoryExists(final Integer categoryId) {
-    serviceCategoryRepository.findById(categoryId).orElseThrow(
+    predefinedCategoryRepository.findById(categoryId).orElseThrow(
         () -> new ApplicationException("Service category with id " + categoryId + " does not exist.", HttpStatus.BAD_REQUEST));
   }
 

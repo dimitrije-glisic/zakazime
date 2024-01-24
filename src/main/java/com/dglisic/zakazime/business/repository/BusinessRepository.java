@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
-import jooq.tables.pojos.BusinessType;
 
 public interface BusinessRepository {
 
@@ -15,8 +14,6 @@ public interface BusinessRepository {
   void linkBusinessToOwner(final Integer businessId, final Integer ownerId);
 
   List<Business> getAll();
-
-  List<BusinessType> getBusinessTypes();
 
   Optional<Business> findBusinessById(final Integer businessId);
 

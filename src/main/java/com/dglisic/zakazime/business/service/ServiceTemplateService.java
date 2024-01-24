@@ -10,13 +10,10 @@ import jooq.tables.pojos.Service;
 
 public interface ServiceTemplateService {
 
-  List<Service> searchServiceTemplates(@Nullable final String businessType, @Nullable final String category,
-                                       @Nullable final String subcategory);
-
-  Service getServiceTemplate(@NotNull final Integer id);
+  Service getService(@NotNull final Integer id);
 
 
-  Service createServiceTemplate(@NotNull @Valid final CreateServiceRequest createServiceRequest);
+  Service createService(@NotNull @Valid final CreateServiceRequest createServiceRequest);
 
   void updateServiceTemplate(@NotNull final Integer id, @NotNull final UpdateServiceRequest createServiceRequest);
 

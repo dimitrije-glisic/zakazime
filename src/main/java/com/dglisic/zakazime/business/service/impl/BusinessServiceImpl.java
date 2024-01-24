@@ -7,11 +7,10 @@ import com.dglisic.zakazime.business.controller.dto.ServiceMapper;
 import com.dglisic.zakazime.business.controller.dto.UpdateServiceRequest;
 import com.dglisic.zakazime.business.repository.BusinessRepository;
 import com.dglisic.zakazime.business.repository.ServiceRepository;
-import com.dglisic.zakazime.business.repository.impl.ServiceSubcategoryRepositoryImpl;
+import com.dglisic.zakazime.business.repository.UserDefinedCategoryRepository;
 import com.dglisic.zakazime.business.service.BusinessService;
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.service.UserService;
-import jakarta.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -19,7 +18,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
-import jooq.tables.pojos.BusinessType;
 import jooq.tables.pojos.Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,7 +32,7 @@ public class BusinessServiceImpl implements BusinessService {
   private final UserService userService;
   private final BusinessRepository businessRepository;
   private final ServiceRepository serviceRepository;
-  private final ServiceSubcategoryRepositoryImpl subcategoryRepository;
+  private final UserDefinedCategoryRepository categoryRepository;
 
   @Override
   @Transactional
@@ -68,24 +66,15 @@ public class BusinessServiceImpl implements BusinessService {
   }
 
   @Override
-  public List<BusinessType> getBusinessTypes() {
-    return businessRepository.getBusinessTypes();
-  }
-
-  @Override
   public void updateService(final int businessId, final int serviceId, final UpdateServiceRequest updateServiceRequest) {
     validateOnUpdate(serviceId, businessId, updateServiceRequest);
     final Service service = serviceMapper.map(updateServiceRequest);
     // this is safe because we validated that service exists and belongs to business
     service.setId(serviceId);
-    service.setBusinessId(businessId);
+    // todo
+    // service no longer has a reference to business id, it has a reference to category id, which has a reference to business id
+//    service.setBusinessId(businessId);
     serviceRepository.update(service);
-  }
-
-  @Override
-  public List<Service> searchServiceTemplates(final @Nullable String businessType, @Nullable final String category,
-                                              final @Nullable String subcategory) {
-    return serviceRepository.searchServiceTemplates(businessType, category, subcategory);
   }
 
   @Override
@@ -118,8 +107,8 @@ public class BusinessServiceImpl implements BusinessService {
 
   private Service fromRequest(final CreateServiceRequest req, final int businessId) {
     final Service service = serviceMapper.map(req);
-    service.setBusinessId(businessId);
-    service.setTemplate(false);
+    // todo - see what to do with this
+//    service.setBusinessId(businessId);
     return service;
   }
 
@@ -135,7 +124,8 @@ public class BusinessServiceImpl implements BusinessService {
     requireUserPermittedToChangeBusiness(businessId);
     final Set<Integer> subCategoryIds =
         createServiceRequestList.stream().map(CreateServiceRequest::subcategoryId).collect(Collectors.toSet());
-    final boolean allExist = subcategoryRepository.allExist(subCategoryIds);
+    // todo - no longer subcategory - only category
+    final boolean allExist = categoryRepository.allExist(subCategoryIds);
     if (!allExist) {
       throw new ApplicationException("Subcategory does not exist", HttpStatus.BAD_REQUEST);
     }
@@ -176,15 +166,16 @@ public class BusinessServiceImpl implements BusinessService {
       throw new ApplicationException("Service with id " + serviceId + " does not exist", HttpStatus.BAD_REQUEST);
     }
     final Service serviceFromDbValue = serviceFromDb.get();
-    if (!serviceFromDbValue.getBusinessId().equals(businessId)) {
-      throw new ApplicationException(
-          "Service with id " + serviceId + " does not belong to business with id " + businessId,
-          HttpStatus.BAD_REQUEST);
-    }
+    // todo - see what with this
+//    if (!serviceFromDbValue.getBusinessId().equals(businessId)) {
+//      throw new ApplicationException(
+//          "Service with id " + serviceId + " does not belong to business with id " + businessId,
+//          HttpStatus.BAD_REQUEST);
+//    }
   }
 
   private void requireSubcategoryExists(final Integer subcategoryId) {
-    final boolean subcategoryExists = subcategoryRepository.exists(subcategoryId);
+    final boolean subcategoryExists = categoryRepository.exists(subcategoryId);
     if (!subcategoryExists) {
       throw new ApplicationException("Subcategory does not exist", HttpStatus.BAD_REQUEST);
     }

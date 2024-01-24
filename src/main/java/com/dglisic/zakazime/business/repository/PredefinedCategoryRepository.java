@@ -4,19 +4,22 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Optional;
-import jooq.tables.pojos.ServiceCategory;
+import jooq.tables.pojos.PredefinedCategory;
 
-public interface ServiceCategoryRepository {
+public interface PredefinedCategoryRepository {
 
-  @NotNull List<ServiceCategory> getAll();
+  @NotNull List<PredefinedCategory> getAll();
 
-  Optional<ServiceCategory> findById(final Integer id);
+  Optional<PredefinedCategory> findById(final Integer id);
 
-  @NotNull ServiceCategory store(final ServiceCategory serviceCategory);
+  @NotNull PredefinedCategory store(final PredefinedCategory serviceCategory);
 
   void delete(final Integer id);
 
   Optional<Object> findByTitle(@NotBlank final String title);
 
   void updateImage(@NotNull final Integer id, @NotNull final String url);
+
+  void update(PredefinedCategory category);
+
 }

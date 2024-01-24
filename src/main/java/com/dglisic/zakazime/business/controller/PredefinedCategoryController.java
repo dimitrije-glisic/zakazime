@@ -1,15 +1,18 @@
 package com.dglisic.zakazime.business.controller;
 
+import static org.springframework.http.HttpStatus.CREATED;
+
 import com.dglisic.zakazime.business.controller.dto.CreateServiceCategoryRequest;
+import com.dglisic.zakazime.business.controller.dto.ImageUploadResponse;
 import com.dglisic.zakazime.business.controller.dto.UpdateServiceCategoryRequest;
-import com.dglisic.zakazime.business.service.ServiceCategoryService;
+import com.dglisic.zakazime.business.service.PredefinedCategoryService;
 import com.dglisic.zakazime.common.MessageResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.List;
-import jooq.tables.pojos.ServiceCategory;
+import jooq.tables.pojos.PredefinedCategory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,60 +24,69 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/service-category")
+@RequestMapping("categories")
 @RequiredArgsConstructor
-public class ServiceCategoryController {
+public class PredefinedCategoryController {
 
-  private final ServiceCategoryService serviceCategoryService;
+  private final PredefinedCategoryService predefinedCategoryService;
   private final ObjectMapper objectMapper;
 
   @PostMapping
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<ServiceCategory> create(
+  public ResponseEntity<PredefinedCategory> create(
       @RequestBody @Valid final CreateServiceCategoryRequest createServiceCategoryRequest) {
-    return ResponseEntity.ok(serviceCategoryService.create(createServiceCategoryRequest));
+    return ResponseEntity.ok(predefinedCategoryService.create(createServiceCategoryRequest));
   }
 
   @PostMapping(value = "/with-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @PreAuthorize("hasRole('ADMIN')")
-  public ServiceCategory createWithImage(
+  public ResponseEntity<PredefinedCategory> createWithImage(
       @RequestPart("category") final String categoryJson,
       @RequestPart("image") final MultipartFile image) throws IOException {
     final CreateServiceCategoryRequest createRequest = objectMapper.readValue(categoryJson, CreateServiceCategoryRequest.class);
-    return serviceCategoryService.createWithImage(createRequest, image);
+    return ResponseEntity.status(CREATED).body(predefinedCategoryService.createWithImage(createRequest, image));
+  }
+
+  @PostMapping(value = "/{id}/upload-image", consumes = {"multipart/form-data"})
+  @PreAuthorize("hasRole('ADMIN')")
+  public ImageUploadResponse uploadImage(@PathVariable final Integer id, @RequestParam("image") final MultipartFile file) {
+    final String url = predefinedCategoryService.uploadImage(id, file);
+    return new ImageUploadResponse(url);
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ServiceCategory> get(@PathVariable final Integer id) {
-    return ResponseEntity.ok(serviceCategoryService.requireById(id));
+  public ResponseEntity<PredefinedCategory> get(@PathVariable final Integer id) {
+    return ResponseEntity.ok(predefinedCategoryService.requireById(id));
   }
 
   @GetMapping("/{id}/image")
   public byte[] getImage(@PathVariable final Integer id) {
-    return serviceCategoryService.getImage(id);
+    return predefinedCategoryService.getImage(id);
   }
 
   @PutMapping("/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<ServiceCategory> update(@RequestBody final UpdateServiceCategoryRequest updateServiceCategoryRequest,
+  public ResponseEntity<MessageResponse> update(@RequestBody final UpdateServiceCategoryRequest updateServiceCategoryRequest,
                                                 @PathVariable final Integer id) {
-    return ResponseEntity.ok(serviceCategoryService.update(updateServiceCategoryRequest, id));
+    predefinedCategoryService.update(updateServiceCategoryRequest, id);
+    return ResponseEntity.ok(new MessageResponse("Service category updated successfully"));
   }
 
   @DeleteMapping("/{id}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> delete(@PathVariable @NotNull final Integer id) {
-    serviceCategoryService.delete(id);
+    predefinedCategoryService.delete(id);
     return ResponseEntity.ok().build();
   }
 
   @GetMapping
-  public ResponseEntity<List<ServiceCategory>> getAll() {
-    return ResponseEntity.ok(serviceCategoryService.getAll());
+  public ResponseEntity<List<PredefinedCategory>> getAll() {
+    return ResponseEntity.ok(predefinedCategoryService.getAll());
   }
 }

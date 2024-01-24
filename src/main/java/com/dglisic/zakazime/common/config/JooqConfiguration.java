@@ -3,10 +3,10 @@ package com.dglisic.zakazime.common.config;
 import jooq.tables.daos.BusinessAccountMapDao;
 import jooq.tables.daos.BusinessDao;
 import jooq.tables.daos.BusinessTypeDao;
+import jooq.tables.daos.PredefinedCategoryDao;
 import jooq.tables.daos.RoleDao;
-import jooq.tables.daos.ServiceCategoryDao;
 import jooq.tables.daos.ServiceDao;
-import jooq.tables.daos.ServiceSubcategoryDao;
+import jooq.tables.daos.UserDefinedCategoryDao;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DataSourceConnectionProvider;
 import org.jooq.impl.DefaultConfiguration;
@@ -56,18 +56,18 @@ public class JooqConfiguration {
   }
 
   @Bean
-  public ServiceCategoryDao serviceCategoryDao(final DefaultConfiguration configuration) {
-    return new ServiceCategoryDao(configuration);
+  public PredefinedCategoryDao predefinedCategoryDao(final DefaultConfiguration configuration) {
+    return new PredefinedCategoryDao(configuration);
+  }
+
+  @Bean
+  public UserDefinedCategoryDao userDefinedCategoryDao(final DefaultConfiguration configuration) {
+    return new UserDefinedCategoryDao(configuration);
   }
 
   @Bean
   public ServiceDao serviceDao(final DefaultConfiguration configuration) {
     return new ServiceDao(configuration);
-  }
-
-  @Bean
-  public ServiceSubcategoryDao serviceSubcategoryDao(final DefaultConfiguration configuration) {
-    return new ServiceSubcategoryDao(configuration);
   }
 
 }
