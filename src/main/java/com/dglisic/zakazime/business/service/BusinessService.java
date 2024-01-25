@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Business;
+import jooq.tables.pojos.PredefinedCategory;
 import jooq.tables.pojos.Service;
 
 public interface BusinessService {
@@ -31,4 +32,8 @@ public interface BusinessService {
   Optional<Business> findBusinessById(@NotNull final Integer businessId);
 
   void addServiceToBusiness(final @NotNull @Valid CreateServiceRequest serviceRequest, @NotNull final Integer businessId);
+
+  void linkPredefinedCategories(List<Integer> categoryIds, Integer businessId);
+
+  List<PredefinedCategory> getPredefinedCategories(Integer businessId);
 }

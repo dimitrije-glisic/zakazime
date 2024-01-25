@@ -70,17 +70,9 @@ CREATE TABLE service
 -- this table is used to map predefined categories to businesses in order to be able to search for businesses by category
 CREATE TABLE BUSINESS_PREDEFINED_CATEGORY_MAP
 (
-    business_id         INT REFERENCES business (id),
-    predefined_category INT REFERENCES predefined_category (id),
-    PRIMARY KEY (business_id, predefined_category)
-);
-
--- this table is used to map user defined categories to businesses in order to be able to organize services by category
-CREATE TABLE BUSINESS_USER_DEFINED_CATEGORY_MAP
-(
-    business_id           INT REFERENCES business (id),
-    user_defined_category INT REFERENCES user_defined_category (id),
-    PRIMARY KEY (business_id, user_defined_category)
+    business_id INT REFERENCES business (id),
+    category_id INT REFERENCES predefined_category (id),
+    PRIMARY KEY (business_id, category_id)
 );
 
 CREATE TABLE business_account_map

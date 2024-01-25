@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import jooq.tables.pojos.PredefinedCategory;
 
 public interface PredefinedCategoryRepository {
@@ -21,5 +22,7 @@ public interface PredefinedCategoryRepository {
   void updateImage(@NotNull final Integer id, @NotNull final String url);
 
   void update(PredefinedCategory category);
+
+  boolean allExist(Set<Integer> categoryIds);
 
 }

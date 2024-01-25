@@ -6,6 +6,7 @@ import static jooq.tables.PredefinedCategory.PREDEFINED_CATEGORY;
 import com.dglisic.zakazime.business.repository.PredefinedCategoryRepository;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import jooq.tables.daos.PredefinedCategoryDao;
 import jooq.tables.pojos.PredefinedCategory;
 import jooq.tables.records.PredefinedCategoryRecord;
@@ -59,6 +60,15 @@ public class PredefinedCategoryRepositoryImpl implements PredefinedCategoryRepos
   @Override
   public void update(PredefinedCategory category) {
     categoryDao.update(category);
+  }
+
+  @Override
+  public boolean allExist(Set<Integer> categoryIds) {
+    List<Integer> fetch = dsl.select(PREDEFINED_CATEGORY.ID)
+        .from(PREDEFINED_CATEGORY)
+        .where(PREDEFINED_CATEGORY.ID.in(categoryIds))
+        .fetchInto(Integer.class);
+    return fetch.size() == categoryIds.size();
   }
 
 }

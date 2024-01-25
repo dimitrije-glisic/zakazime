@@ -11,6 +11,7 @@ import jakarta.validation.constraints.NotBlank;
 import java.security.Principal;
 import java.util.List;
 import jooq.tables.pojos.Business;
+import jooq.tables.pojos.PredefinedCategory;
 import jooq.tables.pojos.Service;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -50,7 +51,7 @@ public class BusinessController {
   }
 
   @GetMapping("{businessId}")
-  public ResponseEntity<Business> getBusinessProfile(@PathVariable @Valid @NotBlank int businessId) {
+  public ResponseEntity<Business> getBusinessProfile(@PathVariable @Valid @NotBlank Integer businessId) {
     logger.info("Getting business profile for business {}", businessId);
     Business business = businessService.findBusinessById(businessId)
         .orElseThrow(() -> new ApplicationException("Business not found", HttpStatus.NOT_FOUND));
@@ -65,14 +66,14 @@ public class BusinessController {
   }
 
   @GetMapping("{businessId}/services")
-  public List<Service> getServicesOfBusiness(@PathVariable @Valid @NotBlank int businessId) {
+  public List<Service> getServicesOfBusiness(@PathVariable @Valid @NotBlank Integer businessId) {
     List<Service> servicesOfBusiness = businessService.getServicesOfBusiness(businessId);
     logger.info("Getting Services ({}) of business {}: {}", servicesOfBusiness.size(), businessId, servicesOfBusiness);
     return servicesOfBusiness;
   }
 
   @PostMapping("{businessId}/services")
-  public ResponseEntity<MessageResponse> addServicesToBusiness(@PathVariable @Valid @NotBlank int businessId,
+  public ResponseEntity<MessageResponse> addServicesToBusiness(@PathVariable @Valid @NotBlank Integer businessId,
                                                                @RequestBody @Valid List<CreateServiceRequest> serviceRequests) {
     logger.info("Saving services {} for business {}", serviceRequests, businessId);
     businessService.addServiceToBusiness(serviceRequests, businessId);
@@ -80,7 +81,7 @@ public class BusinessController {
   }
 
   @PostMapping("{businessId}/single-service")
-  public ResponseEntity<MessageResponse> addServiceToBusiness(@PathVariable @Valid @NotBlank int businessId,
+  public ResponseEntity<MessageResponse> addServiceToBusiness(@PathVariable @Valid @NotBlank Integer businessId,
                                                               @RequestBody @Valid CreateServiceRequest serviceRequest) {
     logger.info("Saving service {} for business {}", serviceRequest, businessId);
     businessService.addServiceToBusiness(serviceRequest, businessId);
@@ -88,12 +89,37 @@ public class BusinessController {
   }
 
   @PutMapping("{businessId}/services/{serviceId}")
-  public ResponseEntity<MessageResponse> updateService(@PathVariable @Valid @NotBlank final int businessId,
-                                                       @PathVariable @Valid @NotBlank final int serviceId,
+  public ResponseEntity<MessageResponse> updateService(@PathVariable @Valid @NotBlank final Integer businessId,
+                                                       @PathVariable @Valid @NotBlank final Integer serviceId,
                                                        @RequestBody @Valid final UpdateServiceRequest serviceRequest) {
     logger.info("Updating service {} for business {}", serviceRequest, businessId);
     businessService.updateService(businessId, serviceId, serviceRequest);
     return ResponseEntity.ok(new MessageResponse("Service updated successfully"));
+  }
+
+  //====================================================================================================
+  // NEW ENDPOINTS
+  //====================================================================================================
+
+  // endpoint for adding new mapping: predefined_category - business
+  // mapping between the two is important for searching businesses by predefined category
+
+  @PostMapping("{businessId}/predefined-categories")
+  public ResponseEntity<MessageResponse> linkBusinessWithPredefinedCategories(@PathVariable @Valid @NotBlank Integer businessId,
+                                                                              @RequestBody @Valid List<Integer> categoryIds) {
+    logger.info("Saving categories {} for business {}", categoryIds, businessId);
+    businessService.linkPredefinedCategories(categoryIds, businessId);
+    return ResponseEntity.status(HttpStatus.CREATED).body(new MessageResponse("Categories saved successfully"));
+  }
+
+  // get all predefined categories for business
+  @GetMapping("{businessId}/predefined-categories")
+  public ResponseEntity<List<PredefinedCategory>> getPredefinedCategoriesOfBusiness(
+      @PathVariable @Valid @NotBlank Integer businessId) {
+    List<PredefinedCategory> predefinedCategoriesOfBusiness = businessService.getPredefinedCategories(businessId);
+    logger.info("Getting PredefinedCategories ({}) of business {}: {}", predefinedCategoriesOfBusiness.size(), businessId,
+        predefinedCategoriesOfBusiness);
+    return ResponseEntity.ok(predefinedCategoriesOfBusiness);
   }
 
 }

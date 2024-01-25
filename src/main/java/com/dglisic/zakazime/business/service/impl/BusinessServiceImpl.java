@@ -6,18 +6,21 @@ import com.dglisic.zakazime.business.controller.dto.CreateServiceRequest;
 import com.dglisic.zakazime.business.controller.dto.ServiceMapper;
 import com.dglisic.zakazime.business.controller.dto.UpdateServiceRequest;
 import com.dglisic.zakazime.business.repository.BusinessRepository;
+import com.dglisic.zakazime.business.repository.PredefinedCategoryRepository;
 import com.dglisic.zakazime.business.repository.ServiceRepository;
 import com.dglisic.zakazime.business.repository.UserDefinedCategoryRepository;
 import com.dglisic.zakazime.business.service.BusinessService;
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.service.UserService;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
+import jooq.tables.pojos.PredefinedCategory;
 import jooq.tables.pojos.Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -32,7 +35,10 @@ public class BusinessServiceImpl implements BusinessService {
   private final UserService userService;
   private final BusinessRepository businessRepository;
   private final ServiceRepository serviceRepository;
+  // used for organization of services of business
   private final UserDefinedCategoryRepository categoryRepository;
+  // used for search by end user
+  private final PredefinedCategoryRepository predefinedCategoryRepository;
 
   @Override
   @Transactional
@@ -89,6 +95,22 @@ public class BusinessServiceImpl implements BusinessService {
     validateOnSaveService(serviceRequest, businessId);
     final Service serviceToBeSaved = fromRequest(serviceRequest, businessId);
     serviceRepository.create(serviceToBeSaved);
+  }
+
+  @Override
+  public void linkPredefinedCategories(List<Integer> categoryIds, Integer businessId) {
+    requireBusinessExists(businessId);
+    requireUserPermittedToChangeBusiness(businessId);
+    final boolean allExist = predefinedCategoryRepository.allExist(new HashSet<>(categoryIds));
+    if (!allExist) {
+      throw new ApplicationException("Category does not exist", HttpStatus.BAD_REQUEST);
+    }
+    businessRepository.linkPredefined(categoryIds, businessId);
+  }
+
+  public List<PredefinedCategory> getPredefinedCategories(Integer businessId) {
+    requireBusinessExists(businessId);
+    return businessRepository.getPredefinedCategories(businessId);
   }
 
   @Override

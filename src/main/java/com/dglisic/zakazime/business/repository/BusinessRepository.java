@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
+import jooq.tables.pojos.PredefinedCategory;
 
 public interface BusinessRepository {
 
@@ -20,4 +21,8 @@ public interface BusinessRepository {
   Optional<Business> findBusinessByName(final String name);
 
   boolean isUserRelatedToBusiness(final Integer id, final Integer businessId);
+
+  void linkPredefined(List<Integer> categoryIds, Integer businessId);
+
+  List<PredefinedCategory> getPredefinedCategories(Integer businessId);
 }

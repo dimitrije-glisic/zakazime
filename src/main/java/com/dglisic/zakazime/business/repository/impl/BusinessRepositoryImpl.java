@@ -4,17 +4,22 @@ package com.dglisic.zakazime.business.repository.impl;
 import static jooq.tables.Account.ACCOUNT;
 import static jooq.tables.Business.BUSINESS;
 import static jooq.tables.BusinessAccountMap.BUSINESS_ACCOUNT_MAP;
+import static jooq.tables.BusinessPredefinedCategoryMap.BUSINESS_PREDEFINED_CATEGORY_MAP;
 import static jooq.tables.BusinessType.BUSINESS_TYPE;
+import static jooq.tables.PredefinedCategory.PREDEFINED_CATEGORY;
 import static org.jooq.impl.DSL.upper;
 
 import com.dglisic.zakazime.business.repository.BusinessRepository;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
+import jooq.tables.pojos.PredefinedCategory;
 import jooq.tables.records.BusinessRecord;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
+import org.jooq.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -83,6 +88,29 @@ public class BusinessRepositoryImpl implements BusinessRepository {
         .fetchOneInto(Integer.class);
 
     return count != null && count > 0;
+  }
+
+  @Override
+  public void linkPredefined(List<Integer> categoryIds, Integer businessId) {
+    List<Query> queries = new ArrayList<>();
+
+    for (Integer categoryId : categoryIds) {
+      queries.add(
+          dsl.insertInto(BUSINESS_PREDEFINED_CATEGORY_MAP)
+              .set(BUSINESS_PREDEFINED_CATEGORY_MAP.BUSINESS_ID, businessId)
+              .set(BUSINESS_PREDEFINED_CATEGORY_MAP.CATEGORY_ID, categoryId)
+      );
+    }
+    dsl.batch(queries).execute();
+  }
+
+  @Override
+  public List<PredefinedCategory> getPredefinedCategories(Integer businessId) {
+    return dsl.select()
+        .from(PREDEFINED_CATEGORY)
+        .join(BUSINESS_PREDEFINED_CATEGORY_MAP).on(PREDEFINED_CATEGORY.ID.eq(BUSINESS_PREDEFINED_CATEGORY_MAP.CATEGORY_ID))
+        .where(BUSINESS_PREDEFINED_CATEGORY_MAP.BUSINESS_ID.eq(businessId))
+        .fetchInto(PredefinedCategory.class);
   }
 
 }
