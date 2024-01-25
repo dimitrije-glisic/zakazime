@@ -1,7 +1,7 @@
 package com.dglisic.zakazime.business.service.impl;
 
-import com.dglisic.zakazime.business.controller.dto.CreateServiceCategoryRequest;
-import com.dglisic.zakazime.business.controller.dto.UpdateServiceCategoryRequest;
+import com.dglisic.zakazime.business.controller.dto.CreatePredefinedCategoryRequest;
+import com.dglisic.zakazime.business.controller.dto.UpdatePredefinedCategoryRequest;
 import com.dglisic.zakazime.business.repository.BusinessTypeRepository;
 import com.dglisic.zakazime.business.repository.PredefinedCategoryRepository;
 import com.dglisic.zakazime.business.service.ImageStorage;
@@ -28,15 +28,15 @@ public class PredefinedCategoryServiceImpl implements PredefinedCategoryService 
   private final ImageStorage imageStorage;
 
   @Override
-  public PredefinedCategory create(final CreateServiceCategoryRequest createServiceCategoryRequest) {
-    validateOnSave(createServiceCategoryRequest);
-    PredefinedCategory toBeCreated = fromRequest(createServiceCategoryRequest);
+  public PredefinedCategory create(final CreatePredefinedCategoryRequest createPredefinedCategoryRequest) {
+    validateOnSave(createPredefinedCategoryRequest);
+    PredefinedCategory toBeCreated = fromRequest(createPredefinedCategoryRequest);
     return predefinedCategoryRepository.store(toBeCreated);
   }
 
   @Override
   @Transactional
-  public PredefinedCategory createWithImage(final CreateServiceCategoryRequest createRequest, final MultipartFile image) {
+  public PredefinedCategory createWithImage(final CreatePredefinedCategoryRequest createRequest, final MultipartFile image) {
     validateOnSave(createRequest);
     final PredefinedCategory toBeCreated = fromRequest(createRequest);
     final PredefinedCategory newCategory = predefinedCategoryRepository.store(toBeCreated);
@@ -54,13 +54,42 @@ public class PredefinedCategoryServiceImpl implements PredefinedCategoryService 
   }
 
   @Override
-  public void update(final UpdateServiceCategoryRequest updateServiceCategoryRequest, final Integer categoryId) {
-    validateOnUpdate(updateServiceCategoryRequest, categoryId);
+  public void update(final Integer categoryId, final UpdatePredefinedCategoryRequest updateRequest) {
+    validateOnUpdate(updateRequest, categoryId);
+    if (updateRequest.title().equals(requireById(categoryId).getTitle())) {
+      // nothing to update
+      return;
+    }
     final PredefinedCategory category = new PredefinedCategory();
     category.setId(categoryId);
-    category.setTitle(updateServiceCategoryRequest.title());
-    category.setBusinessTypeId(updateServiceCategoryRequest.businessTypeId());
+    category.setTitle(updateRequest.title());
+    final String slug = SlugUtil.fromTitle(updateRequest.title());
+    category.setSlug(slug);
+
     predefinedCategoryRepository.update(category);
+  }
+
+  @Override
+  @Transactional
+  public void update(final Integer id, final UpdatePredefinedCategoryRequest updateRequest, final MultipartFile file)
+      throws IOException {
+    final PredefinedCategory inUpdate = requireById(id);
+    if (updateRequest.title().equals(inUpdate.getTitle()) && file.isEmpty()) {
+      // nothing to update
+      return;
+    }
+    final String url = makeUrl(id, file);
+    if (url.equalsIgnoreCase(inUpdate.getImageUrl())) {
+      // nothing to update
+      return;
+    }
+    inUpdate.setTitle(updateRequest.title());
+    final String slug = SlugUtil.fromTitle(updateRequest.title());
+    inUpdate.setSlug(slug);
+    inUpdate.setImageUrl(url);
+    predefinedCategoryRepository.update(inUpdate);
+    // no rollback mechanism for storing image so it is done after update
+    storeImage(url, file);
   }
 
   @Override
@@ -96,21 +125,21 @@ public class PredefinedCategoryServiceImpl implements PredefinedCategoryService 
     return url;
   }
 
-  private void validateOnSave(final CreateServiceCategoryRequest createServiceCategoryRequest) {
-    requireUniqueCategoryTitle(createServiceCategoryRequest.title());
-    requireBusinessTypeExists(createServiceCategoryRequest.businessTypeId());
+  private void validateOnSave(final CreatePredefinedCategoryRequest createPredefinedCategoryRequest) {
+    requireUniqueCategoryTitle(createPredefinedCategoryRequest.title());
+    requireBusinessTypeExists(createPredefinedCategoryRequest.businessTypeId());
   }
 
-  private PredefinedCategory fromRequest(CreateServiceCategoryRequest request) {
+  private PredefinedCategory fromRequest(CreatePredefinedCategoryRequest request) {
     PredefinedCategory category = new PredefinedCategory();
     category.setTitle(request.title());
-    final String slug = request.title().toLowerCase().replace(" ", "-");
+    final String slug = SlugUtil.fromTitle(request.title());
     category.setSlug(slug);
     category.setBusinessTypeId(request.businessTypeId());
     return category;
   }
 
-  private void validateOnUpdate(final UpdateServiceCategoryRequest updateServiceCategoryRequest, final Integer categoryId) {
+  private void validateOnUpdate(final UpdatePredefinedCategoryRequest updatePredefinedCategoryRequest, final Integer categoryId) {
     requireCategoryExists(categoryId);
   }
 

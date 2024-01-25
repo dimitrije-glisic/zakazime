@@ -2,9 +2,9 @@ package com.dglisic.zakazime.business.controller;
 
 import static org.springframework.http.HttpStatus.CREATED;
 
-import com.dglisic.zakazime.business.controller.dto.CreateServiceCategoryRequest;
+import com.dglisic.zakazime.business.controller.dto.CreatePredefinedCategoryRequest;
 import com.dglisic.zakazime.business.controller.dto.ImageUploadResponse;
-import com.dglisic.zakazime.business.controller.dto.UpdateServiceCategoryRequest;
+import com.dglisic.zakazime.business.controller.dto.UpdatePredefinedCategoryRequest;
 import com.dglisic.zakazime.business.service.PredefinedCategoryService;
 import com.dglisic.zakazime.common.MessageResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.List;
 import jooq.tables.pojos.PredefinedCategory;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,6 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("categories")
 @RequiredArgsConstructor
+@Slf4j
 public class PredefinedCategoryController {
 
   private final PredefinedCategoryService predefinedCategoryService;
@@ -40,8 +42,9 @@ public class PredefinedCategoryController {
   @PostMapping
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<PredefinedCategory> create(
-      @RequestBody @Valid final CreateServiceCategoryRequest createServiceCategoryRequest) {
-    return ResponseEntity.ok(predefinedCategoryService.create(createServiceCategoryRequest));
+      @RequestBody @Valid final CreatePredefinedCategoryRequest createPredefinedCategoryRequest) {
+    log.info("Creating predefined category: {}", createPredefinedCategoryRequest);
+    return ResponseEntity.ok(predefinedCategoryService.create(createPredefinedCategoryRequest));
   }
 
   @PostMapping(value = "/with-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -49,13 +52,16 @@ public class PredefinedCategoryController {
   public ResponseEntity<PredefinedCategory> createWithImage(
       @RequestPart("category") final String categoryJson,
       @RequestPart("image") final MultipartFile image) throws IOException {
-    final CreateServiceCategoryRequest createRequest = objectMapper.readValue(categoryJson, CreateServiceCategoryRequest.class);
+    log.info("Creating predefined category with image: {}", categoryJson);
+    final CreatePredefinedCategoryRequest createRequest =
+        objectMapper.readValue(categoryJson, CreatePredefinedCategoryRequest.class);
     return ResponseEntity.status(CREATED).body(predefinedCategoryService.createWithImage(createRequest, image));
   }
 
   @PostMapping(value = "/{id}/upload-image", consumes = {"multipart/form-data"})
   @PreAuthorize("hasRole('ADMIN')")
   public ImageUploadResponse uploadImage(@PathVariable final Integer id, @RequestParam("image") final MultipartFile file) {
+    log.info("Uploading image for predefined category with id: {}", id);
     final String url = predefinedCategoryService.uploadImage(id, file);
     return new ImageUploadResponse(url);
   }
@@ -72,9 +78,23 @@ public class PredefinedCategoryController {
 
   @PutMapping("/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<MessageResponse> update(@RequestBody final UpdateServiceCategoryRequest updateServiceCategoryRequest,
-                                                @PathVariable final Integer id) {
-    predefinedCategoryService.update(updateServiceCategoryRequest, id);
+  public ResponseEntity<MessageResponse> update(@PathVariable final Integer id,
+                                                @RequestBody final UpdatePredefinedCategoryRequest updateRequest) {
+    log.info("Updating predefined category with id: {} with request: {}", id, updateRequest);
+    predefinedCategoryService.update(id, updateRequest);
+    return ResponseEntity.ok(new MessageResponse("Service category updated successfully"));
+  }
+
+  @PutMapping(value = "/{id}/with-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<MessageResponse> updateWithImage(
+      @RequestPart("category") final String categoryJson,
+      @RequestPart("image") final MultipartFile image,
+      @PathVariable final Integer id) throws IOException {
+    log.info("Updating predefined category with id: {} with request: {}", id, categoryJson);
+    final UpdatePredefinedCategoryRequest updateRequest =
+        objectMapper.readValue(categoryJson, UpdatePredefinedCategoryRequest.class);
+    predefinedCategoryService.update(id, updateRequest, image);
     return ResponseEntity.ok(new MessageResponse("Service category updated successfully"));
   }
 
