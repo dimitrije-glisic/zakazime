@@ -3,8 +3,10 @@ package com.dglisic.zakazime.business.service.impl;
 import com.dglisic.zakazime.business.controller.dto.BusinessMapper;
 import com.dglisic.zakazime.business.controller.dto.CreateBusinessProfileRequest;
 import com.dglisic.zakazime.business.controller.dto.CreateServiceRequest;
+import com.dglisic.zakazime.business.controller.dto.CreateUserDefinedCategoryRequest;
 import com.dglisic.zakazime.business.controller.dto.ServiceMapper;
 import com.dglisic.zakazime.business.controller.dto.UpdateServiceRequest;
+import com.dglisic.zakazime.business.controller.dto.UpdateUserDefinedCategoryRequest;
 import com.dglisic.zakazime.business.repository.BusinessRepository;
 import com.dglisic.zakazime.business.repository.PredefinedCategoryRepository;
 import com.dglisic.zakazime.business.repository.ServiceRepository;
@@ -16,18 +18,23 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.PredefinedCategory;
 import jooq.tables.pojos.Service;
+import jooq.tables.pojos.UserDefinedCategory;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 
 @org.springframework.stereotype.Service
 @RequiredArgsConstructor
+@Slf4j
 public class BusinessServiceImpl implements BusinessService {
 
   private final BusinessMapper businessMapper;
@@ -36,7 +43,7 @@ public class BusinessServiceImpl implements BusinessService {
   private final BusinessRepository businessRepository;
   private final ServiceRepository serviceRepository;
   // used for organization of services of business
-  private final UserDefinedCategoryRepository categoryRepository;
+  private final UserDefinedCategoryRepository userDefinedCategoryRepository;
   // used for search by end user
   private final PredefinedCategoryRepository predefinedCategoryRepository;
 
@@ -72,29 +79,29 @@ public class BusinessServiceImpl implements BusinessService {
   }
 
   @Override
-  public void updateService(final int businessId, final int serviceId, final UpdateServiceRequest updateServiceRequest) {
-    validateOnUpdate(serviceId, businessId, updateServiceRequest);
-    final Service service = serviceMapper.map(updateServiceRequest);
-    // this is safe because we validated that service exists and belongs to business
-    service.setId(serviceId);
-    // todo
-    // service no longer has a reference to business id, it has a reference to category id, which has a reference to business id
-//    service.setBusinessId(businessId);
-    serviceRepository.update(service);
-  }
-
-  @Override
-  public List<Service> getServicesOfBusiness(int businessId) {
-    Business business = businessRepository.findBusinessById(businessId)
+  @Cacheable(value = "services", key = "#businessId")
+  public List<Service> getServicesOfBusiness(final Integer businessId) {
+    log.debug("Getting services for business with id {}", businessId);
+    final Business business = businessRepository.findBusinessById(businessId)
         .orElseThrow(() -> new ApplicationException("Business not found", HttpStatus.NOT_FOUND));
-    return serviceRepository.getServicesOfBusiness(business.getId());
+    return businessRepository.getServicesOfBusiness(business.getId());
   }
 
   @Override
-  public void addServiceToBusiness(final CreateServiceRequest serviceRequest, final Integer businessId) {
+  @CachePut(value = "services", key = "#businessId")
+  public Service addServicesToBusiness(final CreateServiceRequest serviceRequest, final Integer businessId) {
     validateOnSaveService(serviceRequest, businessId);
-    final Service serviceToBeSaved = fromRequest(serviceRequest, businessId);
-    serviceRepository.create(serviceToBeSaved);
+    final Service serviceToBeSaved = fromRequest(serviceRequest);
+    return serviceRepository.create(serviceToBeSaved);
+  }
+
+  @Override
+  @CacheEvict(value = "services", key = "#businessId")
+  public void updateService(final int businessId, final int serviceId, final UpdateServiceRequest updateServiceRequest) {
+    validateOnUpdateService(serviceId, businessId, updateServiceRequest);
+    final Service service = serviceMapper.map(updateServiceRequest);
+    service.setId(serviceId);
+    serviceRepository.update(service);
   }
 
   @Override
@@ -114,24 +121,66 @@ public class BusinessServiceImpl implements BusinessService {
   }
 
   @Override
+  public List<UserDefinedCategory> getUserDefinedCategories(Integer businessId) {
+    requireBusinessExists(businessId);
+    return businessRepository.getUserDefinedCategories(businessId);
+  }
+
+  @Override
+  public void createUserDefinedCategory(CreateUserDefinedCategoryRequest categoryRequest, Integer businessId) {
+    requireBusinessExists(businessId);
+    requireUserPermittedToChangeBusiness(businessId);
+    final UserDefinedCategory category = new UserDefinedCategory()
+        .setTitle(categoryRequest.title())
+        .setBusinessId(businessId);
+    businessRepository.createUserDefinedCategory(category);
+  }
+
+  @Override
+  public void updateUserDefinedCategory(Integer businessId, Integer categoryId,
+                                        UpdateUserDefinedCategoryRequest categoryRequest) {
+    requireBusinessExists(businessId);
+    requireUserPermittedToChangeBusiness(businessId);
+    final UserDefinedCategory category = requireUserDefinedCategory(categoryId);
+
+    if (!category.getBusinessId().equals(businessId)) {
+      throw new ApplicationException("Category with id " + categoryId + " does not belong to business with id " + businessId,
+          HttpStatus.BAD_REQUEST);
+    }
+
+    if (category.getTitle().equals(categoryRequest.title())) {
+      return;
+      // no change
+    }
+    category.setTitle(categoryRequest.title());
+    userDefinedCategoryRepository.update(category);
+  }
+
+  @Override
+  @CacheEvict(value = "services", key = "#businessId")
+  public void deleteService(Integer businessId, Integer serviceId) {
+    validateOnDeleteService(businessId, serviceId);
+    serviceRepository.delete(serviceId);
+  }
+
+  @Override
   @Transactional
-  public void addServiceToBusiness(final List<CreateServiceRequest> createServiceRequestList, final Integer businessId) {
+  @CacheEvict(value = "services", key = "#businessId")
+  public List<Service> addServicesToBusiness(final List<CreateServiceRequest> createServiceRequestList,
+                                             final Integer businessId) {
     validateOnSaveServices(createServiceRequestList, businessId);
     final List<Service> servicesToBeSaved = fromRequest(createServiceRequestList, businessId);
-    serviceRepository.saveServices(servicesToBeSaved);
+    return serviceRepository.saveServices(servicesToBeSaved);
   }
 
   private List<Service> fromRequest(final List<CreateServiceRequest> createServiceRequestList, int businessId) {
     return createServiceRequestList.stream()
-        .map(req -> fromRequest(req, businessId))
+        .map(this::fromRequest)
         .toList();
   }
 
-  private Service fromRequest(final CreateServiceRequest req, final int businessId) {
-    final Service service = serviceMapper.map(req);
-    // todo - see what to do with this
-//    service.setBusinessId(businessId);
-    return service;
+  private Service fromRequest(final CreateServiceRequest req) {
+    return serviceMapper.map(req);
   }
 
   private void validateOnCreateBusiness(CreateBusinessProfileRequest request) {
@@ -144,27 +193,61 @@ public class BusinessServiceImpl implements BusinessService {
   private void validateOnSaveServices(final List<CreateServiceRequest> createServiceRequestList, int businessId) {
     requireBusinessExists(businessId);
     requireUserPermittedToChangeBusiness(businessId);
-    final Set<Integer> subCategoryIds =
-        createServiceRequestList.stream().map(CreateServiceRequest::subcategoryId).collect(Collectors.toSet());
-    // todo - no longer subcategory - only category
-    final boolean allExist = categoryRepository.allExist(subCategoryIds);
-    if (!allExist) {
-      throw new ApplicationException("Subcategory does not exist", HttpStatus.BAD_REQUEST);
-    }
+    requireAllCategoriesExist(createServiceRequestList);
+    requireAllTitlesUnique(createServiceRequestList, businessId);
   }
 
   private void validateOnSaveService(final CreateServiceRequest serviceRequest, final Integer businessId) {
     requireBusinessExists(businessId);
     requireUserPermittedToChangeBusiness(businessId);
-    requireSubcategoryExists(serviceRequest.subcategoryId());
+    requireCategoryExists(serviceRequest.categoryId());
+    requireUniqueServiceTitle(serviceRequest.title(), businessId);
   }
 
-  private void validateOnUpdate(final Integer serviceId, final Integer businessId,
-                                final UpdateServiceRequest changeServiceRequest) {
+  private void validateOnUpdateService(final Integer serviceId, final Integer businessId,
+                                       final UpdateServiceRequest changeServiceRequest) {
     requireBusinessExists(businessId);
+    requireCategoryExists(changeServiceRequest.categoryId());
+    requireServiceExists(serviceId);
+    requireServiceBelongsToBusiness(serviceId, businessId);
     requireUserPermittedToChangeBusiness(businessId);
-    requireServiceExistsAndBelongsToBusiness(serviceId, businessId);
-    requireSubcategoryExists(changeServiceRequest.subcategoryId());
+  }
+
+  private void validateOnDeleteService(Integer businessId, Integer serviceId) {
+    requireBusinessExists(businessId);
+    requireServiceExists(serviceId);
+    requireServiceBelongsToBusiness(serviceId, businessId);
+    requireUserPermittedToChangeBusiness(businessId);
+  }
+
+  private void requireAllCategoriesExist(List<CreateServiceRequest> createServiceRequestList) {
+    for (CreateServiceRequest createServiceRequest : createServiceRequestList) {
+      requireCategoryExists(createServiceRequest.categoryId());
+    }
+  }
+
+  private void requireAllTitlesUnique(List<CreateServiceRequest> createServiceRequestList, int businessId) {
+    final var incomingTitles = createServiceRequestList.stream()
+        .map(CreateServiceRequest::title)
+        .collect(Collectors.toSet());
+
+    boolean incomingTitlesAreUnique = incomingTitles.size() == createServiceRequestList.size();
+
+    if (!incomingTitlesAreUnique) {
+      throw new ApplicationException("Service titles must be unique", HttpStatus.BAD_REQUEST);
+    }
+
+    for (String title : incomingTitles) {
+      requireUniqueServiceTitle(title, businessId);
+    }
+  }
+
+  private void requireServiceBelongsToBusiness(Integer serviceId, Integer businessId) {
+    final boolean serviceBelongsToBusiness = businessRepository.serviceBelongsToBusiness(serviceId, businessId);
+    if (!serviceBelongsToBusiness) {
+      throw new ApplicationException("Service with id " + serviceId + " does not belong to business with id " + businessId,
+          HttpStatus.BAD_REQUEST);
+    }
   }
 
   private void requireBusinessExists(final Integer businessId) {
@@ -182,24 +265,31 @@ public class BusinessServiceImpl implements BusinessService {
     }
   }
 
-  private void requireServiceExistsAndBelongsToBusiness(final Integer serviceId, final Integer businessId) {
+  private void requireUniqueServiceTitle(String title, Integer businessId) {
+    final boolean exists = serviceRepository.existsByTitleAndBusinessId(title, businessId);
+    if (exists) {
+      throw new ApplicationException("Service with title " + title + " already exists, nothing was saved",
+          HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  private void requireServiceExists(final Integer serviceId) {
     final Optional<Service> serviceFromDb = serviceRepository.findServiceById(serviceId);
     if (serviceFromDb.isEmpty()) {
       throw new ApplicationException("Service with id " + serviceId + " does not exist", HttpStatus.BAD_REQUEST);
     }
-    final Service serviceFromDbValue = serviceFromDb.get();
-    // todo - see what with this
-//    if (!serviceFromDbValue.getBusinessId().equals(businessId)) {
-//      throw new ApplicationException(
-//          "Service with id " + serviceId + " does not belong to business with id " + businessId,
-//          HttpStatus.BAD_REQUEST);
-//    }
   }
 
-  private void requireSubcategoryExists(final Integer subcategoryId) {
-    final boolean subcategoryExists = categoryRepository.exists(subcategoryId);
-    if (!subcategoryExists) {
-      throw new ApplicationException("Subcategory does not exist", HttpStatus.BAD_REQUEST);
+  private void requireCategoryExists(final Integer categoryId) {
+    final boolean categoryExists = userDefinedCategoryRepository.exists(categoryId);
+    if (!categoryExists) {
+      throw new ApplicationException("Category with id" + categoryId + "not exists", HttpStatus.BAD_REQUEST);
     }
+  }
+
+  private UserDefinedCategory requireUserDefinedCategory(Integer categoryId) {
+    return userDefinedCategoryRepository.findUserDefinedCategoryById(categoryId)
+        .orElseThrow(
+            () -> new ApplicationException("Category with id " + categoryId + " does not exist", HttpStatus.BAD_REQUEST));
   }
 }

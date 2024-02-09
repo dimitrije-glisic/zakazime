@@ -60,7 +60,6 @@ CREATE TABLE service
 (
     id           INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     category_id  INT REFERENCES user_defined_category (id),
-    name         VARCHAR(50) NOT NULL,
     title        VARCHAR(50) NOT NULL,
     price        DECIMAL     NOT NULL,
     avg_duration INT         NOT NULL,

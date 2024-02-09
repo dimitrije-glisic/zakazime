@@ -8,6 +8,7 @@ import jooq.tables.pojos.UserDefinedCategory;
 
 public interface UserDefinedCategoryRepository {
   Optional<UserDefinedCategory> findById(@NotNull final Integer id);
+
   Optional<UserDefinedCategory> findByTitle(@NotNull final String categoryName);
 
   boolean allExist(Set<Integer> categoryIds);
@@ -19,4 +20,8 @@ public interface UserDefinedCategoryRepository {
   UserDefinedCategory store(UserDefinedCategory category);
 
   List<UserDefinedCategory> getAll();
+
+  void update(UserDefinedCategory category);
+
+  Optional<UserDefinedCategory> findUserDefinedCategoryById(Integer categoryId);
 }

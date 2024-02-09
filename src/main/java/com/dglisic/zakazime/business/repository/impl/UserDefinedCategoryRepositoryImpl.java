@@ -44,8 +44,8 @@ public class UserDefinedCategoryRepositoryImpl implements UserDefinedCategoryRep
   }
 
   @Override
-  public boolean exists(final Integer integer) {
-    return dao.findById(integer) != null;
+  public boolean exists(final Integer id) {
+    return dao.findById(id) != null;
   }
 
   @Override
@@ -63,6 +63,21 @@ public class UserDefinedCategoryRepositoryImpl implements UserDefinedCategoryRep
   @Override
   public List<UserDefinedCategory> getAll() {
     return dao.findAll();
+  }
+
+  @Override
+  public void update(UserDefinedCategory category) {
+    dsl.update(USER_DEFINED_CATEGORY)
+        .set(USER_DEFINED_CATEGORY.TITLE, category.getTitle())
+        .where(USER_DEFINED_CATEGORY.ID.eq(category.getId()))
+        .execute();
+  }
+
+  @Override
+  public Optional<UserDefinedCategory> findUserDefinedCategoryById(Integer categoryId) {
+    return Optional.ofNullable(dsl.selectFrom(USER_DEFINED_CATEGORY)
+        .where(USER_DEFINED_CATEGORY.ID.eq(categoryId))
+        .fetchOneInto(UserDefinedCategory.class));
   }
 
 }

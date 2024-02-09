@@ -18,3 +18,9 @@ springdoc:
   api-docs:
     path: /api-docs
 
+logging:
+  level:
+    com:
+      dglisic:
+        zakazime:
+          business: DEBUG

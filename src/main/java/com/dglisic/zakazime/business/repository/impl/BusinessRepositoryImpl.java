@@ -7,6 +7,8 @@ import static jooq.tables.BusinessAccountMap.BUSINESS_ACCOUNT_MAP;
 import static jooq.tables.BusinessPredefinedCategoryMap.BUSINESS_PREDEFINED_CATEGORY_MAP;
 import static jooq.tables.BusinessType.BUSINESS_TYPE;
 import static jooq.tables.PredefinedCategory.PREDEFINED_CATEGORY;
+import static jooq.tables.Service.SERVICE;
+import static jooq.tables.UserDefinedCategory.USER_DEFINED_CATEGORY;
 import static org.jooq.impl.DSL.upper;
 
 import com.dglisic.zakazime.business.repository.BusinessRepository;
@@ -16,6 +18,8 @@ import java.util.Optional;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.PredefinedCategory;
+import jooq.tables.pojos.Service;
+import jooq.tables.pojos.UserDefinedCategory;
 import jooq.tables.records.BusinessRecord;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
@@ -111,6 +115,42 @@ public class BusinessRepositoryImpl implements BusinessRepository {
         .join(BUSINESS_PREDEFINED_CATEGORY_MAP).on(PREDEFINED_CATEGORY.ID.eq(BUSINESS_PREDEFINED_CATEGORY_MAP.CATEGORY_ID))
         .where(BUSINESS_PREDEFINED_CATEGORY_MAP.BUSINESS_ID.eq(businessId))
         .fetchInto(PredefinedCategory.class);
+  }
+
+  @Override
+  public List<UserDefinedCategory> getUserDefinedCategories(Integer businessId) {
+    return dsl.selectFrom(USER_DEFINED_CATEGORY)
+        .where(USER_DEFINED_CATEGORY.BUSINESS_ID.eq(businessId))
+        .fetchInto(UserDefinedCategory.class);
+  }
+
+  @Override
+  public void createUserDefinedCategory(UserDefinedCategory category) {
+    dsl.insertInto(USER_DEFINED_CATEGORY)
+        .set(USER_DEFINED_CATEGORY.TITLE, category.getTitle())
+        .set(USER_DEFINED_CATEGORY.BUSINESS_ID, category.getBusinessId())
+        .execute();
+  }
+
+  @Override
+  public List<Service> getServicesOfBusiness(Integer businessId) {
+    return dsl.select(SERVICE.ID, SERVICE.TITLE, SERVICE.CATEGORY_ID, SERVICE.PRICE, SERVICE.DESCRIPTION, SERVICE.AVG_DURATION)
+        .from(SERVICE)
+        .join(USER_DEFINED_CATEGORY).on(SERVICE.CATEGORY_ID.eq(USER_DEFINED_CATEGORY.ID))
+        .where(USER_DEFINED_CATEGORY.BUSINESS_ID.eq(businessId))
+        .fetchInto(Service.class);
+  }
+
+  @Override
+  public boolean serviceBelongsToBusiness(Integer serviceId, Integer businessId) {
+    Integer count = dsl.selectCount()
+        .from(SERVICE)
+        .join(USER_DEFINED_CATEGORY).on(SERVICE.CATEGORY_ID.eq(USER_DEFINED_CATEGORY.ID))
+        .where(SERVICE.ID.eq(serviceId))
+        .and(USER_DEFINED_CATEGORY.BUSINESS_ID.eq(businessId))
+        .fetchOneInto(Integer.class);
+
+    return count != null && count > 0;
   }
 
 }

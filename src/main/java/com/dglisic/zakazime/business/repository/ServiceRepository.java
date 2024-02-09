@@ -13,7 +13,7 @@ public interface ServiceRepository {
 
   Optional<Service> findServiceById(@NotNull final Integer serviceId);
 
-  void saveServices(@NotNull final List<Service> services);
+  List<Service> saveServices(@NotNull final List<Service> services);
 
   Service create(@NotNull final Service service);
 
@@ -21,7 +21,7 @@ public interface ServiceRepository {
 
   Optional<Service> findByTitle(@NotBlank final String title);
 
-  void updateServiceTemplate(final Service request);
+  boolean existsByTitleAndBusinessId(String title, Integer businessId);
 
-  void deleteServiceTemplate(final Integer id);
+  void delete(Integer serviceId);
 }
