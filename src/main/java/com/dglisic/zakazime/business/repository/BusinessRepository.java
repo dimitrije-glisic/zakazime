@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
+import jooq.tables.pojos.BusinessImage;
 import jooq.tables.pojos.PredefinedCategory;
 import jooq.tables.pojos.Service;
 import jooq.tables.pojos.UserDefinedCategory;
@@ -35,4 +36,12 @@ public interface BusinessRepository {
   List<Service> getServicesOfBusiness(Integer businessId);
 
   boolean serviceBelongsToBusiness(Integer serviceId, Integer businessId);
+
+  List<Business> searchBusinesses(String city, String businessType, String category);
+
+  List<Business> getAllBusinessesInCity(String city);
+
+  void updateProfileImageUrl(Integer businessId, String imageUrl);
+
+  Optional<BusinessImage> getProfileImage(Integer businessId);
 }

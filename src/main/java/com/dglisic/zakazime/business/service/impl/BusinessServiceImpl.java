@@ -4,16 +4,21 @@ import com.dglisic.zakazime.business.controller.dto.BusinessMapper;
 import com.dglisic.zakazime.business.controller.dto.CreateBusinessProfileRequest;
 import com.dglisic.zakazime.business.controller.dto.CreateServiceRequest;
 import com.dglisic.zakazime.business.controller.dto.CreateUserDefinedCategoryRequest;
+import com.dglisic.zakazime.business.controller.dto.ImageType;
 import com.dglisic.zakazime.business.controller.dto.ServiceMapper;
 import com.dglisic.zakazime.business.controller.dto.UpdateServiceRequest;
 import com.dglisic.zakazime.business.controller.dto.UpdateUserDefinedCategoryRequest;
+import com.dglisic.zakazime.business.repository.BusinessImageRepository;
 import com.dglisic.zakazime.business.repository.BusinessRepository;
 import com.dglisic.zakazime.business.repository.PredefinedCategoryRepository;
 import com.dglisic.zakazime.business.repository.ServiceRepository;
 import com.dglisic.zakazime.business.repository.UserDefinedCategoryRepository;
 import com.dglisic.zakazime.business.service.BusinessService;
+import com.dglisic.zakazime.business.service.ImageStorage;
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.service.UserService;
+import jakarta.validation.constraints.NotNull;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -21,16 +26,15 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
+import jooq.tables.pojos.BusinessImage;
 import jooq.tables.pojos.PredefinedCategory;
 import jooq.tables.pojos.Service;
 import jooq.tables.pojos.UserDefinedCategory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @org.springframework.stereotype.Service
 @RequiredArgsConstructor
@@ -46,6 +50,8 @@ public class BusinessServiceImpl implements BusinessService {
   private final UserDefinedCategoryRepository userDefinedCategoryRepository;
   // used for search by end user
   private final PredefinedCategoryRepository predefinedCategoryRepository;
+  private final ImageStorage imageStorage;
+  private final BusinessImageRepository businessImageRepository;
 
   @Override
   @Transactional
@@ -79,7 +85,6 @@ public class BusinessServiceImpl implements BusinessService {
   }
 
   @Override
-  @Cacheable(value = "services", key = "#businessId")
   public List<Service> getServicesOfBusiness(final Integer businessId) {
     log.debug("Getting services for business with id {}", businessId);
     final Business business = businessRepository.findBusinessById(businessId)
@@ -88,7 +93,6 @@ public class BusinessServiceImpl implements BusinessService {
   }
 
   @Override
-  @CachePut(value = "services", key = "#businessId")
   public Service addServicesToBusiness(final CreateServiceRequest serviceRequest, final Integer businessId) {
     validateOnSaveService(serviceRequest, businessId);
     final Service serviceToBeSaved = fromRequest(serviceRequest);
@@ -96,7 +100,6 @@ public class BusinessServiceImpl implements BusinessService {
   }
 
   @Override
-  @CacheEvict(value = "services", key = "#businessId")
   public void updateService(final int businessId, final int serviceId, final UpdateServiceRequest updateServiceRequest) {
     validateOnUpdateService(serviceId, businessId, updateServiceRequest);
     final Service service = serviceMapper.map(updateServiceRequest);
@@ -157,15 +160,71 @@ public class BusinessServiceImpl implements BusinessService {
   }
 
   @Override
-  @CacheEvict(value = "services", key = "#businessId")
   public void deleteService(Integer businessId, Integer serviceId) {
     validateOnDeleteService(businessId, serviceId);
     serviceRepository.delete(serviceId);
   }
 
   @Override
+  public List<Business> searchBusinesses(String city, String businessType, String category) {
+    return businessRepository.searchBusinesses(city, businessType, category);
+  }
+
+  @Override
+  public List<Business> getAllBusinessesInCity(String city) {
+    return businessRepository.getAllBusinessesInCity(city);
+  }
+
+  @Override
   @Transactional
-  @CacheEvict(value = "services", key = "#businessId")
+  public String uploadImage(Integer businessId, MultipartFile imageFile, ImageType imageType) {
+    validateOnUploadImage(businessId);
+    final String url = makeUrl(businessId, imageFile);
+    businessImageRepository.storeImage(businessId, url);
+    if (imageType.equals(ImageType.PROFILE)) {
+      businessRepository.updateProfileImageUrl(businessId, url);
+    }
+    storeImage(url, imageFile);
+    return url;
+  }
+
+  @Override
+  @Transactional
+  public void deleteImage(Integer businessId, Integer imageId) {
+    validateOnDeleteImage(businessId, imageId);
+    businessImageRepository.deleteImage(imageId);
+    // todo - maybe delete image from storage or archive, for now we will keep it but it will not be used
+//    imageStorage.deleteImage(url);
+  }
+
+  @Override
+  public List<BusinessImage> getImages(Integer businessId) {
+    return businessImageRepository.getImages(businessId);
+  }
+
+  @Override
+  public BusinessImage getProfileImage(Integer businessId) {
+    return businessRepository.getProfileImage(businessId).orElseThrow(
+        () -> new ApplicationException("Profile image not found for business with id " + businessId, HttpStatus.NOT_FOUND)
+    );
+  }
+
+  private @NotNull String makeUrl(final Integer id, final MultipartFile imageFile) {
+    final String idPartOfPath = String.format("id_%d", id);
+    return "businesses" + "/" + idPartOfPath + "/" + imageFile.getOriginalFilename();
+  }
+
+  private void storeImage(final String url, final MultipartFile imageFile) {
+    try {
+      imageStorage.storeImage(url, imageFile);
+    } catch (IOException e) {
+      log.error("Failed to store imageFile", e);
+      throw new ApplicationException("Failed to store imageFile", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Override
+  @Transactional
   public List<Service> addServicesToBusiness(final List<CreateServiceRequest> createServiceRequestList,
                                              final Integer businessId) {
     validateOnSaveServices(createServiceRequestList, businessId);
@@ -218,6 +277,21 @@ public class BusinessServiceImpl implements BusinessService {
     requireServiceExists(serviceId);
     requireServiceBelongsToBusiness(serviceId, businessId);
     requireUserPermittedToChangeBusiness(businessId);
+  }
+
+  private void validateOnUploadImage(Integer businessId) {
+    requireBusinessExists(businessId);
+    requireUserPermittedToChangeBusiness(businessId);
+  }
+
+  private void validateOnDeleteImage(Integer businessId, Integer imageId) {
+    requireBusinessExists(businessId);
+    requireUserPermittedToChangeBusiness(businessId);
+    final boolean imageBelongsToBusiness = businessImageRepository.imageBelongsToBusiness(imageId, businessId);
+    if (!imageBelongsToBusiness) {
+      throw new ApplicationException("Image with id " + imageId + " does not belong to business with id " + businessId,
+          HttpStatus.BAD_REQUEST);
+    }
   }
 
   private void requireAllCategoriesExist(List<CreateServiceRequest> createServiceRequestList) {

@@ -3,6 +3,7 @@ package com.dglisic.zakazime.common.config.security;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
@@ -28,7 +29,11 @@ public class SecurityConfiguration {
         .authorizeHttpRequests(authorize ->
             authorize
                 .requestMatchers("/", "/home", "/login", "/register", "/user", "/error", "/dummy-post").permitAll()
-//                .requestMatchers(request -> request.getServletPath().startsWith("/admin/**")).hasRole("ADMIN")
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").authenticated()
+                .requestMatchers(HttpMethod.GET).permitAll()
+                .requestMatchers(HttpMethod.POST).authenticated()
+                .requestMatchers(HttpMethod.PUT).authenticated()
+                .requestMatchers(HttpMethod.DELETE).authenticated()
                 .anyRequest().authenticated()
         )
         .csrf(csrf -> csrf

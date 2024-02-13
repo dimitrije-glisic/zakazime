@@ -29,12 +29,6 @@ public class UserDefinedCategoryRepositoryImpl implements UserDefinedCategoryRep
   }
 
   @Override
-  public Optional<UserDefinedCategory> findByTitle(String categoryName) {
-    UserDefinedCategory category = dao.fetchOneByTitle(categoryName.toUpperCase());
-    return Optional.ofNullable(category);
-  }
-
-  @Override
   public boolean allExist(Set<Integer> categoryIds) {
     List<Integer> fetch = dsl.select(USER_DEFINED_CATEGORY.ID)
         .from(USER_DEFINED_CATEGORY)

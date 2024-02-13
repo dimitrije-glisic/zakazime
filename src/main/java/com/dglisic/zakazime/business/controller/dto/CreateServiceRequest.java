@@ -7,9 +7,9 @@ import java.math.BigDecimal;
 
 public record CreateServiceRequest(
     @NotBlank String title,
-    @NotBlank String description,
     @NotNull Integer categoryId,
     @NotNull @Positive Integer avgDuration,
-    @NotNull @Positive BigDecimal price
+    @NotNull @Positive BigDecimal price,
+    String description
 ) {
 }

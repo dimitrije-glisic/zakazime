@@ -9,8 +9,6 @@ import jooq.tables.pojos.UserDefinedCategory;
 public interface UserDefinedCategoryRepository {
   Optional<UserDefinedCategory> findById(@NotNull final Integer id);
 
-  Optional<UserDefinedCategory> findByTitle(@NotNull final String categoryName);
-
   boolean allExist(Set<Integer> categoryIds);
 
   boolean exists(Integer integer);

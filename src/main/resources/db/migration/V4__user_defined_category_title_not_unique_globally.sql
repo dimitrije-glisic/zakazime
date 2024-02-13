@@ -1,0 +1,1 @@
+ALTER TABLE user_defined_category DROP CONSTRAINT user_defined_category_title_key;
