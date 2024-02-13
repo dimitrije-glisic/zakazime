@@ -10,7 +10,6 @@ public interface BusinessMapper {
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "status", ignore = true)
   @Mapping(target = "description", ignore = true)
-  @Mapping(target = "typeId", source = "businessTypeId")
   Business map(final CreateBusinessProfileRequest createBusinessProfileRequest);
 
 }

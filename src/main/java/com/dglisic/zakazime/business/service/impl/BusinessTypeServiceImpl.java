@@ -41,19 +41,23 @@ public class BusinessTypeServiceImpl implements BusinessTypeService {
     validateOnCreate(createRequest);
     final BusinessType businessType = new BusinessType();
     businessType.setTitle(createRequest.title());
+    final String slug = createRequest.title().toLowerCase().replace(" ", "-");
+    businessType.setSlug(slug);
     return businessTypeRepository.create(businessType);
   }
 
   @Override
   @Transactional
-  public BusinessType createWithImage(final CreateBusinessTypeRequest createRequest, final MultipartFile file) throws IOException {
+  public BusinessType createWithImage(final CreateBusinessTypeRequest createRequest, final MultipartFile file) {
     validateOnCreate(createRequest);
     final BusinessType toBeCreated = new BusinessType();
     toBeCreated.setTitle(createRequest.title());
+    final String slug = createRequest.title().toLowerCase().replace(" ", "-");
+    toBeCreated.setSlug(slug);
     final BusinessType newBType = businessTypeRepository.create(toBeCreated);
     final String url = makeUrl(newBType.getId(), file);
-    storeImage(url, file);
     businessTypeRepository.updateImage(newBType.getId(), url);
+    storeImage(url, file);
     newBType.setImageUrl(url);
     return newBType;
   }
@@ -61,7 +65,7 @@ public class BusinessTypeServiceImpl implements BusinessTypeService {
   @Override
   public void update(final Integer id, final UpdateBusinessTypeRequest updateRequest) {
     final BusinessType inUpdate = validateOnUpdate(id);
-    if (updateRequest.title().equalsIgnoreCase(inUpdate.getTitle())) {
+    if (updateRequest.title().equals(inUpdate.getTitle())) {
       // nothing to update
       return;
     }
@@ -74,7 +78,7 @@ public class BusinessTypeServiceImpl implements BusinessTypeService {
   public void update(final Integer id, final UpdateBusinessTypeRequest businessType, final MultipartFile file)
       throws IOException {
     final BusinessType inUpdate = validateOnUpdate(id);
-    if (businessType.title().equalsIgnoreCase(inUpdate.getTitle()) && file.isEmpty()) {
+    if (businessType.title().equals(inUpdate.getTitle()) && file.isEmpty()) {
       // nothing to update
       return;
     }
@@ -83,10 +87,10 @@ public class BusinessTypeServiceImpl implements BusinessTypeService {
       // nothing to update
       return;
     }
-    storeImage(url, file);
     inUpdate.setTitle(businessType.title());
     inUpdate.setImageUrl(url);
     businessTypeRepository.update(inUpdate);
+    storeImage(url, file);
   }
 
   @Override
@@ -95,11 +99,9 @@ public class BusinessTypeServiceImpl implements BusinessTypeService {
     businessTypeRepository.deleteById(id);
   }
 
-  final static String IMAGE_DIRECTORY_ROOT = "C:\\Users\\dglisic\\personal-projects\\storage\\images\\";
-
   @Override
   @Transactional
-  public String uploadImage(final Integer id, final MultipartFile file) throws IOException {
+  public String uploadImage(final Integer id, final MultipartFile file) {
     final String url = makeUrl(id, file);
     storeImage(url, file);
     businessTypeRepository.updateImage(id, url);

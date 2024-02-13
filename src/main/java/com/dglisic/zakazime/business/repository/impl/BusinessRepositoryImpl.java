@@ -4,19 +4,30 @@ package com.dglisic.zakazime.business.repository.impl;
 import static jooq.tables.Account.ACCOUNT;
 import static jooq.tables.Business.BUSINESS;
 import static jooq.tables.BusinessAccountMap.BUSINESS_ACCOUNT_MAP;
+import static jooq.tables.BusinessImage.BUSINESS_IMAGE;
+import static jooq.tables.BusinessPredefinedCategoryMap.BUSINESS_PREDEFINED_CATEGORY_MAP;
 import static jooq.tables.BusinessType.BUSINESS_TYPE;
+import static jooq.tables.PredefinedCategory.PREDEFINED_CATEGORY;
+import static jooq.tables.Service.SERVICE;
+import static jooq.tables.UserDefinedCategory.USER_DEFINED_CATEGORY;
 import static org.jooq.impl.DSL.upper;
 
 import com.dglisic.zakazime.business.repository.BusinessRepository;
-import com.dglisic.zakazime.user.repository.RoleRepository;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
-import jooq.tables.pojos.BusinessType;
+import jooq.tables.pojos.BusinessImage;
+import jooq.tables.pojos.PredefinedCategory;
+import jooq.tables.pojos.Service;
+import jooq.tables.pojos.UserDefinedCategory;
 import jooq.tables.records.BusinessRecord;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.jooq.DSLContext;
+import org.jooq.Query;
+import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -24,7 +35,6 @@ import org.springframework.stereotype.Repository;
 public class BusinessRepositoryImpl implements BusinessRepository {
 
   private final DSLContext dsl;
-  private final RoleRepository roleRepository;
 
   @Override
   public Optional<Business> getBusinessProfile(final Integer userId) {
@@ -33,7 +43,6 @@ public class BusinessRepositoryImpl implements BusinessRepository {
         .from(ACCOUNT)
         .join(BUSINESS_ACCOUNT_MAP).on(ACCOUNT.ID.eq(BUSINESS_ACCOUNT_MAP.ACCOUNT_ID))
         .join(BUSINESS).on(BUSINESS_ACCOUNT_MAP.BUSINESS_ID.eq(BUSINESS.ID))
-        .join(BUSINESS_TYPE).on(BUSINESS.TYPE_ID.eq(BUSINESS_TYPE.ID))
         .where(ACCOUNT.ID.eq(userId))
         .fetchOneInto(Business.class);
 
@@ -61,20 +70,11 @@ public class BusinessRepositoryImpl implements BusinessRepository {
   }
 
   @Override
-  public List<BusinessType> getBusinessTypes() {
-    return dsl.selectDistinct(BUSINESS_TYPE)
-        .from(BUSINESS_TYPE)
-        .fetchInto(BusinessType.class);
-  }
-
-  @Override
   public Optional<Business> findBusinessById(final Integer businessId) {
     Business businessProfileRecord = dsl.selectFrom(BUSINESS)
         .where(BUSINESS.ID.eq(businessId))
         .fetchOneInto(Business.class);
-
     return Optional.ofNullable(businessProfileRecord);
-
   }
 
   @Override
@@ -95,6 +95,113 @@ public class BusinessRepositoryImpl implements BusinessRepository {
         .fetchOneInto(Integer.class);
 
     return count != null && count > 0;
+  }
+
+  @Override
+  public void linkPredefined(List<Integer> categoryIds, Integer businessId) {
+    List<Query> queries = new ArrayList<>();
+
+    for (Integer categoryId : categoryIds) {
+      queries.add(
+          dsl.insertInto(BUSINESS_PREDEFINED_CATEGORY_MAP)
+              .set(BUSINESS_PREDEFINED_CATEGORY_MAP.BUSINESS_ID, businessId)
+              .set(BUSINESS_PREDEFINED_CATEGORY_MAP.CATEGORY_ID, categoryId)
+      );
+    }
+    dsl.batch(queries).execute();
+  }
+
+  @Override
+  public List<PredefinedCategory> getPredefinedCategories(Integer businessId) {
+    return dsl.select()
+        .from(PREDEFINED_CATEGORY)
+        .join(BUSINESS_PREDEFINED_CATEGORY_MAP).on(PREDEFINED_CATEGORY.ID.eq(BUSINESS_PREDEFINED_CATEGORY_MAP.CATEGORY_ID))
+        .where(BUSINESS_PREDEFINED_CATEGORY_MAP.BUSINESS_ID.eq(businessId))
+        .fetchInto(PredefinedCategory.class);
+  }
+
+  @Override
+  public List<UserDefinedCategory> getUserDefinedCategories(Integer businessId) {
+    return dsl.selectFrom(USER_DEFINED_CATEGORY)
+        .where(USER_DEFINED_CATEGORY.BUSINESS_ID.eq(businessId))
+        .fetchInto(UserDefinedCategory.class);
+  }
+
+  @Override
+  public void createUserDefinedCategory(UserDefinedCategory category) {
+    dsl.insertInto(USER_DEFINED_CATEGORY)
+        .set(USER_DEFINED_CATEGORY.TITLE, category.getTitle())
+        .set(USER_DEFINED_CATEGORY.BUSINESS_ID, category.getBusinessId())
+        .execute();
+  }
+
+  @Override
+  public List<Service> getServicesOfBusiness(Integer businessId) {
+    return dsl.select(SERVICE.ID, SERVICE.TITLE, SERVICE.CATEGORY_ID, SERVICE.PRICE, SERVICE.DESCRIPTION, SERVICE.AVG_DURATION)
+        .from(SERVICE)
+        .join(USER_DEFINED_CATEGORY).on(SERVICE.CATEGORY_ID.eq(USER_DEFINED_CATEGORY.ID))
+        .where(USER_DEFINED_CATEGORY.BUSINESS_ID.eq(businessId))
+        .fetchInto(Service.class);
+  }
+
+  @Override
+  public boolean serviceBelongsToBusiness(Integer serviceId, Integer businessId) {
+    Integer count = dsl.selectCount()
+        .from(SERVICE)
+        .join(USER_DEFINED_CATEGORY).on(SERVICE.CATEGORY_ID.eq(USER_DEFINED_CATEGORY.ID))
+        .where(SERVICE.ID.eq(serviceId))
+        .and(USER_DEFINED_CATEGORY.BUSINESS_ID.eq(businessId))
+        .fetchOneInto(Integer.class);
+
+    return count != null && count > 0;
+  }
+
+  @Override
+  public List<Business> searchBusinesses(String city, String businessType, String category) {
+    // city is sent from the frontend as a lowercase string separated by a hyphen (e.g. new-york)
+    final var denormalizedCity = city.replace("-", " ");
+    final var cityCondition = StringUtils.isBlank(city) ? DSL.trueCondition() : upper(BUSINESS.CITY).eq(upper(denormalizedCity));
+    final var businessTypeCondition =
+        StringUtils.isBlank(businessType) ? DSL.trueCondition() : BUSINESS_TYPE.SLUG.eq(businessType);
+    final var categoryCondition =
+        StringUtils.isBlank(category) ? DSL.trueCondition() : PREDEFINED_CATEGORY.SLUG.eq(category);
+
+    return dsl.selectDistinct(BUSINESS)
+        .from(BUSINESS)
+        .join(BUSINESS_PREDEFINED_CATEGORY_MAP).on(BUSINESS.ID.eq(BUSINESS_PREDEFINED_CATEGORY_MAP.BUSINESS_ID))
+        .join(PREDEFINED_CATEGORY).on(BUSINESS_PREDEFINED_CATEGORY_MAP.CATEGORY_ID.eq(PREDEFINED_CATEGORY.ID))
+        .join(BUSINESS_TYPE).on(BUSINESS_TYPE.ID.eq(PREDEFINED_CATEGORY.BUSINESS_TYPE_ID))
+        .where(cityCondition)
+        .and(businessTypeCondition)
+        .and(categoryCondition)
+        .fetchInto(Business.class);
+  }
+
+  @Override
+  public List<Business> getAllBusinessesInCity(String city) {
+    final var denormalizedCity = city.replace("-", " ");
+    return dsl.selectFrom(BUSINESS)
+        .where(upper(BUSINESS.CITY).eq(upper(denormalizedCity)))
+        .fetchInto(Business.class);
+  }
+
+  @Override
+  public void updateProfileImageUrl(Integer businessId, String imageUrl) {
+    dsl.update(BUSINESS)
+        .set(BUSINESS.PROFILE_IMAGE_URL, imageUrl)
+        .where(BUSINESS.ID.eq(businessId))
+        .execute();
+  }
+
+  @Override
+  public Optional<BusinessImage> getProfileImage(Integer businessId) {
+    BusinessImage businessImage = dsl.select(BUSINESS_IMAGE)
+        .from(BUSINESS_IMAGE)
+        .join(BUSINESS).on(BUSINESS_IMAGE.BUSINESS_ID.eq(BUSINESS.ID))
+        .where(BUSINESS.ID.eq(businessId))
+        .and(BUSINESS_IMAGE.IMAGE_URL.eq(BUSINESS.PROFILE_IMAGE_URL))
+        .fetchOneInto(BusinessImage.class);
+    return Optional.ofNullable(businessImage);
   }
 
 }

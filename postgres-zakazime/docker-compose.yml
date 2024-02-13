@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: zakazime
     volumes:
-      - ~/postgres/zakazime/data:/var/lib/postgresql/data
+        - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
@@ -21,3 +21,6 @@ services:
       - "15432:80"
     depends_on:
       - postgres-zakazime
+
+volumes:
+  postgres_data:

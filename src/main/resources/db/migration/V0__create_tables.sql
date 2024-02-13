@@ -1,7 +1,7 @@
 CREATE TABLE role
 (
     id   INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    name VARCHAR(255) UNIQUE NOT NULL
+    name VARCHAR(50) UNIQUE NOT NULL
 );
 
 CREATE TABLE account
@@ -19,8 +19,19 @@ CREATE TABLE account
 
 CREATE TABLE business_type
 (
-    id    INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    title VARCHAR(255) UNIQUE NOT NULL
+    id        INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    slug      VARCHAR(50) UNIQUE NOT NULL,
+    title     VARCHAR(50) UNIQUE NOT NULL,
+    image_url VARCHAR(255)
+);
+
+CREATE TABLE predefined_category
+(
+    id               INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    slug             VARCHAR(50) UNIQUE NOT NULL,
+    title            VARCHAR(50) UNIQUE NOT NULL,
+    business_type_id INT REFERENCES business_type (id),
+    image_url        VARCHAR(255)
 );
 
 CREATE TABLE business
@@ -38,32 +49,29 @@ CREATE TABLE business
     updated_on   TIMESTAMP
 );
 
-CREATE TABLE service_category
+CREATE TABLE user_defined_category
 (
-    id               INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    title            VARCHAR(255) UNIQUE NOT NULL,
-    business_type_id INT REFERENCES business_type (id)
-);
-
-CREATE TABLE service_subcategory
-(
-    id                  INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    title               VARCHAR(255) UNIQUE NOT NULL,
-    service_category_id INT REFERENCES service_category (id),
-    description         TEXT
+    id          INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    title       VARCHAR(50) UNIQUE NOT NULL,
+    business_id INT REFERENCES business (id)
 );
 
 CREATE TABLE service
 (
-    id             INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    subcategory_id INT REFERENCES service_subcategory (id) NOT NULL,
-    business_id    INT REFERENCES business (id),
-    title          VARCHAR(255)                            NOT NULL,
-    note           VARCHAR(255),
-    price          DECIMAL                                 NOT NULL,
-    avg_duration   INT                                     NOT NULL,
-    description    TEXT,
-    template       BOOLEAN                                 NOT NULL
+    id           INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    category_id  INT REFERENCES user_defined_category (id),
+    title        VARCHAR(50) NOT NULL,
+    price        DECIMAL     NOT NULL,
+    avg_duration INT         NOT NULL,
+    description  TEXT
+);
+
+-- this table is used to map predefined categories to businesses in order to be able to search for businesses by category
+CREATE TABLE BUSINESS_PREDEFINED_CATEGORY_MAP
+(
+    business_id INT REFERENCES business (id),
+    category_id INT REFERENCES predefined_category (id),
+    PRIMARY KEY (business_id, category_id)
 );
 
 CREATE TABLE business_account_map
