@@ -1,0 +1,6 @@
+CREATE TABLE business_user
+(
+    id       INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    user_id  VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL
+);

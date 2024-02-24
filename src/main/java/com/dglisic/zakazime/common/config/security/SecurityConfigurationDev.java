@@ -3,6 +3,7 @@ package com.dglisic.zakazime.common.config.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -23,6 +24,11 @@ public class SecurityConfigurationDev {
         .authorizeHttpRequests(authorize ->
             authorize
                 .requestMatchers("/", "/home", "/login", "/register", "/user", "/error", "/dummy-post").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").authenticated()
+                .requestMatchers(HttpMethod.GET).permitAll()
+                .requestMatchers(HttpMethod.POST).authenticated()
+                .requestMatchers(HttpMethod.PUT).authenticated()
+                .requestMatchers(HttpMethod.DELETE).authenticated()
                 .anyRequest().authenticated()
         )
         .csrf(AbstractHttpConfigurer::disable)

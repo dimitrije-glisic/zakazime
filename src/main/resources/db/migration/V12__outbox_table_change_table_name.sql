@@ -1,0 +1,1 @@
+ALTER TABLE outbox RENAME TO outbox_message;

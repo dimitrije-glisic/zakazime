@@ -1,5 +1,7 @@
 package com.dglisic.zakazime.business.repository;
 
+import com.dglisic.zakazime.business.service.impl.BusinessStatus;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Account;
@@ -13,7 +15,7 @@ public interface BusinessRepository {
 
   Optional<Business> getBusinessProfile(final Integer userEmail);
 
-  Business storeBusinessProfile(final Business business, final Account owner);
+  Business storeBusinessProfile(final Business business);
 
   void linkBusinessToOwner(final Integer businessId, final Integer ownerId);
 
@@ -22,6 +24,8 @@ public interface BusinessRepository {
   Optional<Business> findBusinessById(final Integer businessId);
 
   Optional<Business> findBusinessByName(final String name);
+
+  Optional<Business> findBusinessByCityAndName(final String city, final String name);
 
   boolean isUserRelatedToBusiness(final Integer id, final Integer businessId);
 
@@ -44,4 +48,10 @@ public interface BusinessRepository {
   void updateProfileImageUrl(Integer businessId, String imageUrl);
 
   Optional<BusinessImage> getProfileImage(Integer businessId);
+
+  void patchBusinessStatus(Integer businessId, BusinessStatus status);
+
+  @NotNull List<Business> getAllWithStatus(BusinessStatus businessStatus);
+
+  void updateStatus(Integer businessId, BusinessStatus businessStatus);
 }

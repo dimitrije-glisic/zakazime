@@ -19,5 +19,6 @@ public interface UserService {
 
   Account requireLoggedInUser();
 
+  //not needed anymore?
   void setRoleToServiceProvider(Account user);
 }

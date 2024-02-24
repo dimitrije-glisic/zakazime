@@ -1,5 +1,6 @@
 package com.dglisic.zakazime.business.controller;
 
+import com.dglisic.zakazime.business.controller.dto.BusinessRichObject;
 import com.dglisic.zakazime.business.controller.dto.CreateBusinessProfileRequest;
 import com.dglisic.zakazime.business.controller.dto.CreateServiceRequest;
 import com.dglisic.zakazime.business.controller.dto.CreateUserDefinedCategoryRequest;
@@ -33,7 +34,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,6 +44,16 @@ public class BusinessController {
   private static final Logger logger = LoggerFactory.getLogger(BusinessController.class);
 
   private final BusinessService businessService;
+
+  @GetMapping("/{city}/{businessName}")
+  public ResponseEntity<BusinessRichObject> getRichBusinessData(@PathVariable @Valid @NotBlank String city,
+                                                                @PathVariable @Valid @NotBlank String businessName) {
+    logger.info("Getting business profile for business {} in city {}", businessName, city);
+    final var denormalizeCity = city.replace("-", " ");
+    final var denormalizeBusinessName = businessName.replace("-", " ");
+    final BusinessRichObject business = businessService.getCompleteBusinessData(denormalizeCity, denormalizeBusinessName);
+    return ResponseEntity.ok(business);
+  }
 
   @GetMapping("/all/{city}")
   public ResponseEntity<List<Business>> getAllBusinessesInCity(@PathVariable @Valid @NotBlank String city) {
@@ -63,13 +73,22 @@ public class BusinessController {
     return ResponseEntity.ok(businesses);
   }
 
+//  @PostMapping
+//  @PreAuthorize("hasRole('SERVICE_PROVIDER')")
+//  public ResponseEntity<Business> createBusinessProfile(
+//      @RequestBody @Valid CreateBusinessProfileRequest createBusinessProfileRequest
+//  ) {
+//    logger.info("Creating business profile {}", createBusinessProfileRequest);
+//    Business created = businessService.create(createBusinessProfileRequest);
+//    return ResponseEntity.ok(created);
+//  }
+
   @PostMapping
-  @PreAuthorize("hasRole('SERVICE_PROVIDER')")
-  public ResponseEntity<Business> createBusinessProfile(
+  public ResponseEntity<Business> createBusinessProfileNew(
       @RequestBody @Valid CreateBusinessProfileRequest createBusinessProfileRequest
   ) {
     logger.info("Creating business profile {}", createBusinessProfileRequest);
-    Business created = businessService.create(createBusinessProfileRequest);
+    Business created = businessService.createNew(createBusinessProfileRequest);
     return ResponseEntity.ok(created);
   }
 

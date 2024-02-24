@@ -13,10 +13,10 @@ import static jooq.tables.UserDefinedCategory.USER_DEFINED_CATEGORY;
 import static org.jooq.impl.DSL.upper;
 
 import com.dglisic.zakazime.business.repository.BusinessRepository;
+import com.dglisic.zakazime.business.service.impl.BusinessStatus;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.BusinessImage;
 import jooq.tables.pojos.PredefinedCategory;
@@ -50,7 +50,7 @@ public class BusinessRepositoryImpl implements BusinessRepository {
   }
 
   @Override
-  public Business storeBusinessProfile(final Business business, final Account owner) {
+  public Business storeBusinessProfile(final Business business) {
     final BusinessRecord businessRecord = dsl.newRecord(BUSINESS, business);
     businessRecord.store();
     return businessRecord.into(Business.class);
@@ -81,6 +81,16 @@ public class BusinessRepositoryImpl implements BusinessRepository {
   public Optional<Business> findBusinessByName(String name) {
     Business business = dsl.selectFrom(BUSINESS)
         .where(upper(BUSINESS.NAME).eq(upper(name)))
+        .fetchOneInto(Business.class);
+
+    return Optional.ofNullable(business);
+  }
+
+  @Override
+  public Optional<Business> findBusinessByCityAndName(String city, String name) {
+    Business business = dsl.selectFrom(BUSINESS)
+        .where(upper(BUSINESS.NAME).eq(upper(name)))
+        .and(upper(BUSINESS.CITY).eq(upper(city)))
         .fetchOneInto(Business.class);
 
     return Optional.ofNullable(business);
@@ -202,6 +212,29 @@ public class BusinessRepositoryImpl implements BusinessRepository {
         .and(BUSINESS_IMAGE.IMAGE_URL.eq(BUSINESS.PROFILE_IMAGE_URL))
         .fetchOneInto(BusinessImage.class);
     return Optional.ofNullable(businessImage);
+  }
+
+  @Override
+  public void patchBusinessStatus(Integer businessId, BusinessStatus status) {
+    dsl.update(BUSINESS)
+        .set(BUSINESS.STATUS, status.name())
+        .where(BUSINESS.ID.eq(businessId))
+        .execute();
+  }
+
+  @Override
+  public List<Business> getAllWithStatus(BusinessStatus businessStatus) {
+    return dsl.selectFrom(BUSINESS)
+        .where(BUSINESS.STATUS.eq(businessStatus.name()))
+        .fetchInto(Business.class);
+  }
+
+  @Override
+  public void updateStatus(Integer businessId, BusinessStatus businessStatus) {
+    dsl.update(BUSINESS)
+        .set(BUSINESS.STATUS, businessStatus.name())
+        .where(BUSINESS.ID.eq(businessId))
+        .execute();
   }
 
 }

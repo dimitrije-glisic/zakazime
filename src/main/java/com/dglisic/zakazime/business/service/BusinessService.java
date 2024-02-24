@@ -1,11 +1,13 @@
 package com.dglisic.zakazime.business.service;
 
+import com.dglisic.zakazime.business.controller.dto.BusinessRichObject;
 import com.dglisic.zakazime.business.controller.dto.CreateBusinessProfileRequest;
 import com.dglisic.zakazime.business.controller.dto.CreateServiceRequest;
 import com.dglisic.zakazime.business.controller.dto.CreateUserDefinedCategoryRequest;
 import com.dglisic.zakazime.business.controller.dto.ImageType;
 import com.dglisic.zakazime.business.controller.dto.UpdateServiceRequest;
 import com.dglisic.zakazime.business.controller.dto.UpdateUserDefinedCategoryRequest;
+import com.dglisic.zakazime.business.service.impl.BusinessStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -34,6 +36,7 @@ public interface BusinessService {
                                       @NotNull final Integer businessId);
 
   Business create(final CreateBusinessProfileRequest createBusinessProfileRequest);
+  Business createNew(final CreateBusinessProfileRequest createBusinessProfileRequest);
 
   Optional<Business> findBusinessById(@NotNull final Integer businessId);
 
@@ -62,4 +65,7 @@ public interface BusinessService {
   List<BusinessImage> getImages(Integer businessId);
 
   BusinessImage getProfileImage(Integer businessId);
+
+  BusinessRichObject getCompleteBusinessData(String city, String businessName);
+
 }

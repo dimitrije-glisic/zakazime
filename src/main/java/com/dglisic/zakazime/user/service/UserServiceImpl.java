@@ -55,6 +55,8 @@ public class UserServiceImpl implements UserService {
     return findUserByEmailOrElseThrow(authentication.getName());
   }
 
+
+  //not needed anymore?
   @Override
   public void setRoleToServiceProvider(Account user) {
     Role currentRole = roleRepository.findById(user.getRoleId())

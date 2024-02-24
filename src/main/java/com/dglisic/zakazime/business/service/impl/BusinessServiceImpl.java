@@ -1,6 +1,7 @@
 package com.dglisic.zakazime.business.service.impl;
 
 import com.dglisic.zakazime.business.controller.dto.BusinessMapper;
+import com.dglisic.zakazime.business.controller.dto.BusinessRichObject;
 import com.dglisic.zakazime.business.controller.dto.CreateBusinessProfileRequest;
 import com.dglisic.zakazime.business.controller.dto.CreateServiceRequest;
 import com.dglisic.zakazime.business.controller.dto.CreateUserDefinedCategoryRequest;
@@ -61,10 +62,19 @@ public class BusinessServiceImpl implements BusinessService {
     toBeCreated.setStatus(BusinessStatus.CREATED.toString());
     toBeCreated.setCreatedOn(LocalDateTime.now());
     final Account user = userService.requireLoggedInUser();
-    final Business created = businessRepository.storeBusinessProfile(toBeCreated, user);
+    final Business created = businessRepository.storeBusinessProfile(toBeCreated);
     businessRepository.linkBusinessToOwner(created.getId(), user.getId());
     userService.setRoleToServiceProvider(user);
     return created;
+  }
+
+  @Override
+  public Business createNew(final CreateBusinessProfileRequest request) {
+    validateOnCreateBusiness(request);
+    final Business toBeCreated = businessMapper.map(request);
+    toBeCreated.setStatus(BusinessStatus.CREATED.toString());
+    toBeCreated.setCreatedOn(LocalDateTime.now());
+    return businessRepository.storeBusinessProfile(toBeCreated);
   }
 
   @Override
@@ -207,6 +217,17 @@ public class BusinessServiceImpl implements BusinessService {
     return businessRepository.getProfileImage(businessId).orElseThrow(
         () -> new ApplicationException("Profile image not found for business with id " + businessId, HttpStatus.NOT_FOUND)
     );
+  }
+
+  @Override
+  public BusinessRichObject getCompleteBusinessData(String city, String businessName) {
+    final Business business = businessRepository.findBusinessByCityAndName(city, businessName)
+        .orElseThrow(
+            () -> new ApplicationException(String.format("Business with name %s in city %s not found", businessName, city),
+                HttpStatus.NOT_FOUND));
+    final List<Service> services = businessRepository.getServicesOfBusiness(business.getId());
+    final List<UserDefinedCategory> userDefinedCategories = businessRepository.getUserDefinedCategories(business.getId());
+    return new BusinessRichObject(business, services, userDefinedCategories);
   }
 
   private @NotNull String makeUrl(final Integer id, final MultipartFile imageFile) {
