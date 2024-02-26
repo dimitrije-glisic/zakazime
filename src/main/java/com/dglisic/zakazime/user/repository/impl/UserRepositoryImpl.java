@@ -1,7 +1,8 @@
-package com.dglisic.zakazime.user.repository;
+package com.dglisic.zakazime.user.repository.impl;
 
 import static jooq.Tables.ACCOUNT;
 
+import com.dglisic.zakazime.user.repository.UserRepository;
 import java.util.List;
 import java.util.Optional;
 import jooq.tables.BusinessAccountMap;

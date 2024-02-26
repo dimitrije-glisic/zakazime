@@ -9,23 +9,22 @@ import com.dglisic.zakazime.user.repository.RoleRepository;
 import com.dglisic.zakazime.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 import jooq.tables.pojos.Account;
+import jooq.tables.pojos.Business;
 import jooq.tables.pojos.Role;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@AllArgsConstructor
 public class UserServiceImpl implements UserService {
   private final UserRepository userRepository;
   private final RoleRepository roleRepository;
-
-  public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository) {
-    this.userRepository = userRepository;
-    this.roleRepository = roleRepository;
-  }
 
   @Override
   public Account registerUser(final RegistrationRequest registrationRequest) {
@@ -70,6 +69,32 @@ public class UserServiceImpl implements UserService {
     }
   }
 
+  @Override
+  @Transactional
+  public Account createBusinessUser(Business business) {
+    final String username = generateUsername(business.getName());
+    final String password = generatePassword();
+    final Account businessUser = new Account();
+    businessUser.setFirstName(business.getName());
+    businessUser.setLastName(business.getName());
+    businessUser.setEmail(username);
+    businessUser.setPassword(password);
+    businessUser.setIsEnabled(true);
+    businessUser.setCreatedOn(LocalDateTime.now());
+    businessUser.setRoleId(roleRepository.findByName(SERVICE_PROVIDER.value).get().getId());
+    final Account savedUser = userRepository.saveUser(businessUser);
+    this.userRepository.linkBusinessProfileToUser(savedUser.getId(), business.getId());
+    return savedUser;
+  }
+
+  private String generateUsername(String name) {
+    return name.toLowerCase().replaceAll("\\s+", "") + "_user" + UUID.randomUUID().toString().substring(0, 4);
+  }
+
+  private String generatePassword() {
+    return UUID.randomUUID().toString().substring(0, 8);
+  }
+
   private Account fromRegistrationRequest(final RegistrationRequest registrationRequest) {
     final Role role = fromString(registrationRequest.role());
     final LocalDateTime createdOn = LocalDateTime.now();
@@ -102,32 +127,6 @@ public class UserServiceImpl implements UserService {
         new ApplicationException("Role not found", HttpStatus.BAD_REQUEST)
     );
   }
-
-  //  //add roles authorization
-//  @Override
-//  public void finishBusinessUserRegistration(String ownerEmail, BusinessProfileRecord businessProfile) {
-//    Optional<User> userByEmail = userRepository.findByEmail(ownerEmail);
-//    if (userByEmail.isPresent()) {
-//      User user = userByEmail.get();
-//
-////      if (user.getUserType().equals(UserType.CUSTOMER.toString())) {
-////        throw new ApplicationException("This is permitted only for business users", HttpStatus.BAD_REQUEST);
-////      }
-//
-////      if (user.getRegistrationStatus().equals(UserRegistrationStatus.COMPLETED.toString())) {
-////        throw new ApplicationException("User is already registered", HttpStatus.BAD_REQUEST);
-////      }
-//
-//      businessProfile.setStatus(BusinessProfileStatus.PENDING.toString());
-//      int businessProfileId = businessRepository.saveBusinessProfile(businessProfile);
-//      final int userId = user.getId();
-//      userRepository.linkBusinessProfileToUser(userId, businessProfileId);
-////      userRepository.updateRegistrationStatus(user.getId(), UserRegistrationStatus.COMPLETED);
-//    } else {
-//      throw new ApplicationException("User not found", HttpStatus.NOT_FOUND);
-//    }
-//  }
-
 
   @AllArgsConstructor
   enum RoleName {

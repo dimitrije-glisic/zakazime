@@ -1,0 +1,1 @@
+ALTER TABLE business DROP COLUMN postal_code;

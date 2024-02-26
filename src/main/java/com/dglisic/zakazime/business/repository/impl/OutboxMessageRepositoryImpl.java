@@ -19,7 +19,6 @@ public class OutboxMessageRepositoryImpl implements OutboxMessageRepository {
   @Override
   public void save(OutboxMessage outboxMessage) {
     dsl.insertInto(OUTBOX_MESSAGE)
-        .set(OUTBOX_MESSAGE.ID, outboxMessage.getId())
         .set(OUTBOX_MESSAGE.SUBJECT, outboxMessage.getSubject())
         .set(OUTBOX_MESSAGE.BODY, outboxMessage.getBody())
         .set(OUTBOX_MESSAGE.RECIPIENT, outboxMessage.getRecipient())

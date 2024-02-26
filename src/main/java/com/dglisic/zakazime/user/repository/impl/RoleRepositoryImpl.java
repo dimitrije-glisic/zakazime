@@ -1,7 +1,8 @@
-package com.dglisic.zakazime.user.repository;
+package com.dglisic.zakazime.user.repository.impl;
 
 import static jooq.tables.Role.ROLE;
 
+import com.dglisic.zakazime.user.repository.RoleRepository;
 import java.util.Optional;
 import jooq.tables.pojos.Role;
 import org.jooq.DSLContext;

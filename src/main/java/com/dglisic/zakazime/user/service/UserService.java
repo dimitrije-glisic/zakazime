@@ -3,6 +3,7 @@ package com.dglisic.zakazime.user.service;
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.controller.RegistrationRequest;
 import jooq.tables.pojos.Account;
+import jooq.tables.pojos.Business;
 
 public interface UserService {
 
@@ -21,4 +22,6 @@ public interface UserService {
 
   //not needed anymore?
   void setRoleToServiceProvider(Account user);
+
+  Account createBusinessUser(Business business);
 }
