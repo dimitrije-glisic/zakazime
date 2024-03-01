@@ -33,7 +33,22 @@ public class AdminServiceImpl implements AdminService {
   @Override
   @Transactional
   public void approveBusiness(Integer businessId) {
-    Business business = businessRepository.findBusinessById(businessId).orElseThrow(
+    final Business business = validateOnReview(businessId);
+
+    businessRepository.updateStatus(businessId, BusinessStatus.APPROVED);
+    final Account businessUser = createBusinessUser(business);
+    createOutboxMessageApproved(business, businessUser);
+  }
+
+  @Override
+  public void rejectBusiness(Integer businessId, String reason) {
+    final Business business = validateOnReview(businessId);
+    businessRepository.updateStatus(businessId, BusinessStatus.REJECTED);
+    createOutboxMessageRejected(business, reason);
+  }
+
+  private Business validateOnReview(Integer businessId) {
+    final Business business = businessRepository.findBusinessById(businessId).orElseThrow(
         () -> new ApplicationException("Business with id " + businessId + " not found", HttpStatus.BAD_REQUEST)
     );
 
@@ -41,20 +56,7 @@ public class AdminServiceImpl implements AdminService {
       throw new ApplicationException("Business with id " + businessId + " is not waiting for approval", HttpStatus.BAD_REQUEST);
     }
 
-    // change status to APPROVED and send email to business owner
-    businessRepository.updateStatus(businessId, BusinessStatus.APPROVED);
-
-    // Create an outbox message
-    OutboxMessage outboxMessage = new OutboxMessage();
-    outboxMessage.setRecipient(business.getEmail());
-    outboxMessage.setSubject("Business Approved!");
-    Account businessUser = createBusinessUser(business);
-    final String message =
-        "Your business " + business.getName() + " has been approved! Your username is " + businessUser.getEmail() +
-            " and your password is " + businessUser.getPassword();
-    outboxMessage.setBody(message);
-    outboxMessage.setStatus(OutboxMessageStatus.PENDING.toString());
-    outboxMessageRepository.save(outboxMessage);
+    return business;
   }
 
   private Account createBusinessUser(Business business) {
@@ -63,9 +65,29 @@ public class AdminServiceImpl implements AdminService {
     return businessUser;
   }
 
-  @Override
-  public void rejectBusiness(Integer businessId) {
-
+  private void createOutboxMessageApproved(Business business, Account businessUser) {
+    final String recipient = business.getEmail();
+    final String subject = "Zahtev Prihvacen!";
+    final String message = "Vaša registracija za salon " + business.getName() + " je prihvaćena! " +
+        "Vaše korisničko ime je " + businessUser.getEmail() + " a vaša lozinka je " + businessUser.getPassword();
+    createOutboxMessage(recipient, subject, message);
   }
+
+  private void createOutboxMessageRejected(Business business, String reason) {
+    final String recipient = business.getEmail();
+    final String subject = "Zahtev odbijen";
+    final String message = "Vaša registracija za salon " + business.getName() + " je odbijena. Razlog: " + reason;
+    createOutboxMessage(recipient, subject, message);
+  }
+
+  private void createOutboxMessage(String recipient, String subject, String body) {
+    OutboxMessage outboxMessage = new OutboxMessage();
+    outboxMessage.setRecipient(recipient);
+    outboxMessage.setSubject(subject);
+    outboxMessage.setBody(body);
+    outboxMessage.setStatus(OutboxMessageStatus.PENDING.toString());
+    outboxMessageRepository.save(outboxMessage);
+  }
+
 
 }

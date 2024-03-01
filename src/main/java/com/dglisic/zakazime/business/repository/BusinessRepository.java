@@ -54,4 +54,6 @@ public interface BusinessRepository {
   @NotNull List<Business> getAllWithStatus(BusinessStatus businessStatus);
 
   void updateStatus(Integer businessId, BusinessStatus businessStatus);
+
+  void changeStatus(Integer businessId, String string);
 }

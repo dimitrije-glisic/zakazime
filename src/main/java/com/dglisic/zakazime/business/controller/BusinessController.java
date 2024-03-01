@@ -73,23 +73,24 @@ public class BusinessController {
     return ResponseEntity.ok(businesses);
   }
 
-//  @PostMapping
-//  @PreAuthorize("hasRole('SERVICE_PROVIDER')")
-//  public ResponseEntity<Business> createBusinessProfile(
-//      @RequestBody @Valid CreateBusinessProfileRequest createBusinessProfileRequest
-//  ) {
-//    logger.info("Creating business profile {}", createBusinessProfileRequest);
-//    Business created = businessService.create(createBusinessProfileRequest);
-//    return ResponseEntity.ok(created);
-//  }
-
   @PostMapping
-  public ResponseEntity<Business> createBusinessProfileNew(
+  public ResponseEntity<Business> createBusiness(
       @RequestBody @Valid CreateBusinessProfileRequest createBusinessProfileRequest
   ) {
     logger.info("Creating business profile {}", createBusinessProfileRequest);
-    Business created = businessService.createNew(createBusinessProfileRequest);
+    Business created = businessService.create(createBusinessProfileRequest);
     return ResponseEntity.ok(created);
+  }
+
+  @PostMapping("/{businessId}/submit")
+  //has role service provider (or admin?)
+  @PreAuthorize("hasRole('SERVICE_PROVIDER')")
+  public ResponseEntity<MessageResponse> submitBusiness(
+      @PathVariable Integer businessId
+  ) {
+    logger.info("Submitting business profile {}", businessId);
+    businessService.submitBusiness(businessId);
+    return ResponseEntity.ok(new MessageResponse("Business profile submitted successfully"));
   }
 
   @PostMapping(value = "/{id}/upload-image", consumes = {"multipart/form-data"})
@@ -129,6 +130,13 @@ public class BusinessController {
   public ResponseEntity<List<Business>> getAllBusinesses() {
     logger.info("Getting all businesses");
     List<Business> allBusinesses = businessService.getAll();
+    return ResponseEntity.ok(allBusinesses);
+  }
+
+  @GetMapping("all-active")
+  public ResponseEntity<List<Business>> getAllActiveBusinesses() {
+    logger.info("Getting all businesses");
+    List<Business> allBusinesses = businessService.getAllActive();
     return ResponseEntity.ok(allBusinesses);
   }
 

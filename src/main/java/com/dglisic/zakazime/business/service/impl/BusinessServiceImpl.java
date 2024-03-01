@@ -55,26 +55,22 @@ public class BusinessServiceImpl implements BusinessService {
   private final BusinessImageRepository businessImageRepository;
 
   @Override
-  @Transactional
   public Business create(final CreateBusinessProfileRequest request) {
     validateOnCreateBusiness(request);
     final Business toBeCreated = businessMapper.map(request);
     toBeCreated.setStatus(BusinessStatus.CREATED.toString());
     toBeCreated.setCreatedOn(LocalDateTime.now());
-    final Account user = userService.requireLoggedInUser();
-    final Business created = businessRepository.storeBusinessProfile(toBeCreated);
-    businessRepository.linkBusinessToOwner(created.getId(), user.getId());
-    userService.setRoleToServiceProvider(user);
-    return created;
+    return businessRepository.storeBusinessProfile(toBeCreated);
   }
 
   @Override
-  public Business createNew(final CreateBusinessProfileRequest request) {
-    validateOnCreateBusiness(request);
-    final Business toBeCreated = businessMapper.map(request);
-    toBeCreated.setStatus(BusinessStatus.CREATED.toString());
-    toBeCreated.setCreatedOn(LocalDateTime.now());
-    return businessRepository.storeBusinessProfile(toBeCreated);
+  public void submitBusiness(Integer businessId) {
+    final Business business = requireBusinessExistsAndReturn(businessId);
+    if (!business.getStatus().equals(BusinessStatus.APPROVED.toString())) {
+      throw new ApplicationException("Business with id " + businessId + " is not in status APPROVED", HttpStatus.BAD_REQUEST);
+    }
+    requireUserPermittedToChangeBusiness(businessId);
+    businessRepository.changeStatus(businessId, BusinessStatus.ACTIVE.toString());
   }
 
   @Override
@@ -92,6 +88,11 @@ public class BusinessServiceImpl implements BusinessService {
   @Override
   public List<Business> getAll() {
     return businessRepository.getAll();
+  }
+
+  @Override
+  public List<Business> getAllActive() {
+    return businessRepository.getAllWithStatus(BusinessStatus.ACTIVE);
   }
 
   @Override
@@ -347,6 +348,12 @@ public class BusinessServiceImpl implements BusinessService {
 
   private void requireBusinessExists(final Integer businessId) {
     businessRepository.findBusinessById(businessId).orElseThrow(
+        () -> new ApplicationException("Business with id " + businessId + " does not exist", HttpStatus.BAD_REQUEST)
+    );
+  }
+
+  private Business requireBusinessExistsAndReturn(final Integer businessId) {
+    return businessRepository.findBusinessById(businessId).orElseThrow(
         () -> new ApplicationException("Business with id " + businessId + " does not exist", HttpStatus.BAD_REQUEST)
     );
   }

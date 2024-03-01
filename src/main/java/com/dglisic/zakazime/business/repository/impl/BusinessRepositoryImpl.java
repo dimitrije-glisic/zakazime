@@ -237,4 +237,12 @@ public class BusinessRepositoryImpl implements BusinessRepository {
         .execute();
   }
 
+  @Override
+  public void changeStatus(Integer businessId, String string) {
+    dsl.update(BUSINESS)
+        .set(BUSINESS.STATUS, string)
+        .where(BUSINESS.ID.eq(businessId))
+        .execute();
+  }
+
 }

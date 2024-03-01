@@ -7,7 +7,6 @@ import com.dglisic.zakazime.business.controller.dto.CreateUserDefinedCategoryReq
 import com.dglisic.zakazime.business.controller.dto.ImageType;
 import com.dglisic.zakazime.business.controller.dto.UpdateServiceRequest;
 import com.dglisic.zakazime.business.controller.dto.UpdateUserDefinedCategoryRequest;
-import com.dglisic.zakazime.business.service.impl.BusinessStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -36,7 +35,6 @@ public interface BusinessService {
                                       @NotNull final Integer businessId);
 
   Business create(final CreateBusinessProfileRequest createBusinessProfileRequest);
-  Business createNew(final CreateBusinessProfileRequest createBusinessProfileRequest);
 
   Optional<Business> findBusinessById(@NotNull final Integer businessId);
 
@@ -67,5 +65,9 @@ public interface BusinessService {
   BusinessImage getProfileImage(Integer businessId);
 
   BusinessRichObject getCompleteBusinessData(String city, String businessName);
+
+  void submitBusiness(Integer businessId);
+
+  List<Business> getAllActive();
 
 }

@@ -9,5 +9,5 @@ public interface AdminService {
 
   void approveBusiness(Integer businessId);
 
-  void rejectBusiness(Integer businessId);
+  void rejectBusiness(Integer businessId, String reason);
 }

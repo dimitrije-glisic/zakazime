@@ -1,6 +1,7 @@
 package com.dglisic.zakazime.business.controller;
 
 
+import com.dglisic.zakazime.business.controller.dto.RejectBusinessRequest;
 import com.dglisic.zakazime.business.service.AdminService;
 import com.dglisic.zakazime.common.MessageResponse;
 import java.util.List;
@@ -11,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -36,8 +38,9 @@ public class AdminController {
 
   @PostMapping("/businesses/{businessId}/reject")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<MessageResponse> rejectBusiness(@PathVariable Integer businessId) {
-    adminService.rejectBusiness(businessId);
+  public ResponseEntity<MessageResponse> rejectBusiness(@PathVariable Integer businessId,
+                                                        @RequestBody RejectBusinessRequest request) {
+    adminService.rejectBusiness(businessId, request.reason());
     return ResponseEntity.ok(new MessageResponse("Business rejected successfully"));
   }
 
