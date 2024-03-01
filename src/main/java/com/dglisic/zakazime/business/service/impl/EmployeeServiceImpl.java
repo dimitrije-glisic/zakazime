@@ -1,6 +1,7 @@
 package com.dglisic.zakazime.business.service.impl;
 
 import com.dglisic.zakazime.business.controller.dto.CreateEmployeeRequest;
+import com.dglisic.zakazime.business.controller.dto.EmployeeRichObject;
 import com.dglisic.zakazime.business.domain.OutboxMessageStatus;
 import com.dglisic.zakazime.business.repository.EmployeeRepository;
 import com.dglisic.zakazime.business.repository.OutboxMessageRepository;
@@ -8,6 +9,7 @@ import com.dglisic.zakazime.business.service.EmployeeService;
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.service.UserService;
 import java.util.List;
+import java.util.Optional;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.Employee;
@@ -31,7 +33,7 @@ public class EmployeeServiceImpl implements EmployeeService {
   public Employee createEmployee(Integer businessId, CreateEmployeeRequest request) {
     log.info("Creating employee for business with id: {}", businessId);
     final Business business = businessValidator.requireBusinessExistsAndReturn(businessId);
-    businessValidator.requireUserPermittedToChangeBusiness(businessId);
+    businessValidator.requireCurrentUserPermittedToChangeBusiness(businessId);
     // create account for the new employee
     final Account employeeAccount = userService.createBusinessUser(business);
     final Employee employee = fromRequest(request);
@@ -51,38 +53,86 @@ public class EmployeeServiceImpl implements EmployeeService {
   @Override
   public Employee findById(Integer businessId, Integer employeeId) {
     businessValidator.requireBusinessExists(businessId);
-    return employeeRepository.findById(employeeId)
-        .orElseThrow(() -> new ApplicationException("Employee with id " + employeeId + " not found", HttpStatus.NOT_FOUND));
+    return requireEmployeeExistsAndReturn(employeeId);
   }
 
   @Override
   public void activate(Integer businessId, Integer employeeId) {
     businessValidator.requireBusinessExists(businessId);
-    requireEmployeeExists(employeeId);
+    businessValidator.requireCurrentUserPermittedToChangeBusiness(businessId);
+    final Employee employee = requireEmployeeExistsAndReturn(employeeId);
+    requireIsEmployeeOfBusiness(employee, businessId);
     employeeRepository.setEmployeeActive(employeeId);
   }
 
   @Override
   public void deactivate(Integer businessId, Integer employeeId) {
     businessValidator.requireBusinessExists(businessId);
-    requireEmployeeExists(employeeId);
+    businessValidator.requireCurrentUserPermittedToChangeBusiness(businessId);
+    final Employee employee = requireEmployeeExistsAndReturn(employeeId);
+    requireIsEmployeeOfBusiness(employee, businessId);
     employeeRepository.setEmployeeInactive(employeeId);
   }
 
   @Override
   public void update(Integer businessId, Integer employeeId, CreateEmployeeRequest request) {
     businessValidator.requireBusinessExists(businessId);
-    requireEmployeeExists(employeeId);
+    businessValidator.requireCurrentUserPermittedToChangeBusiness(businessId);
+    final Employee employee = requireEmployeeExistsAndReturn(employeeId);
+    requireIsEmployeeOfBusiness(employee, businessId);
     final Employee updatedEmployee = fromRequest(request);
     updatedEmployee.setId(employeeId);
     updatedEmployee.setBusinessId(businessId);
     employeeRepository.update(updatedEmployee);
   }
 
-  private void requireEmployeeExists(Integer employeeId) {
-    employeeRepository.findById(employeeId)
-        .orElseThrow(() -> new ApplicationException("Employee with id " + employeeId + " not found", HttpStatus.NOT_FOUND));
+  // =================
+  // service related
+  // =================
+  @Override
+  public void addService(Integer businessId, Integer employeeId, Integer serviceId) {
+    validateOnServiceChange(businessId, employeeId, serviceId);
+    employeeRepository.addService(employeeId, serviceId);
+  }
 
+  @Override
+  public void deleteService(Integer businessId, Integer employeeId, Integer serviceId) {
+    validateOnServiceChange(businessId, employeeId, serviceId);
+    employeeRepository.deleteService(employeeId, serviceId);
+  }
+
+  @Override
+  public List<jooq.tables.pojos.Service> getAllServices(Integer businessId, Integer employeeId) {
+    return employeeRepository.getAllServices(businessId, employeeId);
+  }
+
+  // =================
+
+  @Override
+  public EmployeeRichObject findByIdFull(Integer businessId, Integer employeeId) {
+    Optional<EmployeeRichObject> employee = employeeRepository.findByIdFull(businessId, employeeId);
+    return employee.orElseThrow(
+        () -> new ApplicationException("Employee with id " + employeeId + " not found", HttpStatus.NOT_FOUND));
+  }
+
+  private void validateOnServiceChange(Integer businessId, Integer employeeId, Integer serviceId) {
+    businessValidator.requireBusinessExists(businessId);
+    businessValidator.requireServiceBelongsToBusiness(serviceId, businessId);
+    businessValidator.requireCurrentUserPermittedToChangeBusiness(businessId);
+    final Employee employee = requireEmployeeExistsAndReturn(employeeId);
+    requireIsEmployeeOfBusiness(employee, businessId);
+  }
+
+  private Employee requireEmployeeExistsAndReturn(Integer employeeId) {
+    return employeeRepository.findById(employeeId)
+        .orElseThrow(() -> new ApplicationException("Employee with id " + employeeId + " not found", HttpStatus.NOT_FOUND));
+  }
+
+  private void requireIsEmployeeOfBusiness(Employee employee, Integer businessId) {
+    if (!employee.getBusinessId().equals(businessId)) {
+      throw new ApplicationException("Employee with id " + employee.getId() + " is not part of business with id " + businessId,
+          HttpStatus.BAD_REQUEST);
+    }
   }
 
   private Employee fromRequest(CreateEmployeeRequest request) {

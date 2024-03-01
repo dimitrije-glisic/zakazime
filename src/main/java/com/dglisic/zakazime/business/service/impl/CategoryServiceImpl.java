@@ -26,7 +26,7 @@ public class CategoryServiceImpl implements CategoryService {
   @Override
   public void createUserDefinedCategory(CreateUserDefinedCategoryRequest categoryRequest, Integer businessId) {
     businessValidator.requireBusinessExists(businessId);
-    businessValidator.requireUserPermittedToChangeBusiness(businessId);
+    businessValidator.requireCurrentUserPermittedToChangeBusiness(businessId);
     final UserDefinedCategory category = new UserDefinedCategory()
         .setTitle(categoryRequest.title())
         .setBusinessId(businessId);
@@ -37,7 +37,7 @@ public class CategoryServiceImpl implements CategoryService {
   public void updateUserDefinedCategory(Integer businessId, Integer categoryId,
                                         UpdateUserDefinedCategoryRequest categoryRequest) {
     businessValidator.requireBusinessExists(businessId);
-    businessValidator.requireUserPermittedToChangeBusiness(businessId);
+    businessValidator.requireCurrentUserPermittedToChangeBusiness(businessId);
     final UserDefinedCategory category = requireUserDefinedCategory(categoryId);
 
     if (!category.getBusinessId().equals(businessId)) {

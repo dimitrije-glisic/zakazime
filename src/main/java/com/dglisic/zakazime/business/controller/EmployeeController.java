@@ -1,6 +1,7 @@
 package com.dglisic.zakazime.business.controller;
 
 import com.dglisic.zakazime.business.controller.dto.CreateEmployeeRequest;
+import com.dglisic.zakazime.business.controller.dto.EmployeeRichObject;
 import com.dglisic.zakazime.business.service.EmployeeService;
 import com.dglisic.zakazime.common.MessageResponse;
 import java.util.List;
@@ -8,6 +9,7 @@ import jooq.tables.pojos.Employee;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,6 +43,11 @@ public class EmployeeController {
     return ResponseEntity.status(200).body(employeeService.findById(businessId, employeeId));
   }
 
+  @GetMapping("/{employeeId}/full")
+  public ResponseEntity<EmployeeRichObject> findByIdFull(@PathVariable Integer businessId, @PathVariable Integer employeeId) {
+    return ResponseEntity.status(200).body(employeeService.findByIdFull(businessId, employeeId));
+  }
+
   @PatchMapping("/{employeeId}/activate")
   public ResponseEntity<MessageResponse> activate(@PathVariable Integer businessId, @PathVariable Integer employeeId) {
     employeeService.activate(businessId, employeeId);
@@ -59,6 +66,30 @@ public class EmployeeController {
 
     employeeService.update(businessId, employeeId, request);
     return ResponseEntity.status(200).body(new MessageResponse("Employee updated"));
+  }
+
+  // ========================================
+  // =========== Services ====================
+  // ========================================
+
+  @PostMapping("/{employeeId}/services/{serviceId}")
+  public ResponseEntity<MessageResponse> addService(@PathVariable Integer businessId, @PathVariable Integer employeeId,
+                                                    @PathVariable Integer serviceId) {
+    employeeService.addService(businessId, employeeId, serviceId);
+    return ResponseEntity.status(201).body(new MessageResponse("Service added"));
+  }
+
+  @DeleteMapping("/{employeeId}/services/{serviceId}")
+  public ResponseEntity<MessageResponse> deleteService(@PathVariable Integer businessId, @PathVariable Integer employeeId,
+                                                       @PathVariable Integer serviceId) {
+    employeeService.deleteService(businessId, employeeId, serviceId);
+    return ResponseEntity.status(200).body(new MessageResponse("Service deleted"));
+  }
+
+  @GetMapping("/{employeeId}/services")
+  public ResponseEntity<List<jooq.tables.pojos.Service>> getAllServices(@PathVariable Integer businessId,
+                                                                        @PathVariable Integer employeeId) {
+    return ResponseEntity.status(200).body(employeeService.getAllServices(businessId, employeeId));
   }
 
 }

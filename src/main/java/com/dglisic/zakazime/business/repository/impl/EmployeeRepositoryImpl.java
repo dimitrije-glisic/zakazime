@@ -1,15 +1,26 @@
 package com.dglisic.zakazime.business.repository.impl;
 
 import static jooq.tables.Employee.EMPLOYEE;
+import static jooq.tables.EmployeeServiceMap.EMPLOYEE_SERVICE_MAP;
+import static jooq.tables.Service.SERVICE;
 import static org.jooq.impl.DSL.asterisk;
+import static org.jooq.impl.DSL.multiset;
+import static org.jooq.impl.DSL.selectDistinct;
 
+import com.dglisic.zakazime.business.controller.dto.EmployeeRichObject;
 import com.dglisic.zakazime.business.repository.EmployeeRepository;
 import java.util.List;
 import java.util.Optional;
 import jooq.tables.daos.EmployeeDao;
 import jooq.tables.pojos.Employee;
+import jooq.tables.pojos.Service;
+import jooq.tables.records.EmployeeRecord;
+import jooq.tables.records.ServiceRecord;
 import lombok.AllArgsConstructor;
 import org.jooq.DSLContext;
+import org.jooq.Record1;
+import org.jooq.Record2;
+import org.jooq.Result;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -73,4 +84,58 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
         .where(EMPLOYEE.ID.eq(id))
         .execute();
   }
+
+  @Override
+  public void addService(Integer employeeId, Integer serviceId) {
+    dsl.insertInto(EMPLOYEE_SERVICE_MAP)
+        .set(EMPLOYEE_SERVICE_MAP.EMPLOYEE_ID, employeeId)
+        .set(EMPLOYEE_SERVICE_MAP.SERVICE_ID, serviceId)
+        .execute();
+  }
+
+  @Override
+  public void deleteService(Integer employeeId, Integer serviceId) {
+    dsl.deleteFrom(EMPLOYEE_SERVICE_MAP)
+        .where(EMPLOYEE_SERVICE_MAP.EMPLOYEE_ID.eq(employeeId))
+        .and(EMPLOYEE_SERVICE_MAP.SERVICE_ID.eq(serviceId))
+        .execute();
+  }
+
+  @Override
+  public List<Service> getAllServices(Integer businessId, Integer employeeId) {
+    return dsl.select(SERVICE)
+        .from(EMPLOYEE_SERVICE_MAP)
+        .join(SERVICE).on(EMPLOYEE_SERVICE_MAP.SERVICE_ID.eq(SERVICE.ID))
+        .join(EMPLOYEE).on(EMPLOYEE_SERVICE_MAP.EMPLOYEE_ID.eq(EMPLOYEE.ID))
+        .where(EMPLOYEE_SERVICE_MAP.EMPLOYEE_ID.eq(employeeId))
+        .and(EMPLOYEE.BUSINESS_ID.eq(businessId))
+        .fetchInto(Service.class);
+  }
+
+  @Override
+  public Optional<EmployeeRichObject> findByIdFull(Integer businessId, Integer employeeId) {
+    final Record2<EmployeeRecord, Result<Record1<ServiceRecord>>> fetched = dsl.select(
+            EMPLOYEE,
+            multiset(
+                selectDistinct(SERVICE)
+                    .from(EMPLOYEE_SERVICE_MAP)
+                    .join(SERVICE).on(EMPLOYEE_SERVICE_MAP.SERVICE_ID.eq(SERVICE.ID))
+                    .where(EMPLOYEE_SERVICE_MAP.EMPLOYEE_ID.eq(EMPLOYEE.ID))
+            ).as("fetched")
+        )
+        .from(EMPLOYEE)
+        .where(EMPLOYEE.ID.eq(employeeId))
+        .and(EMPLOYEE.BUSINESS_ID.eq(businessId))
+        .fetchOne();
+
+    if (fetched == null) {
+      return Optional.empty();
+    } else {
+      final Employee employee = fetched.value1().into(Employee.class);
+      final List<Service> serviceList = fetched.value2().into(Service.class);
+      return Optional.of(new EmployeeRichObject(employee, serviceList));
+    }
+
+  }
+
 }

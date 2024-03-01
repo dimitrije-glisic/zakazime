@@ -57,7 +57,7 @@ public class BusinessServiceImpl implements BusinessService {
     if (!business.getStatus().equals(BusinessStatus.APPROVED.toString())) {
       throw new ApplicationException("Business with id " + businessId + " is not in status APPROVED", HttpStatus.BAD_REQUEST);
     }
-    businessValidator.requireUserPermittedToChangeBusiness(businessId);
+    businessValidator.requireCurrentUserPermittedToChangeBusiness(businessId);
     businessRepository.changeStatus(businessId, BusinessStatus.ACTIVE.toString());
   }
 
@@ -94,7 +94,7 @@ public class BusinessServiceImpl implements BusinessService {
   @Override
   public void linkPredefinedCategories(List<Integer> categoryIds, Integer businessId) {
     businessValidator.requireBusinessExists(businessId);
-    businessValidator.requireUserPermittedToChangeBusiness(businessId);
+    businessValidator.requireCurrentUserPermittedToChangeBusiness(businessId);
     final boolean allExist = predefinedCategoryRepository.allExist(new HashSet<>(categoryIds));
     if (!allExist) {
       throw new ApplicationException("Category does not exist", HttpStatus.BAD_REQUEST);
@@ -191,12 +191,12 @@ public class BusinessServiceImpl implements BusinessService {
 
   private void validateOnUploadImage(Integer businessId) {
     businessValidator.requireBusinessExists(businessId);
-    businessValidator.requireUserPermittedToChangeBusiness(businessId);
+    businessValidator.requireCurrentUserPermittedToChangeBusiness(businessId);
   }
 
   private void validateOnDeleteImage(Integer businessId, Integer imageId) {
     businessValidator.requireBusinessExists(businessId);
-    businessValidator.requireUserPermittedToChangeBusiness(businessId);
+    businessValidator.requireCurrentUserPermittedToChangeBusiness(businessId);
     final boolean imageBelongsToBusiness = businessImageRepository.imageBelongsToBusiness(imageId, businessId);
     if (!imageBelongsToBusiness) {
       throw new ApplicationException("Image with id " + imageId + " does not belong to business with id " + businessId,

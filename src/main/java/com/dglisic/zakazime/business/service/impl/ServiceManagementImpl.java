@@ -66,14 +66,14 @@ public class ServiceManagementImpl implements ServiceManagement {
 
   private void validateOnSaveServices(final List<CreateServiceRequest> createServiceRequestList, int businessId) {
     businessValidator.requireBusinessExists(businessId);
-    businessValidator.requireUserPermittedToChangeBusiness(businessId);
+    businessValidator.requireCurrentUserPermittedToChangeBusiness(businessId);
     requireAllCategoriesExist(createServiceRequestList);
     requireAllTitlesUnique(createServiceRequestList, businessId);
   }
 
   private void validateOnSaveService(final CreateServiceRequest serviceRequest, final Integer businessId) {
     businessValidator.requireBusinessExists(businessId);
-    businessValidator.requireUserPermittedToChangeBusiness(businessId);
+    businessValidator.requireCurrentUserPermittedToChangeBusiness(businessId);
     requireCategoryExists(serviceRequest.categoryId());
     requireUniqueServiceTitle(serviceRequest.title(), businessId);
   }
@@ -84,14 +84,14 @@ public class ServiceManagementImpl implements ServiceManagement {
     requireCategoryExists(changeServiceRequest.categoryId());
     requireServiceExists(serviceId);
     businessValidator.requireServiceBelongsToBusiness(serviceId, businessId);
-    businessValidator.requireUserPermittedToChangeBusiness(businessId);
+    businessValidator.requireCurrentUserPermittedToChangeBusiness(businessId);
   }
 
   private void validateOnDeleteService(Integer businessId, Integer serviceId) {
     businessValidator.requireBusinessExists(businessId);
     requireServiceExists(serviceId);
     businessValidator.requireServiceBelongsToBusiness(serviceId, businessId);
-    businessValidator.requireUserPermittedToChangeBusiness(businessId);
+    businessValidator.requireCurrentUserPermittedToChangeBusiness(businessId);
   }
 
   private void requireAllCategoriesExist(List<CreateServiceRequest> createServiceRequestList) {
