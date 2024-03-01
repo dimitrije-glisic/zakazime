@@ -3,6 +3,7 @@ package com.dglisic.zakazime.common.config;
 import jooq.tables.daos.BusinessAccountMapDao;
 import jooq.tables.daos.BusinessDao;
 import jooq.tables.daos.BusinessTypeDao;
+import jooq.tables.daos.EmployeeDao;
 import jooq.tables.daos.PredefinedCategoryDao;
 import jooq.tables.daos.RoleDao;
 import jooq.tables.daos.ServiceDao;
@@ -68,6 +69,11 @@ public class JooqConfiguration {
   @Bean
   public ServiceDao serviceDao(final DefaultConfiguration configuration) {
     return new ServiceDao(configuration);
+  }
+
+  @Bean
+  public EmployeeDao employeeDao(final DefaultConfiguration configuration) {
+    return new EmployeeDao(configuration);
   }
 
 }

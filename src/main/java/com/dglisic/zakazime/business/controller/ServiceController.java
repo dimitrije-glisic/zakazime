@@ -47,7 +47,7 @@ public class ServiceController {
     return ResponseEntity.status(HttpStatus.CREATED).body(service);
   }
 
-  @PutMapping("{businessId}/services/{serviceId}")
+  @PutMapping("{serviceId}")
   @PreAuthorize("hasRole('SERVICE_PROVIDER')")
   public ResponseEntity<MessageResponse> updateService(@PathVariable @Valid @NotBlank final Integer businessId,
                                                        @PathVariable @Valid @NotBlank final Integer serviceId,
@@ -57,7 +57,7 @@ public class ServiceController {
     return ResponseEntity.ok(new MessageResponse("Service updated successfully"));
   }
 
-  @DeleteMapping("{businessId}/services/{serviceId}")
+  @DeleteMapping("{serviceId}")
   @PreAuthorize("hasRole('SERVICE_PROVIDER')")
   public ResponseEntity<MessageResponse> deleteService(@PathVariable @Valid @NotBlank final Integer businessId,
                                                        @PathVariable @Valid @NotBlank final Integer serviceId) {

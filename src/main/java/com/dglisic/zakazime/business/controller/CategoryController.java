@@ -26,7 +26,7 @@ public class CategoryController {
 
   private final CategoryService categoryService;
 
-  @PostMapping("{businessId}/categories")
+  @PostMapping
   @PreAuthorize("hasRole('SERVICE_PROVIDER')")
   public ResponseEntity<MessageResponse> addUserDefinedCategoryToBusiness(@PathVariable @Valid @NotBlank Integer businessId,
                                                                           @RequestBody
@@ -36,7 +36,7 @@ public class CategoryController {
     return ResponseEntity.status(HttpStatus.CREATED).body(new MessageResponse("Category saved successfully"));
   }
 
-  @PutMapping("{businessId}/categories/{categoryId}")
+  @PutMapping
   @PreAuthorize("hasRole('SERVICE_PROVIDER')")
   public ResponseEntity<MessageResponse> updateUserDefinedCategory(@PathVariable @Valid @NotBlank final Integer businessId,
                                                                    @PathVariable @Valid @NotBlank final Integer categoryId,

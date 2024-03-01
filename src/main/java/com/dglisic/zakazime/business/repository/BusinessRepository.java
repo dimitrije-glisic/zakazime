@@ -16,8 +16,6 @@ public interface BusinessRepository {
 
   Business storeBusinessProfile(final Business business);
 
-  void linkBusinessToOwner(final Integer businessId, final Integer ownerId);
-
   List<Business> getAll();
 
   Optional<Business> findById(final Integer businessId);
@@ -34,7 +32,6 @@ public interface BusinessRepository {
 
   List<UserDefinedCategory> getUserDefinedCategories(Integer businessId);
 
-  void createUserDefinedCategory(UserDefinedCategory category);
 
   List<Service> getServicesOfBusiness(Integer businessId);
 
@@ -47,8 +44,6 @@ public interface BusinessRepository {
   void updateProfileImageUrl(Integer businessId, String imageUrl);
 
   Optional<BusinessImage> getProfileImage(Integer businessId);
-
-  void patchBusinessStatus(Integer businessId, BusinessStatus status);
 
   @NotNull List<Business> getAllWithStatus(BusinessStatus businessStatus);
 

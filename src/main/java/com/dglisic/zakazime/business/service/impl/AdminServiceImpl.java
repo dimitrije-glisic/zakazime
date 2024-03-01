@@ -34,7 +34,6 @@ public class AdminServiceImpl implements AdminService {
   @Transactional
   public void approveBusiness(Integer businessId) {
     final Business business = validateOnReview(businessId);
-
     businessRepository.updateStatus(businessId, BusinessStatus.APPROVED);
     final Account businessUser = createBusinessUser(business);
     createOutboxMessageApproved(business, businessUser);
