@@ -4,7 +4,6 @@ import com.dglisic.zakazime.business.service.impl.BusinessStatus;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Optional;
-import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.BusinessImage;
 import jooq.tables.pojos.PredefinedCategory;
@@ -21,7 +20,7 @@ public interface BusinessRepository {
 
   List<Business> getAll();
 
-  Optional<Business> findBusinessById(final Integer businessId);
+  Optional<Business> findById(final Integer businessId);
 
   Optional<Business> findBusinessByName(final String name);
 

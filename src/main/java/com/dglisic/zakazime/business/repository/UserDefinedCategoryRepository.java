@@ -22,4 +22,6 @@ public interface UserDefinedCategoryRepository {
   void update(UserDefinedCategory category);
 
   Optional<UserDefinedCategory> findUserDefinedCategoryById(Integer categoryId);
+
+  void createUserDefinedCategory(UserDefinedCategory category);
 }
