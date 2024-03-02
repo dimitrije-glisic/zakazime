@@ -40,7 +40,7 @@ public class BusinessController {
 
   private final BusinessService businessService;
 
-  @GetMapping("/{city}/{businessName}")
+  @GetMapping("/full/{city}/{businessName}")
   public ResponseEntity<BusinessRichObject> getRichBusinessData(@PathVariable @Valid @NotBlank String city,
                                                                 @PathVariable @Valid @NotBlank String businessName) {
     logger.info("Getting business profile for business {} in city {}", businessName, city);

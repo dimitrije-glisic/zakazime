@@ -2,6 +2,7 @@ package com.dglisic.zakazime.business.controller;
 
 import com.dglisic.zakazime.business.controller.dto.CreateEmployeeRequest;
 import com.dglisic.zakazime.business.controller.dto.EmployeeRichObject;
+import com.dglisic.zakazime.business.controller.dto.WorkingHoursRequest;
 import com.dglisic.zakazime.business.service.EmployeeService;
 import com.dglisic.zakazime.common.MessageResponse;
 import java.util.List;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/business/{businessId}/employee")
+@RequestMapping("/business/{businessId}/employees")
 @AllArgsConstructor
 public class EmployeeController {
 
@@ -72,11 +73,11 @@ public class EmployeeController {
   // =========== Services ====================
   // ========================================
 
-  @PostMapping("/{employeeId}/services/{serviceId}")
-  public ResponseEntity<MessageResponse> addService(@PathVariable Integer businessId, @PathVariable Integer employeeId,
-                                                    @PathVariable Integer serviceId) {
-    employeeService.addService(businessId, employeeId, serviceId);
-    return ResponseEntity.status(201).body(new MessageResponse("Service added"));
+  @PostMapping("/{employeeId}/services")
+  public ResponseEntity<MessageResponse> addServices(@PathVariable Integer businessId, @PathVariable Integer employeeId,
+                                                     @RequestBody List<Integer> serviceIds) {
+    employeeService.addServices(businessId, employeeId, serviceIds);
+    return ResponseEntity.status(201).body(new MessageResponse("Services added"));
   }
 
   @DeleteMapping("/{employeeId}/services/{serviceId}")
@@ -90,6 +91,17 @@ public class EmployeeController {
   public ResponseEntity<List<jooq.tables.pojos.Service>> getAllServices(@PathVariable Integer businessId,
                                                                         @PathVariable Integer employeeId) {
     return ResponseEntity.status(200).body(employeeService.getAllServices(businessId, employeeId));
+  }
+
+  // ========================================
+  // =========== Working hours ===============
+  // ========================================
+
+  @PostMapping("/{employeeId}/working-hours")
+  public ResponseEntity<MessageResponse> setWorkingHours(@PathVariable Integer businessId, @PathVariable Integer employeeId,
+                                                         @RequestBody WorkingHoursRequest request) {
+    employeeService.setWorkingHours(businessId, employeeId, request);
+    return ResponseEntity.status(201).body(new MessageResponse("Working hours set"));
   }
 
 }

@@ -3,6 +3,7 @@ package com.dglisic.zakazime.business.service.impl;
 import com.dglisic.zakazime.business.repository.BusinessRepository;
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.service.UserService;
+import java.util.List;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
 import lombok.AllArgsConstructor;
@@ -35,8 +36,8 @@ public class BusinessValidator {
         () -> new ApplicationException("Business with id " + businessId + " does not exist", HttpStatus.BAD_REQUEST)
     );
   }
-
   // todo - add business_role table and check if logged in user has role of owner/business_admin for business
+
   public void requireCurrentUserPermittedToChangeBusiness(final Integer businessId) {
     Account loggedInUser = userService.requireLoggedInUser();
     if (!businessRepository.isUserRelatedToBusiness(loggedInUser.getId(), businessId)) {
@@ -44,6 +45,5 @@ public class BusinessValidator {
           HttpStatus.BAD_REQUEST);
     }
   }
-
 
 }

@@ -8,6 +8,7 @@ import jooq.tables.daos.PredefinedCategoryDao;
 import jooq.tables.daos.RoleDao;
 import jooq.tables.daos.ServiceDao;
 import jooq.tables.daos.UserDefinedCategoryDao;
+import jooq.tables.daos.WorkingHoursDao;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DataSourceConnectionProvider;
 import org.jooq.impl.DefaultConfiguration;
@@ -74,6 +75,11 @@ public class JooqConfiguration {
   @Bean
   public EmployeeDao employeeDao(final DefaultConfiguration configuration) {
     return new EmployeeDao(configuration);
+  }
+
+  @Bean
+  public WorkingHoursDao workingHoursDao(final DefaultConfiguration configuration) {
+    return new WorkingHoursDao(configuration);
   }
 
 }

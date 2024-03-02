@@ -29,4 +29,5 @@ public interface EmployeeRepository {
   List<Service> getAllServices(Integer businessId, Integer employeeId);
 
   Optional<EmployeeRichObject> findByIdFull(Integer businessId, Integer employeeId);
+
 }

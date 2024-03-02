@@ -6,6 +6,7 @@ import jooq.tables.pojos.Service;
 
 public record EmployeeRichObject(
     Employee employee,
-    List<Service> services
+    List<Service> services,
+    List<WorkingHoursItem> workingHours
 ) {
 }
