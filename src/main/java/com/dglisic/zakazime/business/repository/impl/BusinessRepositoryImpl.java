@@ -56,13 +56,6 @@ public class BusinessRepositoryImpl implements BusinessRepository {
     return businessRecord.into(Business.class);
   }
 
-  @Override
-  public void linkBusinessToOwner(final Integer businessId, final Integer ownerId) {
-    dsl.insertInto(BUSINESS_ACCOUNT_MAP)
-        .set(BUSINESS_ACCOUNT_MAP.BUSINESS_ID, businessId)
-        .set(BUSINESS_ACCOUNT_MAP.ACCOUNT_ID, ownerId)
-        .execute();
-  }
 
   @Override
   public List<Business> getAll() {
@@ -70,7 +63,7 @@ public class BusinessRepositoryImpl implements BusinessRepository {
   }
 
   @Override
-  public Optional<Business> findBusinessById(final Integer businessId) {
+  public Optional<Business> findById(final Integer businessId) {
     Business businessProfileRecord = dsl.selectFrom(BUSINESS)
         .where(BUSINESS.ID.eq(businessId))
         .fetchOneInto(Business.class);
@@ -135,14 +128,6 @@ public class BusinessRepositoryImpl implements BusinessRepository {
     return dsl.selectFrom(USER_DEFINED_CATEGORY)
         .where(USER_DEFINED_CATEGORY.BUSINESS_ID.eq(businessId))
         .fetchInto(UserDefinedCategory.class);
-  }
-
-  @Override
-  public void createUserDefinedCategory(UserDefinedCategory category) {
-    dsl.insertInto(USER_DEFINED_CATEGORY)
-        .set(USER_DEFINED_CATEGORY.TITLE, category.getTitle())
-        .set(USER_DEFINED_CATEGORY.BUSINESS_ID, category.getBusinessId())
-        .execute();
   }
 
   @Override
@@ -212,14 +197,6 @@ public class BusinessRepositoryImpl implements BusinessRepository {
         .and(BUSINESS_IMAGE.IMAGE_URL.eq(BUSINESS.PROFILE_IMAGE_URL))
         .fetchOneInto(BusinessImage.class);
     return Optional.ofNullable(businessImage);
-  }
-
-  @Override
-  public void patchBusinessStatus(Integer businessId, BusinessStatus status) {
-    dsl.update(BUSINESS)
-        .set(BUSINESS.STATUS, status.name())
-        .where(BUSINESS.ID.eq(businessId))
-        .execute();
   }
 
   @Override

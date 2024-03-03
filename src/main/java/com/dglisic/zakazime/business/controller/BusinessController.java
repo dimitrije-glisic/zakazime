@@ -2,12 +2,8 @@ package com.dglisic.zakazime.business.controller;
 
 import com.dglisic.zakazime.business.controller.dto.BusinessRichObject;
 import com.dglisic.zakazime.business.controller.dto.CreateBusinessProfileRequest;
-import com.dglisic.zakazime.business.controller.dto.CreateServiceRequest;
-import com.dglisic.zakazime.business.controller.dto.CreateUserDefinedCategoryRequest;
 import com.dglisic.zakazime.business.controller.dto.ImageType;
 import com.dglisic.zakazime.business.controller.dto.ImageUploadResponse;
-import com.dglisic.zakazime.business.controller.dto.UpdateServiceRequest;
-import com.dglisic.zakazime.business.controller.dto.UpdateUserDefinedCategoryRequest;
 import com.dglisic.zakazime.business.service.BusinessService;
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.common.MessageResponse;
@@ -30,7 +26,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -45,7 +40,7 @@ public class BusinessController {
 
   private final BusinessService businessService;
 
-  @GetMapping("/{city}/{businessName}")
+  @GetMapping("/full/{city}/{businessName}")
   public ResponseEntity<BusinessRichObject> getRichBusinessData(@PathVariable @Valid @NotBlank String city,
                                                                 @PathVariable @Valid @NotBlank String businessName) {
     logger.info("Getting business profile for business {} in city {}", businessName, city);
@@ -162,43 +157,6 @@ public class BusinessController {
     return ResponseEntity.ok(servicesOfBusiness);
   }
 
-  @PostMapping("{businessId}/services")
-  @PreAuthorize("hasRole('SERVICE_PROVIDER')")
-  public ResponseEntity<List<Service>> addServicesToBusiness(@PathVariable @Valid @NotBlank Integer businessId,
-                                                             @RequestBody @Valid List<CreateServiceRequest> serviceRequests) {
-    logger.info("Saving services {} for business {}", serviceRequests, businessId);
-    List<Service> services = businessService.addServicesToBusiness(serviceRequests, businessId);
-    return ResponseEntity.status(HttpStatus.CREATED).body(services);
-  }
-
-  @PostMapping("{businessId}/single-service")
-  @PreAuthorize("hasRole('SERVICE_PROVIDER')")
-  public ResponseEntity<Service> addServiceToBusiness(@PathVariable @Valid @NotBlank Integer businessId,
-                                                      @RequestBody @Valid CreateServiceRequest serviceRequest) {
-    logger.info("Saving service {} for business {}", serviceRequest, businessId);
-    Service service = businessService.addServicesToBusiness(serviceRequest, businessId);
-    return ResponseEntity.status(HttpStatus.CREATED).body(service);
-  }
-
-  @PutMapping("{businessId}/services/{serviceId}")
-  @PreAuthorize("hasRole('SERVICE_PROVIDER')")
-  public ResponseEntity<MessageResponse> updateService(@PathVariable @Valid @NotBlank final Integer businessId,
-                                                       @PathVariable @Valid @NotBlank final Integer serviceId,
-                                                       @RequestBody @Valid final UpdateServiceRequest updateRequest) {
-    logger.info("Updating service {} for business {}", updateRequest, businessId);
-    businessService.updateService(businessId, serviceId, updateRequest);
-    return ResponseEntity.ok(new MessageResponse("Service updated successfully"));
-  }
-
-  @DeleteMapping("{businessId}/services/{serviceId}")
-  @PreAuthorize("hasRole('SERVICE_PROVIDER')")
-  public ResponseEntity<MessageResponse> deleteService(@PathVariable @Valid @NotBlank final Integer businessId,
-                                                       @PathVariable @Valid @NotBlank final Integer serviceId) {
-    logger.info("Deleting service {} for business {}", serviceId, businessId);
-    businessService.deleteService(businessId, serviceId);
-    return ResponseEntity.ok(new MessageResponse("Service deleted successfully"));
-  }
-
   //====================================================================================================
   // NEW ENDPOINTS
   //====================================================================================================
@@ -237,27 +195,6 @@ public class BusinessController {
     logger.info("Getting UserDefinedCategories ({}) of business {}: {}", userDefinedCategoriesOfBusiness.size(), businessId,
         userDefinedCategoriesOfBusiness);
     return ResponseEntity.ok(userDefinedCategoriesOfBusiness);
-  }
-
-  @PostMapping("{businessId}/categories")
-  @PreAuthorize("hasRole('SERVICE_PROVIDER')")
-  public ResponseEntity<MessageResponse> addUserDefinedCategoryToBusiness(@PathVariable @Valid @NotBlank Integer businessId,
-                                                                          @RequestBody
-                                                                          @Valid CreateUserDefinedCategoryRequest categoryRequest) {
-    logger.info("Saving category {} for business {}", categoryRequest, businessId);
-    businessService.createUserDefinedCategory(categoryRequest, businessId);
-    return ResponseEntity.status(HttpStatus.CREATED).body(new MessageResponse("Category saved successfully"));
-  }
-
-  @PutMapping("{businessId}/categories/{categoryId}")
-  @PreAuthorize("hasRole('SERVICE_PROVIDER')")
-  public ResponseEntity<MessageResponse> updateUserDefinedCategory(@PathVariable @Valid @NotBlank final Integer businessId,
-                                                                   @PathVariable @Valid @NotBlank final Integer categoryId,
-                                                                   @RequestBody @Valid
-                                                                   final UpdateUserDefinedCategoryRequest categoryRequest) {
-    logger.info("Updating category {} for business {}", categoryRequest, businessId);
-    businessService.updateUserDefinedCategory(businessId, categoryId, categoryRequest);
-    return ResponseEntity.ok(new MessageResponse("Category updated successfully"));
   }
 
 }

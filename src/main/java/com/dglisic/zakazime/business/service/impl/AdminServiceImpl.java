@@ -34,7 +34,6 @@ public class AdminServiceImpl implements AdminService {
   @Transactional
   public void approveBusiness(Integer businessId) {
     final Business business = validateOnReview(businessId);
-
     businessRepository.updateStatus(businessId, BusinessStatus.APPROVED);
     final Account businessUser = createBusinessUser(business);
     createOutboxMessageApproved(business, businessUser);
@@ -48,7 +47,7 @@ public class AdminServiceImpl implements AdminService {
   }
 
   private Business validateOnReview(Integer businessId) {
-    final Business business = businessRepository.findBusinessById(businessId).orElseThrow(
+    final Business business = businessRepository.findById(businessId).orElseThrow(
         () -> new ApplicationException("Business with id " + businessId + " not found", HttpStatus.BAD_REQUEST)
     );
 

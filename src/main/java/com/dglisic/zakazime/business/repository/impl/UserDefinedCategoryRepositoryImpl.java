@@ -74,4 +74,12 @@ public class UserDefinedCategoryRepositoryImpl implements UserDefinedCategoryRep
         .fetchOneInto(UserDefinedCategory.class));
   }
 
+  @Override
+  public void createUserDefinedCategory(UserDefinedCategory category) {
+    dsl.insertInto(USER_DEFINED_CATEGORY)
+        .set(USER_DEFINED_CATEGORY.TITLE, category.getTitle())
+        .set(USER_DEFINED_CATEGORY.BUSINESS_ID, category.getBusinessId())
+        .execute();
+  }
+
 }

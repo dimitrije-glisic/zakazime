@@ -4,7 +4,6 @@ import com.dglisic.zakazime.business.service.impl.BusinessStatus;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Optional;
-import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.BusinessImage;
 import jooq.tables.pojos.PredefinedCategory;
@@ -17,11 +16,9 @@ public interface BusinessRepository {
 
   Business storeBusinessProfile(final Business business);
 
-  void linkBusinessToOwner(final Integer businessId, final Integer ownerId);
-
   List<Business> getAll();
 
-  Optional<Business> findBusinessById(final Integer businessId);
+  Optional<Business> findById(final Integer businessId);
 
   Optional<Business> findBusinessByName(final String name);
 
@@ -35,7 +32,6 @@ public interface BusinessRepository {
 
   List<UserDefinedCategory> getUserDefinedCategories(Integer businessId);
 
-  void createUserDefinedCategory(UserDefinedCategory category);
 
   List<Service> getServicesOfBusiness(Integer businessId);
 
@@ -48,8 +44,6 @@ public interface BusinessRepository {
   void updateProfileImageUrl(Integer businessId, String imageUrl);
 
   Optional<BusinessImage> getProfileImage(Integer businessId);
-
-  void patchBusinessStatus(Integer businessId, BusinessStatus status);
 
   @NotNull List<Business> getAllWithStatus(BusinessStatus businessStatus);
 

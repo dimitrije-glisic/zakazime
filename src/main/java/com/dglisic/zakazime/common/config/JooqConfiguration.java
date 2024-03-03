@@ -3,10 +3,12 @@ package com.dglisic.zakazime.common.config;
 import jooq.tables.daos.BusinessAccountMapDao;
 import jooq.tables.daos.BusinessDao;
 import jooq.tables.daos.BusinessTypeDao;
+import jooq.tables.daos.EmployeeDao;
 import jooq.tables.daos.PredefinedCategoryDao;
 import jooq.tables.daos.RoleDao;
 import jooq.tables.daos.ServiceDao;
 import jooq.tables.daos.UserDefinedCategoryDao;
+import jooq.tables.daos.WorkingHoursDao;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DataSourceConnectionProvider;
 import org.jooq.impl.DefaultConfiguration;
@@ -68,6 +70,16 @@ public class JooqConfiguration {
   @Bean
   public ServiceDao serviceDao(final DefaultConfiguration configuration) {
     return new ServiceDao(configuration);
+  }
+
+  @Bean
+  public EmployeeDao employeeDao(final DefaultConfiguration configuration) {
+    return new EmployeeDao(configuration);
+  }
+
+  @Bean
+  public WorkingHoursDao workingHoursDao(final DefaultConfiguration configuration) {
+    return new WorkingHoursDao(configuration);
   }
 
 }

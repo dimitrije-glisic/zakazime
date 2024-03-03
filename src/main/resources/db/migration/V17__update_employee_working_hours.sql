@@ -1,0 +1,1 @@
+ALTER TABLE working_hours ADD COLUMN is_working_day BOOLEAN DEFAULT TRUE;
