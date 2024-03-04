@@ -140,6 +140,17 @@ public class BusinessRepositoryImpl implements BusinessRepository {
   }
 
   @Override
+  public Optional<Service> findServiceOfBusiness(Integer serviceId, Integer businessId) {
+    final Service service = dsl.select(SERVICE)
+        .from(SERVICE)
+        .join(USER_DEFINED_CATEGORY).on(SERVICE.CATEGORY_ID.eq(USER_DEFINED_CATEGORY.ID))
+        .where(SERVICE.ID.eq(serviceId))
+        .and(USER_DEFINED_CATEGORY.BUSINESS_ID.eq(businessId))
+        .fetchOneInto(Service.class);
+    return Optional.ofNullable(service);
+  }
+
+  @Override
   public boolean serviceBelongsToBusiness(Integer serviceId, Integer businessId) {
     Integer count = dsl.selectCount()
         .from(SERVICE)

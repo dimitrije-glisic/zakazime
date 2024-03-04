@@ -3,9 +3,9 @@ package com.dglisic.zakazime.business.service.impl;
 import com.dglisic.zakazime.business.repository.BusinessRepository;
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.service.UserService;
-import java.util.List;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
+import jooq.tables.pojos.Service;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -23,6 +23,13 @@ public class BusinessValidator {
       throw new ApplicationException("Service with id " + serviceId + " does not belong to business with id " + businessId,
           HttpStatus.BAD_REQUEST);
     }
+  }
+
+  public Service requireServiceBelongsToBusinessAndReturn(Integer serviceId, Integer businessId) {
+    return businessRepository.findServiceOfBusiness(serviceId, businessId).orElseThrow(
+        () -> new ApplicationException("Service with id " + serviceId + " does not belong to business with id " + businessId,
+            HttpStatus.BAD_REQUEST)
+    );
   }
 
   public void requireBusinessExists(final Integer businessId) {

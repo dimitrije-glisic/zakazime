@@ -35,6 +35,8 @@ public interface BusinessRepository {
 
   List<Service> getServicesOfBusiness(Integer businessId);
 
+  Optional<Service> findServiceOfBusiness(Integer serviceId, Integer businessId);
+
   boolean serviceBelongsToBusiness(Integer serviceId, Integer businessId);
 
   List<Business> searchBusinesses(String city, String businessType, String category);

@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class EmployeeServiceImpl implements EmployeeService {
 
   private final BusinessValidator businessValidator;
+  private final EmployeeValidator employeeValidator;
   private final UserService userService;
   private final EmployeeRepository employeeRepository;
   private final WorkingHoursRepository workingHoursRepository;
@@ -66,7 +67,7 @@ public class EmployeeServiceImpl implements EmployeeService {
   @Override
   public Employee findById(Integer businessId, Integer employeeId) {
     businessValidator.requireBusinessExists(businessId);
-    return requireEmployeeExistsAndReturn(employeeId);
+    return employeeValidator.requireEmployeeExistsAndReturn(employeeId);
   }
 
   @Override
@@ -138,8 +139,8 @@ public class EmployeeServiceImpl implements EmployeeService {
   private void validateOnEmployeeChange(Integer businessId, Integer employeeId) {
     businessValidator.requireBusinessExists(businessId);
     businessValidator.requireCurrentUserPermittedToChangeBusiness(businessId);
-    final Employee employee = requireEmployeeExistsAndReturn(employeeId);
-    requireIsEmployeeOfBusiness(employee, businessId);
+    final Employee employee = employeeValidator.requireEmployeeExistsAndReturn(employeeId);
+    EmployeeValidator.requireIsEmployeeOfBusiness(employee, businessId);
   }
 
   private void validateOnServiceChange(Integer businessId, Integer employeeId, List<Integer> serviceIds) {
@@ -174,18 +175,6 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
     if (daysOfWeek.size() != 7) {
       throw new ApplicationException("Working hours for all days are required", HttpStatus.BAD_REQUEST);
-    }
-  }
-
-  private Employee requireEmployeeExistsAndReturn(Integer employeeId) {
-    return employeeRepository.findById(employeeId)
-        .orElseThrow(() -> new ApplicationException("Employee with id " + employeeId + " not found", HttpStatus.NOT_FOUND));
-  }
-
-  private void requireIsEmployeeOfBusiness(Employee employee, Integer businessId) {
-    if (!employee.getBusinessId().equals(businessId)) {
-      throw new ApplicationException("Employee with id " + employee.getId() + " is not part of business with id " + businessId,
-          HttpStatus.BAD_REQUEST);
     }
   }
 

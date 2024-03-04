@@ -129,7 +129,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @AllArgsConstructor
-  enum RoleName {
+  public enum RoleName {
     USER("USER"),
     SERVICE_PROVIDER("SERVICE_PROVIDER"),
     ADMIN("ADMIN"),

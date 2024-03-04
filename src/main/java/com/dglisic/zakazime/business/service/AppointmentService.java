@@ -10,10 +10,9 @@ import jooq.tables.pojos.Appointment;
 
 public interface AppointmentService {
 
-  Appointment createAppointment(CreateAppointmentRequest request);
+  void createAppointment(CreateAppointmentRequest request);
 
   EmployeeBlockTime createBlockTime(CreateBlockTimeRequest request);
 
-  List<StartTime> getAvailableTimeSlots(Integer businessId, Integer employeeId, LocalDate date);
-
+  List<Appointment> getAppointmentsForDate(Integer businessId, Integer employeeId, LocalDate date);
 }
