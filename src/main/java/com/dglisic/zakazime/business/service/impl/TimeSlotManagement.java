@@ -1,6 +1,5 @@
 package com.dglisic.zakazime.business.service.impl;
 
-import com.dglisic.zakazime.business.controller.dto.CreateAppointmentRequest;
 import com.dglisic.zakazime.business.controller.dto.DateTimeSlot;
 import com.dglisic.zakazime.business.controller.dto.StartTime;
 import com.dglisic.zakazime.business.repository.AppointmentRepository;
@@ -27,6 +26,29 @@ public class TimeSlotManagement {
   private final WorkingHoursRepository workingHoursRepository;
   private final AppointmentRepository appointmentRepository;
 
+  public void validateTimeSlot(Integer businessId, Integer employeeId, LocalDateTime startTime, Integer duration) {
+    final var startTimeClean = startTime.withSecond(0).withNano(0);
+    final var minutes = startTimeClean.getMinute();
+
+    final var now = LocalDateTime.now();
+    if (startTimeClean.isBefore(now)) {
+      throw new ApplicationException("Appointment start time cannot be in the past", HttpStatus.BAD_REQUEST);
+    }
+
+    if (minutes % SLOT_DURATION_IN_MINUTES != 0) {
+      throw new ApplicationException("Appointment start time minutes should be a multiple of 15 minutes", HttpStatus.BAD_REQUEST);
+    }
+    if (duration % SLOT_DURATION_IN_MINUTES != 0) {
+      throw new ApplicationException("Appointment duration should be a multiple of 15 minutes", HttpStatus.BAD_REQUEST);
+    }
+
+    final List<StartTime> availableTimeSlots =
+        getAvailableTimeSlots(businessId, employeeId, startTimeClean.toLocalDate(), duration);
+    if (availableTimeSlots.stream().noneMatch(slot -> slot.startTime().equals(startTimeClean.toLocalTime()))) {
+      throw new ApplicationException("Requested time slot is not available", HttpStatus.BAD_REQUEST);
+    }
+  }
+
   public List<StartTime> getAvailableTimeSlots(Integer businessId, Integer employeeId, LocalDate date, Integer duration) {
     final Employee employee = employeeValidator.requireEmployeeExistsAndReturn(employeeId);
     EmployeeValidator.requireIsEmployeeOfBusiness(employee, businessId);
@@ -36,29 +58,6 @@ public class TimeSlotManagement {
     }
     final List<LocalTime> allAvailableSlots = getAvailableTimeSlotsForDate(employeeId, date);
     return filterSlotsByDuration(allAvailableSlots, duration).stream().map(StartTime::new).toList();
-  }
-
-  public void validateTimeSlot(CreateAppointmentRequest request) {
-    final var startTime = request.startTime().withSecond(0).withNano(0);
-    final var minutes = startTime.getMinute();
-
-    final var now = LocalDateTime.now();
-    if (startTime.isBefore(now)) {
-      throw new ApplicationException("Appointment start time cannot be in the past", HttpStatus.BAD_REQUEST);
-    }
-
-    if (minutes % SLOT_DURATION_IN_MINUTES != 0) {
-      throw new ApplicationException("Appointment start time minutes should be a multiple of 15 minutes", HttpStatus.BAD_REQUEST);
-    }
-    final var duration = request.duration();
-    if (duration % SLOT_DURATION_IN_MINUTES != 0) {
-      throw new ApplicationException("Appointment duration should be a multiple of 15 minutes", HttpStatus.BAD_REQUEST);
-    }
-
-    final List<StartTime> availableTimeSlots = getAvailableTimeSlots(request.businessId(), request.employeeId(), startTime.toLocalDate(), duration);
-    if (availableTimeSlots.stream().noneMatch(slot -> slot.startTime().equals(startTime.toLocalTime()))) {
-      throw new ApplicationException("Requested time slot is not available", HttpStatus.BAD_REQUEST);
-    }
   }
 
   private List<LocalTime> getAvailableTimeSlotsForDate(Integer employeeId, LocalDate date) {

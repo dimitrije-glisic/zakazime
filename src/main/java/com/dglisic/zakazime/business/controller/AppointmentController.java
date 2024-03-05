@@ -1,6 +1,9 @@
 package com.dglisic.zakazime.business.controller;
 
+import com.dglisic.zakazime.business.controller.dto.AppointmentRequestContext;
 import com.dglisic.zakazime.business.controller.dto.CreateAppointmentRequest;
+import com.dglisic.zakazime.business.controller.dto.CreateBlockTimeRequest;
+import com.dglisic.zakazime.business.controller.dto.DeleteBlockTimeRequest;
 import com.dglisic.zakazime.business.controller.dto.StartTime;
 import com.dglisic.zakazime.business.service.AppointmentService;
 import com.dglisic.zakazime.business.service.impl.TimeSlotManagement;
@@ -10,9 +13,11 @@ import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
 import jooq.tables.pojos.Appointment;
+import jooq.tables.pojos.EmployeeBlockTime;
 import lombok.AllArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -52,6 +57,39 @@ public class AppointmentController {
   public ResponseEntity<MessageResponse> createAppointment(@RequestBody @Valid CreateAppointmentRequest request) {
     appointmentService.createAppointment(request);
     return ResponseEntity.status(201).body(new MessageResponse("Appointment created successfully"));
+  }
+
+  @PostMapping("/confirm")
+  public ResponseEntity<MessageResponse> confirmAppointment(@RequestBody @Valid AppointmentRequestContext request) {
+    appointmentService.confirmAppointment(request);
+    return ResponseEntity.status(201).body(new MessageResponse("Appointment confirmed successfully"));
+  }
+
+  @PostMapping("/cancel")
+  public ResponseEntity<MessageResponse> cancelAppointment(@RequestBody @Valid AppointmentRequestContext request) {
+    appointmentService.cancelAppointment(request);
+    return ResponseEntity.status(201).body(new MessageResponse("Appointment cancelled successfully"));
+  }
+
+  @PostMapping("/block-time")
+  public ResponseEntity<MessageResponse> createBlockTime(@RequestBody @Valid CreateBlockTimeRequest request) {
+    appointmentService.createBlockTime(request);
+    return ResponseEntity.status(201).body(new MessageResponse("Block time created successfully"));
+  }
+
+  @DeleteMapping("/block-time")
+  public ResponseEntity<MessageResponse> deleteBlockTime(@RequestBody @Valid DeleteBlockTimeRequest request) {
+    appointmentService.deleteBlockTime(request);
+    return ResponseEntity.status(201).body(new MessageResponse("Block time deleted successfully"));
+  }
+
+  @GetMapping("{businessId}/{employeeId}/block-time")
+  public ResponseEntity<List<EmployeeBlockTime>> getBlockTime(@PathVariable Integer businessId,
+                                                              @PathVariable Integer employeeId,
+                                                              @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy")
+                                                              @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+                                                              LocalDate date) {
+    return ResponseEntity.ok(appointmentService.getBlockTimeForDate(businessId, employeeId, date));
   }
 
 }
