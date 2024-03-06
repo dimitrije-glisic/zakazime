@@ -6,6 +6,7 @@ import com.dglisic.zakazime.business.repository.AppointmentRepository;
 import com.dglisic.zakazime.business.repository.WorkingHoursRepository;
 import com.dglisic.zakazime.business.service.BusinessService;
 import com.dglisic.zakazime.common.ApplicationException;
+import jakarta.annotation.Nullable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -283,7 +284,8 @@ public class TimeSlotManagement {
     List<LocalTime> possibleStartTimes = new ArrayList<>();
 
     if (!serviceEmployeePairs.isEmpty()) {
-      Pair<jooq.tables.pojos.Service, Employee> firstPair = serviceEmployeePairs.getFirst();  // Get the first pair but do not remove it
+      Pair<jooq.tables.pojos.Service, Employee> firstPair =
+          serviceEmployeePairs.getFirst();  // Get the first pair but do not remove it
       Integer employeeId = firstPair.getRight().getId();
       Integer serviceDuration = firstPair.getLeft().getAvgDuration();
       List<LocalTime> availableSlots = getAvailableTimeSlotsForDate(employeeId, date);
@@ -340,5 +342,109 @@ public class TimeSlotManagement {
         slot.isAfter(previousEndTime) && slot.isBefore(previousEndTime.plusMinutes(tolerableWaitTimeMinutes).plusSeconds(1));
   }
 
+
+  // ================================================================================================================
+
+  static final int businessId = 1;
+
+  public Set<LocalTime> findAllPossibleStartTimesNew(
+      LinkedList<Pair<jooq.tables.pojos.Service, Employee>> serviceEmployeePairs, LocalDate date) {
+
+    //start times must come from the first service-employee pair
+    Set<LocalTime> possibleStartTimes = new LinkedHashSet<>();
+
+    if (!serviceEmployeePairs.isEmpty()) {
+      Pair<jooq.tables.pojos.Service, Employee> firstPair = serviceEmployeePairs.getFirst();
+      var serviceDuration = firstPair.getLeft().getAvgDuration();
+      // Check if a specific employee is required for the first service
+      if (firstPair.getRight() == null) {
+        // If no specific employee is required, check all employees for available slots
+        List<Employee> allEmployees = businessService.getEmployees(businessId);
+        for (Employee employee : allEmployees) {
+          List<LocalTime> availableSlots = getAvailableTimeSlotsForDate(employee.getId(), date);
+          checkSlotsAndAdd(availableSlots, serviceEmployeePairs, date, possibleStartTimes, serviceDuration);
+        }
+      } else {
+        // If a specific employee is required, check only that employee for available slots
+        Integer employeeId = firstPair.getRight().getId();
+        List<LocalTime> availableSlots = getAvailableTimeSlotsForDate(employeeId, date);
+        checkSlotsAndAdd(availableSlots, serviceEmployeePairs, date, possibleStartTimes, serviceDuration);
+      }
+    }
+
+    return possibleStartTimes;
+  }
+
+  public List<LocalTime> getAvailableConsecutiveTimeSlotsForDateNew(
+      LinkedList<Pair<jooq.tables.pojos.Service, Employee>> serviceEmployeePairs, LocalDate date, LocalTime previousEndTime) {
+
+    if (serviceEmployeePairs.isEmpty()) {
+      return new ArrayList<>();
+    }
+
+    Pair<jooq.tables.pojos.Service, Employee> currentPair = serviceEmployeePairs.removeFirst();
+
+    // If no specific employee is required
+    if (currentPair.getRight() == null) {
+      List<Employee> allEmployees = businessService.getEmployees(businessId);
+      for (Employee employee : allEmployees) {
+        List<LocalTime> employeeSlots = getAvailableTimeSlotsForDate(employee.getId(), date);
+        List<LocalTime> subsequentSlots =
+            consecutiveRecursion(serviceEmployeePairs, date, previousEndTime, currentPair, employeeSlots);
+        if (subsequentSlots != null) {
+          // return first suitable sequence of slots found (first suitable employee)
+          return subsequentSlots;
+        }
+      }
+    } else {
+      Integer employeeId = currentPair.getRight().getId();
+      List<LocalTime> availableSlots = getAvailableTimeSlotsForDate(employeeId, date);
+      List<LocalTime> subsequentSlots =
+          consecutiveRecursion(serviceEmployeePairs, date, previousEndTime, currentPair, availableSlots);
+      if (subsequentSlots != null) {
+        return subsequentSlots;
+      }
+    }
+
+    return null; // No suitable slots found
+  }
+
+  @Nullable
+  private List<LocalTime> consecutiveRecursion(LinkedList<Pair<jooq.tables.pojos.Service, Employee>> serviceEmployeePairs,
+                                               LocalDate date,
+                                               LocalTime previousEndTime, Pair<jooq.tables.pojos.Service, Employee> currentPair,
+                                               List<LocalTime> employeeSlots) {
+    for (LocalTime slot : employeeSlots) {
+      if (fitsWithinTolerableTime(slot, previousEndTime)) {
+        List<LocalTime> subsequentSlots = getAvailableConsecutiveTimeSlotsForDateNew(
+            new LinkedList<>(serviceEmployeePairs), date, slot.plusMinutes(currentPair.getLeft().getAvgDuration()));
+        if (subsequentSlots != null) {
+          subsequentSlots.add(0, slot);
+          return subsequentSlots;
+        }
+      }
+    }
+    return null;
+  }
+
+
+  void checkSlotsAndAdd(List<LocalTime> availableSlots,
+                        LinkedList<Pair<jooq.tables.pojos.Service, Employee>> serviceEmployeePairs, LocalDate date,
+                        Set<LocalTime> possibleStartTimes, Integer serviceDuration) {
+    for (LocalTime slot : availableSlots) {
+      // Make a copy of the original list for each recursive call
+      LinkedList<Pair<jooq.tables.pojos.Service, Employee>> remainingPairs = new LinkedList<>(serviceEmployeePairs);
+      remainingPairs.removeFirst();  // Remove the first pair for the recursive call
+
+      // Check if the entire sequence can be scheduled starting from this slot
+      List<LocalTime> result = getAvailableConsecutiveTimeSlotsForDateNew(
+          remainingPairs, date, slot.plusMinutes(serviceDuration));
+
+      if (result != null) {
+        possibleStartTimes.add(slot);  // Add this slot as a possible start time
+        // Do not return here; continue to find all possible start times
+      }
+    }
+  }
 
 }
