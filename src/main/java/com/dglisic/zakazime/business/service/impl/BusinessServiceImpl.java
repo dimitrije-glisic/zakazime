@@ -20,6 +20,7 @@ import java.util.Optional;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.BusinessImage;
+import jooq.tables.pojos.Employee;
 import jooq.tables.pojos.PredefinedCategory;
 import jooq.tables.pojos.Service;
 import jooq.tables.pojos.UserDefinedCategory;
@@ -81,6 +82,12 @@ public class BusinessServiceImpl implements BusinessService {
   @Override
   public List<Business> getAllActive() {
     return businessRepository.getAllWithStatus(BusinessStatus.ACTIVE);
+  }
+
+  @Override
+  public List<Employee> getEmployees(Integer businessId) {
+    businessValidator.requireBusinessExists(businessId);
+    return businessRepository.getEmployees(businessId);
   }
 
   @Override

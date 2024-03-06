@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.BusinessImage;
+import jooq.tables.pojos.Employee;
 import jooq.tables.pojos.PredefinedCategory;
 import jooq.tables.pojos.Service;
 import jooq.tables.pojos.UserDefinedCategory;
@@ -231,6 +232,13 @@ public class BusinessRepositoryImpl implements BusinessRepository {
         .set(BUSINESS.STATUS, string)
         .where(BUSINESS.ID.eq(businessId))
         .execute();
+  }
+
+  @Override
+  public List<Employee> getEmployees(Integer businessId) {
+    return dsl.selectFrom(jooq.tables.Employee.EMPLOYEE)
+        .where(jooq.tables.Employee.EMPLOYEE.BUSINESS_ID.eq(businessId))
+        .fetchInto(Employee.class);
   }
 
 }

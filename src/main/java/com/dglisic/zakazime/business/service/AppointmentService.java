@@ -1,7 +1,8 @@
 package com.dglisic.zakazime.business.service;
 
 import com.dglisic.zakazime.business.controller.dto.AppointmentRequestContext;
-import com.dglisic.zakazime.business.controller.dto.CreateAppointmentRequest;
+import com.dglisic.zakazime.business.controller.dto.MultiServiceAppointmentRequest;
+import com.dglisic.zakazime.business.controller.dto.SingleServiceAppointmentRequest;
 import com.dglisic.zakazime.business.controller.dto.CreateBlockTimeRequest;
 import com.dglisic.zakazime.business.controller.dto.DeleteBlockTimeRequest;
 import java.time.LocalDate;
@@ -12,7 +13,8 @@ import jooq.tables.pojos.EmployeeBlockTime;
 
 public interface AppointmentService {
 
-  void createAppointment(CreateAppointmentRequest request);
+  void createSingleServiceAppointment(SingleServiceAppointmentRequest request);
+  void createMultiServiceAppointment(MultiServiceAppointmentRequest request);
 
   void createBlockTime(CreateBlockTimeRequest request);
 

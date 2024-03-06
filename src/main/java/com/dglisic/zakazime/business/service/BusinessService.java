@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.BusinessImage;
+import jooq.tables.pojos.Employee;
 import jooq.tables.pojos.PredefinedCategory;
 import jooq.tables.pojos.Service;
 import jooq.tables.pojos.UserDefinedCategory;
@@ -50,4 +51,5 @@ public interface BusinessService {
 
   List<Business> getAllActive();
 
+  List<Employee> getEmployees(Integer businessId);
 }

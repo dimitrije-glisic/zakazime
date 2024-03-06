@@ -1,9 +1,10 @@
 package com.dglisic.zakazime.business.controller;
 
 import com.dglisic.zakazime.business.controller.dto.AppointmentRequestContext;
-import com.dglisic.zakazime.business.controller.dto.CreateAppointmentRequest;
 import com.dglisic.zakazime.business.controller.dto.CreateBlockTimeRequest;
 import com.dglisic.zakazime.business.controller.dto.DeleteBlockTimeRequest;
+import com.dglisic.zakazime.business.controller.dto.MultiServiceAppointmentRequest;
+import com.dglisic.zakazime.business.controller.dto.SingleServiceAppointmentRequest;
 import com.dglisic.zakazime.business.controller.dto.StartTime;
 import com.dglisic.zakazime.business.service.AppointmentService;
 import com.dglisic.zakazime.business.service.impl.TimeSlotManagement;
@@ -34,6 +35,15 @@ public class AppointmentController {
   private final AppointmentService appointmentService;
   private final TimeSlotManagement timeSlotManagement;
 
+  @GetMapping("/{businessId}/available")
+  public ResponseEntity<List<StartTime>> getAvailableTimeSlots(@PathVariable Integer businessId,
+                                                               @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy")
+                                                               @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+                                                               LocalDate date,
+                                                               @RequestParam Integer duration) {
+    return ResponseEntity.ok(timeSlotManagement.findAvailableTimeSlotsForBusiness(businessId, date, duration));
+  }
+
   @GetMapping("/{businessId}/{employeeId}/available")
   public ResponseEntity<List<StartTime>> getAvailableTimeSlots(@PathVariable Integer businessId,
                                                                @PathVariable Integer employeeId,
@@ -41,7 +51,21 @@ public class AppointmentController {
                                                                @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
                                                                LocalDate date,
                                                                @RequestParam Integer duration) {
-    return ResponseEntity.ok(timeSlotManagement.getAvailableTimeSlots(businessId, employeeId, date, duration));
+    return ResponseEntity.ok(timeSlotManagement.getEmployeeAvailableTimeSlots(businessId, employeeId, date, duration));
+  }
+
+  @PostMapping
+  public ResponseEntity<MessageResponse> createSingleServiceAppointment(
+      @RequestBody @Valid SingleServiceAppointmentRequest request) {
+    appointmentService.createSingleServiceAppointment(request);
+    return ResponseEntity.status(201).body(new MessageResponse("Appointment created successfully"));
+  }
+
+  @PostMapping("/multi")
+  public ResponseEntity<MessageResponse> createMultiServiceAppointment(
+      @RequestBody @Valid MultiServiceAppointmentRequest request) {
+    appointmentService.createMultiServiceAppointment(request);
+    return ResponseEntity.status(201).body(new MessageResponse("Appointment created successfully"));
   }
 
   @GetMapping("/{businessId}/{employeeId}")
@@ -51,12 +75,6 @@ public class AppointmentController {
                                                            @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
                                                            LocalDate date) {
     return ResponseEntity.ok(appointmentService.getAppointmentsForDate(businessId, employeeId, date));
-  }
-
-  @PostMapping
-  public ResponseEntity<MessageResponse> createAppointment(@RequestBody @Valid CreateAppointmentRequest request) {
-    appointmentService.createAppointment(request);
-    return ResponseEntity.status(201).body(new MessageResponse("Appointment created successfully"));
   }
 
   @PostMapping("/confirm")

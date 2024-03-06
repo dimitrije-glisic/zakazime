@@ -1,18 +1,16 @@
 package com.dglisic.zakazime.business.service.impl;
 
-import static com.dglisic.zakazime.business.domain.AppointmentStatus.SCHEDULED;
-
 import com.dglisic.zakazime.business.controller.dto.AppointmentRequestContext;
-import com.dglisic.zakazime.business.controller.dto.CreateAppointmentRequest;
 import com.dglisic.zakazime.business.controller.dto.CreateBlockTimeRequest;
 import com.dglisic.zakazime.business.controller.dto.DeleteBlockTimeRequest;
-import com.dglisic.zakazime.business.domain.AppointmentData;
+import com.dglisic.zakazime.business.controller.dto.MultiServiceAppointmentRequest;
+import com.dglisic.zakazime.business.controller.dto.SingleServiceAppointmentRequest;
+import com.dglisic.zakazime.business.domain.SingleServiceAppointmentData;
 import com.dglisic.zakazime.business.domain.AppointmentStatus;
 import com.dglisic.zakazime.business.domain.OutboxMessageStatus;
 import com.dglisic.zakazime.business.repository.AppointmentRepository;
 import com.dglisic.zakazime.business.repository.OutboxMessageRepository;
 import com.dglisic.zakazime.business.service.AppointmentService;
-import com.dglisic.zakazime.business.service.CustomerService;
 import com.dglisic.zakazime.common.ApplicationException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,7 +18,6 @@ import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Appointment;
 import jooq.tables.pojos.Business;
-import jooq.tables.pojos.Customer;
 import jooq.tables.pojos.Employee;
 import jooq.tables.pojos.EmployeeBlockTime;
 import jooq.tables.pojos.OutboxMessage;
@@ -35,22 +32,24 @@ public class AppointmentServiceImpl implements AppointmentService {
 
   private final BusinessValidator businessValidator;
   private final EmployeeValidator employeeValidator;
-  private final CustomerService customerService;
   private final TimeSlotManagement timeSlotManagement;
   private final OutboxMessageRepository outboxMessageRepository;
   private final AppointmentRepository appointmentRepository;
+  private final AppointmentSingleServiceCreator appointmentSingleServiceCreator;
+  private final AppointmentMultiServiceCreator appointmentMultiServiceCreator;
 
   @Override
   @Transactional
-  public void createAppointment(CreateAppointmentRequest request) {
-    businessValidator.requireCurrentUserPermittedToChangeBusiness(request.businessId());
-    final AppointmentData appointmentData = validateAppointment(request);
-    final Customer customer =
-        customerService.handleCustomerDataOnAppointmentCreation(request.businessId(), request.customerData());
-    appointmentData.setCustomer(customer);
-    final Appointment appointment = storeAppointment(request, customer);
-    appointmentData.setAppointment(appointment);
-    createOutboxMessageAppointmentScheduled(appointmentData);
+  public void createSingleServiceAppointment(SingleServiceAppointmentRequest request) {
+    TimeSlotManagement.validateStartTime(request.startTime());
+    appointmentSingleServiceCreator.createAppointment(request);
+  }
+
+  @Override
+  @Transactional
+  public void createMultiServiceAppointment(MultiServiceAppointmentRequest request) {
+    TimeSlotManagement.validateStartTime(request.startTime());
+    appointmentMultiServiceCreator.createAppointment(request);
   }
 
   @Override
@@ -63,13 +62,13 @@ public class AppointmentServiceImpl implements AppointmentService {
 
   @Override
   public void confirmAppointment(AppointmentRequestContext request) {
-    final AppointmentData appointmentData = handleAppointmentAction(request, AppointmentStatus.CONFIRMED);
+    final SingleServiceAppointmentData appointmentData = handleAppointmentAction(request, AppointmentStatus.CONFIRMED);
     createOutboxMessageAppointmentConfirmed(appointmentData);
   }
 
   @Override
   public void cancelAppointment(AppointmentRequestContext request) {
-    final AppointmentData appointmentData = handleAppointmentAction(request, AppointmentStatus.CANCELLED);
+    final SingleServiceAppointmentData appointmentData = handleAppointmentAction(request, AppointmentStatus.CANCELLED);
     createOutboxMessageAppointmentCancelled(appointmentData);
   }
 
@@ -101,13 +100,13 @@ public class AppointmentServiceImpl implements AppointmentService {
     return appointmentRepository.getBlockTimeForDate(employeeId, date);
   }
 
-  private AppointmentData handleAppointmentAction(AppointmentRequestContext request, AppointmentStatus status) {
+  private SingleServiceAppointmentData handleAppointmentAction(AppointmentRequestContext request, AppointmentStatus status) {
     businessValidator.requireCurrentUserPermittedToChangeBusiness(request.businessId());
     final Integer businessId = request.businessId();
     final Integer employeeId = request.employeeId();
     final Integer appointmentId = request.appointmentId();
     businessValidator.requireCurrentUserPermittedToChangeBusiness(businessId);
-    final AppointmentData appointmentData = businessAndEmployeeValidation(businessId, employeeId);
+    final SingleServiceAppointmentData appointmentData = businessAndEmployeeValidation(businessId, employeeId);
     final Appointment appointment = requireAppointmentExistsAndBelongsToEmployee(businessId, employeeId, appointmentId);
     appointmentData.setAppointment(appointment);
     // change appointment status to cancelled
@@ -115,30 +114,12 @@ public class AppointmentServiceImpl implements AppointmentService {
     return appointmentData;
   }
 
-  private AppointmentData businessAndEmployeeValidation(Integer businessId, Integer employeeId) {
+  private SingleServiceAppointmentData businessAndEmployeeValidation(Integer businessId, Integer employeeId) {
     final Business business = businessValidator.requireBusinessExistsAndReturn(businessId);
     final Employee employee = employeeValidator.requireEmployeeExistsAndReturn(employeeId);
     EmployeeValidator.requireIsEmployeeOfBusiness(employee, businessId);
-    final AppointmentData appointmentData = new AppointmentData();
+    final SingleServiceAppointmentData appointmentData = new SingleServiceAppointmentData();
     appointmentData.setBusiness(business);
-    appointmentData.setEmployee(employee);
-    return appointmentData;
-  }
-
-  private AppointmentData validateAppointment(CreateAppointmentRequest request) {
-    final var business = businessValidator.requireBusinessExistsAndReturn(request.businessId());
-    final var employee = employeeValidator.requireEmployeeExistsAndReturn(request.employeeId());
-    final var service =
-        businessValidator.requireServiceBelongsToBusinessAndReturn(request.serviceId(), request.businessId());
-    EmployeeValidator.requireIsEmployeeOfBusiness(employee, request.businessId());
-    // require employee is available at requested time
-
-    //request.startTime() minutes should be a multiple of 15 minutes
-    timeSlotManagement.validateTimeSlot(request.businessId(), request.employeeId(), request.startTime(), request.duration());
-
-    final AppointmentData appointmentData = new AppointmentData();
-    appointmentData.setBusiness(business);
-    appointmentData.setService(service);
     appointmentData.setEmployee(employee);
     return appointmentData;
   }
@@ -147,7 +128,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     businessValidator.requireBusinessExists(request.businessId());
     final Employee employee = employeeValidator.requireEmployeeExistsAndReturn(request.employeeId());
     EmployeeValidator.requireIsEmployeeOfBusiness(employee, request.businessId());
-    timeSlotManagement.validateTimeSlot(request.businessId(), request.employeeId(), request.start(), request.duration());
+    timeSlotManagement.validateAvailability(request.businessId(), request.employeeId(), request.start(), request.duration());
   }
 
   private Appointment requireAppointmentExistsAndBelongsToEmployee(Integer businessId, Integer employeeId,
@@ -168,12 +149,6 @@ public class AppointmentServiceImpl implements AppointmentService {
     return appointment.orElseThrow(() -> new ApplicationException("Appointment not found", HttpStatus.BAD_REQUEST));
   }
 
-  private void requireAppointmentStatusScheduled(Appointment appointment) {
-    if (!appointment.getStatus().equals(SCHEDULED.toString())) {
-      throw new ApplicationException("Appointment status is not " + SCHEDULED, HttpStatus.BAD_REQUEST);
-    }
-  }
-
   private void requireBlockTimeExistsAndBelongsToEmployee(Integer employeeId, Integer blockTimeId) {
     final Optional<EmployeeBlockTime> blockTime = appointmentRepository.findBlockTimeById(blockTimeId);
     if (blockTime.isEmpty()) {
@@ -182,20 +157,6 @@ public class AppointmentServiceImpl implements AppointmentService {
     if (!blockTime.get().getEmployeeId().equals(employeeId)) {
       throw new ApplicationException("Block time does not belong to employee", HttpStatus.BAD_REQUEST);
     }
-  }
-
-  private Appointment storeAppointment(CreateAppointmentRequest request, Customer customer) {
-    final Appointment appointment = new Appointment();
-    appointment.setCustomerId(customer.getId());
-    appointment.setBusinessId(request.businessId());
-    appointment.setServiceId(request.serviceId());
-    appointment.setEmployeeId(request.employeeId());
-    final var startTime = request.startTime().withSecond(0).withNano(0);
-    appointment.setStartTime(startTime);
-    final var endTime = startTime.plusMinutes(request.duration());
-    appointment.setEndTime(endTime);
-    appointment.setStatus(SCHEDULED.toString());
-    return appointmentRepository.save(appointment);
   }
 
   private void storeBlockTime(CreateBlockTimeRequest request) {
@@ -208,16 +169,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     appointmentRepository.save(blockTime);
   }
 
-  private void createOutboxMessageAppointmentScheduled(AppointmentData appointmentData) {
-    final String recipient = appointmentData.getCustomer().getEmail();
-    final String subject = "Termin zakazan";
-    final String timeFormatted = appointmentData.getAppointment().getStartTime().toString();
-    final String message = "Termin zakazan za " + timeFormatted + " kod " + appointmentData.getBusiness().getName() +
-        " za uslugu " + appointmentData.getService().getTitle() + " kod " + appointmentData.getEmployee().getName();
-    createOutboxMessage(recipient, subject, message);
-  }
-
-  private void createOutboxMessageAppointmentConfirmed(AppointmentData appointmentData) {
+  private void createOutboxMessageAppointmentConfirmed(SingleServiceAppointmentData appointmentData) {
     final String recipient = appointmentData.getCustomer().getEmail();
     final String subject = "Termin potvrđen";
     final String timeFormatted = appointmentData.getAppointment().getStartTime().toString();
@@ -226,7 +178,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     createOutboxMessage(recipient, subject, message);
   }
 
-  private void createOutboxMessageAppointmentCancelled(AppointmentData appointmentData) {
+  private void createOutboxMessageAppointmentCancelled(SingleServiceAppointmentData appointmentData) {
     final String recipient = appointmentData.getCustomer().getEmail();
     final String subject = "Termin otkazan";
     final String timeFormatted = appointmentData.getAppointment().getStartTime().toString();

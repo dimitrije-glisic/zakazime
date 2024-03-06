@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.BusinessImage;
+import jooq.tables.pojos.Employee;
 import jooq.tables.pojos.PredefinedCategory;
 import jooq.tables.pojos.Service;
 import jooq.tables.pojos.UserDefinedCategory;
@@ -52,4 +53,6 @@ public interface BusinessRepository {
   void updateStatus(Integer businessId, BusinessStatus businessStatus);
 
   void changeStatus(Integer businessId, String string);
+
+  List<Employee> getEmployees(Integer businessId);
 }
