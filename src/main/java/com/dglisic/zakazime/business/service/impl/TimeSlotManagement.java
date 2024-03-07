@@ -1,6 +1,7 @@
 package com.dglisic.zakazime.business.service.impl;
 
 import com.dglisic.zakazime.business.controller.dto.DateTimeSlot;
+import com.dglisic.zakazime.business.controller.dto.MultiServiceEmplAvailabilityRequest;
 import com.dglisic.zakazime.business.controller.dto.StartTime;
 import com.dglisic.zakazime.business.repository.AppointmentRepository;
 import com.dglisic.zakazime.business.repository.WorkingHoursRepository;
@@ -64,41 +65,6 @@ public class TimeSlotManagement {
     return filterSlotsByDuration(allAvailableSlots, duration).stream().map(StartTime::new).toList();
   }
 
-  protected void validateAvailability(Integer businessId, Integer employeeId, LocalDateTime startTime, Integer duration) {
-//    final var startTimeClean = startTime.withSecond(0).withNano(0);
-//
-//    final var now = LocalDateTime.now();
-//    if (startTimeClean.isBefore(now)) {
-//      throw new ApplicationException("Appointment start time cannot be in the past", HttpStatus.BAD_REQUEST);
-//    }
-//
-//
-//    //availableTimeSlotsInDay are all slots that can accommodate the requested duration
-//    final List<StartTime> availableTimeSlotsInDay =
-//        getEmployeeAvailableTimeSlots(businessId, employeeId, startTimeClean.toLocalDate(), duration);
-//
-//
-//    // availableTimeSlotsInDay are rounded to the nearest 15 minute interval, but
-//    if (availableTimeSlotsInDay.isEmpty()) {
-//      throw new ApplicationException("Employee is not available at the requested time", HttpStatus.BAD_REQUEST);
-//    }
-//
-//    // startTimeClean might not be, so we need to do a check accordingly
-//
-//    // if starttime is not rounded to 15 it means it is not first slot in the sequence and we don't need to check previous slot
-//
-//    if (startTimeClean.toLocalTime().getMinute() % SLOT_DURATION_IN_MINUTES != 0) {
-//      // check exact slot
-//      if (!availableTimeSlotsInDay.contains(new StartTime(startTimeClean.toLocalTime()))) {
-//        throw new ApplicationException("Employee is not available at the requested time", HttpStatus.BAD_REQUEST);
-//      }
-//    } else {
-//
-//    }
-
-  }
-
-
   protected void validateAvailabilityNew(Integer businessId, Integer employeeId, LocalDateTime startTime, Integer duration) {
     // Clean the start time by removing seconds and nanoseconds, then calculate the end time
     LocalDateTime startTimeClean = startTime.withSecond(0).withNano(0);
@@ -108,7 +74,7 @@ public class TimeSlotManagement {
     WorkingHours workingHours = workingHoursRepository.getWorkingHours(employeeId, startTimeClean.toLocalDate());
 
     // Check if the new appointment's start or end time falls outside the employee's working hours
-    if (isNotWithingWorkingHours(startTimeClean, workingHours) || isNotWithingWorkingHours(endTimeClean, workingHours)) {
+    if (isNotWithinWorkingHours(startTimeClean, workingHours) || isNotWithinWorkingHours(endTimeClean, workingHours)) {
       throw new ApplicationException("Employee is not available at the requested time", HttpStatus.BAD_REQUEST);
     }
 
@@ -119,7 +85,32 @@ public class TimeSlotManagement {
     validateAgainstBlockTimes(employeeId, startTimeClean, endTimeClean);
   }
 
-  private boolean isNotWithingWorkingHours(LocalDateTime time, WorkingHours workingHours) {
+  protected LocalDateTime validateAvailabilityNewWithTolerance(Integer businessId, Integer employeeId, LocalDateTime startTime,
+                                                               Integer duration) {
+    final int CHECK_INTERVAL = 5; // Define how often within the tolerance range you want to check
+
+    LocalDateTime time = startTime.withSecond(0).withNano(0);
+    LocalDateTime endTime = time.plusMinutes(AppointmentMultiServiceCreator.APPOINTMENT_TOLERANCE);
+
+    while (time.isBefore(endTime)) {
+      LocalDateTime endTimeClean = time.plusMinutes(duration);
+      WorkingHours workingHours = workingHoursRepository.getWorkingHours(employeeId, time.toLocalDate());
+
+      if (!isNotWithinWorkingHours(time, workingHours) && !isNotWithinWorkingHours(endTimeClean, workingHours)) {
+        try {
+          validateAgainstExistingAppointments(businessId, employeeId, time, endTimeClean);
+          validateAgainstBlockTimes(employeeId, time, endTimeClean);
+          return time; // Return the first available start time within the tolerance range
+        } catch (ApplicationException ignored) {
+          // If there's a conflict, catch the exception and continue to the next time slot
+        }
+      }
+      time = time.plusMinutes(CHECK_INTERVAL); // Move to the next time slot within the tolerance range
+    }
+    throw new ApplicationException("No available time slots found for the specified services", HttpStatus.BAD_REQUEST);
+  }
+
+  private boolean isNotWithinWorkingHours(LocalDateTime time, WorkingHours workingHours) {
     LocalTime timeToCheck = time.toLocalTime();
     return timeToCheck.isBefore(workingHours.getStartTime()) || timeToCheck.isAfter(workingHours.getEndTime());
   }
@@ -146,12 +137,6 @@ public class TimeSlotManagement {
 
   private boolean timeOverlaps(LocalDateTime start1, LocalDateTime end1, LocalDateTime start2, LocalDateTime end2) {
     return start1.isBefore(end2) && start2.isBefore(end1);
-  }
-
-  private void validateDurationAgainstSlot(Integer durationInMinutes) {
-    if (durationInMinutes % SLOT_DURATION_IN_MINUTES != 0) {
-      throw new ApplicationException("Duration should be a multiple of 15 minutes", HttpStatus.BAD_REQUEST);
-    }
   }
 
   private Set<LocalTime> collectUniqueAvailableSlots(List<Employee> employees, Integer businessId, LocalDate date,
@@ -256,27 +241,9 @@ public class TimeSlotManagement {
     return true;
   }
 
-//  public List<LocalTime> getAvailableConsecutiveTimeSlotsForDate(
-//      LinkedList<Pair<jooq.tables.pojos.Service, Employee>> serviceEmployeePairs, LocalDate date) {
-//
-//    List<LocalTime> availableTimeSlotsForDate =
-//        getAvailableTimeSlotsForDate(serviceEmployeePairs.getFirst().getRight().getId(), date);
-//    List<LocalTime> filteredSlots =
-//        filterSlotsByDuration(availableTimeSlotsForDate, serviceEmployeePairs.getFirst().getLeft().getAvgDuration());
-//    var firstSlot = filteredSlots.get(0);
-//
-//
-//    List<LocalTime> availableConsecutiveTimeSlotsForDate =
-//        getAvailableConsecutiveTimeSlotsForDate(serviceEmployeePairs, date, firstSlot);
-//
-//    if (availableConsecutiveTimeSlotsForDate == null || availableConsecutiveTimeSlotsForDate.isEmpty() ||
-//        availableConsecutiveTimeSlotsForDate.size() < serviceEmployeePairs.size()) {
-//      throw new ApplicationException("No available time slots found for the specified services", HttpStatus.BAD_REQUEST);
-//    }
-//
-//    return availableConsecutiveTimeSlotsForDate;
-//  }
-
+  // ================================================================================================================
+  // to remove ? no employeeId specified functionality is not present here
+  // ================================================================================================================
 
   public List<LocalTime> findAllPossibleStartTimes(
       LinkedList<Pair<jooq.tables.pojos.Service, Employee>> serviceEmployeePairs, LocalDate date) {
@@ -309,7 +276,6 @@ public class TimeSlotManagement {
     return possibleStartTimes;  // Return the list of all possible start times
   }
 
-
   public List<LocalTime> getAvailableConsecutiveTimeSlotsForDate(
       LinkedList<Pair<jooq.tables.pojos.Service, Employee>> serviceEmployeePairs, LocalDate date, LocalTime previousEndTime) {
 
@@ -336,48 +302,105 @@ public class TimeSlotManagement {
     return null;  // No suitable slots found
   }
 
-  private boolean fitsWithinTolerableTime(LocalTime slot, LocalTime previousEndTime) {
-    final int tolerableWaitTimeMinutes = 15;
-    return slot.equals(previousEndTime) ||
-        slot.isAfter(previousEndTime) && slot.isBefore(previousEndTime.plusMinutes(tolerableWaitTimeMinutes).plusSeconds(1));
-  }
-
-
   // ================================================================================================================
 
-  static final int businessId = 1;
+  protected List<Pair<Employee, LocalDateTime>> findAvailableEmployees(Integer id, LocalDateTime appointmentStartTime,
+                                                                       Integer tolerance,
+                                                                       Integer avgDuration) {
+    final int CHECK_INTERVAL = 5;
+    List<Employee> employees = businessService.getEmployees(id);
+    List<Pair<Employee, LocalDateTime>> availableEmployees = new ArrayList<>();
 
-  public Set<LocalTime> findAllPossibleStartTimesNew(
-      LinkedList<Pair<jooq.tables.pojos.Service, Employee>> serviceEmployeePairs, LocalDate date) {
+    LocalDateTime endTime = appointmentStartTime.plusMinutes(tolerance).plusSeconds(1);
+    LocalDateTime time;
+    for (Employee employee : employees) {
+      for (time = appointmentStartTime; time.isBefore(endTime); time = time.plusMinutes(CHECK_INTERVAL)) {
+        try {
+          validateAvailabilityNew(id, employee.getId(), time, avgDuration);
+          availableEmployees.add(Pair.of(employee, time));
+          break; // Break from the time loop if the employee is available at this time
+        } catch (ApplicationException e) {
+          // Continue checking the next time slot
+        }
+      }
+    }
+    return availableEmployees;
+  }
 
+  // ================================================================================================================
+  // no-employeeId-specified functionality
+  // ================================================================================================================
+
+  public Set<LocalTime> findAllPossibleStartTimes(MultiServiceEmplAvailabilityRequest request) {
+    final LinkedList<Pair<jooq.tables.pojos.Service, Employee>> serviceEmployeePairs = new LinkedList<>();
+    for (var pair : request.employeeServicePairs()) {
+      var service = businessValidator.requireServiceBelongsToBusinessAndReturn(pair.serviceId(), request.businessId());
+      var employee = pair.employeeId() != null ? employeeValidator.requireEmployeeExistsAndReturn(pair.employeeId()) : null;
+      serviceEmployeePairs.add(Pair.of(service, employee));
+    }
+    final LocalDate date = request.startTime().toLocalDate();
+    final Set<LocalTime> possibleStartTimes = findAllPossibleStartTimesNew(request.businessId(), serviceEmployeePairs, date);
+    if (possibleStartTimes.isEmpty()) {
+      throw new ApplicationException("No available time slots found for the specified services", HttpStatus.BAD_REQUEST);
+    }
+    return possibleStartTimes;
+  }
+
+  // here the fun begins
+  protected Set<LocalTime> findAllPossibleStartTimesNew(Integer businessId,
+                                                        LinkedList<Pair<jooq.tables.pojos.Service, Employee>> serviceEmployeePairs,
+                                                        LocalDate date) {
     //start times must come from the first service-employee pair
-    Set<LocalTime> possibleStartTimes = new LinkedHashSet<>();
+    final Set<LocalTime> possibleStartTimes = new LinkedHashSet<>();
 
     if (!serviceEmployeePairs.isEmpty()) {
       Pair<jooq.tables.pojos.Service, Employee> firstPair = serviceEmployeePairs.getFirst();
       var serviceDuration = firstPair.getLeft().getAvgDuration();
       // Check if a specific employee is required for the first service
+      // if not, check all employees for available slots and add all possible start times
       if (firstPair.getRight() == null) {
         // If no specific employee is required, check all employees for available slots
         List<Employee> allEmployees = businessService.getEmployees(businessId);
         for (Employee employee : allEmployees) {
           List<LocalTime> availableSlots = getAvailableTimeSlotsForDate(employee.getId(), date);
-          checkSlotsAndAdd(availableSlots, serviceEmployeePairs, date, possibleStartTimes, serviceDuration);
+          checkFirstLevelSlotsAndAddIfChainExists(businessId, availableSlots, serviceEmployeePairs, date, possibleStartTimes,
+              serviceDuration);
         }
       } else {
         // If a specific employee is required, check only that employee for available slots
         Integer employeeId = firstPair.getRight().getId();
         List<LocalTime> availableSlots = getAvailableTimeSlotsForDate(employeeId, date);
-        checkSlotsAndAdd(availableSlots, serviceEmployeePairs, date, possibleStartTimes, serviceDuration);
+        checkFirstLevelSlotsAndAddIfChainExists(businessId, availableSlots, serviceEmployeePairs, date, possibleStartTimes,
+            serviceDuration);
       }
     }
 
     return possibleStartTimes;
   }
 
-  public List<LocalTime> getAvailableConsecutiveTimeSlotsForDateNew(
-      LinkedList<Pair<jooq.tables.pojos.Service, Employee>> serviceEmployeePairs, LocalDate date, LocalTime previousEndTime) {
+  private void checkFirstLevelSlotsAndAddIfChainExists(Integer businessId, List<LocalTime> availableSlots,
+                                                       LinkedList<Pair<jooq.tables.pojos.Service, Employee>> serviceEmployeePairs,
+                                                       LocalDate date, Set<LocalTime> possibleStartTimes,
+                                                       Integer serviceDuration) {
+    for (LocalTime slot : availableSlots) {
+      // Make a copy of the original list for each recursive call
+      LinkedList<Pair<jooq.tables.pojos.Service, Employee>> remainingPairs = new LinkedList<>(serviceEmployeePairs);
+      remainingPairs.removeFirst();  // Remove the first pair for the recursive call
 
+      // Check if the entire sequence can be scheduled starting from this slot
+      List<LocalTime> result =
+          getAvailableConsecutiveTimeSlotsForDateNew(businessId, remainingPairs, date, slot.plusMinutes(serviceDuration));
+
+      if (result != null) {
+        possibleStartTimes.add(slot);  // Add this slot as a possible start time
+        // Do not return here; continue to find all possible start times
+      }
+    }
+  }
+
+  private List<LocalTime> getAvailableConsecutiveTimeSlotsForDateNew(Integer businessId,
+                                                                     LinkedList<Pair<jooq.tables.pojos.Service, Employee>> serviceEmployeePairs,
+                                                                     LocalDate date, LocalTime previousEndTime) {
     if (serviceEmployeePairs.isEmpty()) {
       return new ArrayList<>();
     }
@@ -390,7 +413,7 @@ public class TimeSlotManagement {
       for (Employee employee : allEmployees) {
         List<LocalTime> employeeSlots = getAvailableTimeSlotsForDate(employee.getId(), date);
         List<LocalTime> subsequentSlots =
-            consecutiveRecursion(serviceEmployeePairs, date, previousEndTime, currentPair, employeeSlots);
+            consecutiveRecursion(businessId, serviceEmployeePairs, date, previousEndTime, currentPair, employeeSlots);
         if (subsequentSlots != null) {
           // return first suitable sequence of slots found (first suitable employee)
           return subsequentSlots;
@@ -400,7 +423,7 @@ public class TimeSlotManagement {
       Integer employeeId = currentPair.getRight().getId();
       List<LocalTime> availableSlots = getAvailableTimeSlotsForDate(employeeId, date);
       List<LocalTime> subsequentSlots =
-          consecutiveRecursion(serviceEmployeePairs, date, previousEndTime, currentPair, availableSlots);
+          consecutiveRecursion(businessId, serviceEmployeePairs, date, previousEndTime, currentPair, availableSlots);
       if (subsequentSlots != null) {
         return subsequentSlots;
       }
@@ -410,14 +433,16 @@ public class TimeSlotManagement {
   }
 
   @Nullable
-  private List<LocalTime> consecutiveRecursion(LinkedList<Pair<jooq.tables.pojos.Service, Employee>> serviceEmployeePairs,
+  private List<LocalTime> consecutiveRecursion(Integer businessId,
+                                               LinkedList<Pair<jooq.tables.pojos.Service, Employee>> serviceEmployeePairs,
                                                LocalDate date,
                                                LocalTime previousEndTime, Pair<jooq.tables.pojos.Service, Employee> currentPair,
                                                List<LocalTime> employeeSlots) {
     for (LocalTime slot : employeeSlots) {
       if (fitsWithinTolerableTime(slot, previousEndTime)) {
-        List<LocalTime> subsequentSlots = getAvailableConsecutiveTimeSlotsForDateNew(
-            new LinkedList<>(serviceEmployeePairs), date, slot.plusMinutes(currentPair.getLeft().getAvgDuration()));
+        List<LocalTime> subsequentSlots =
+            getAvailableConsecutiveTimeSlotsForDateNew(businessId, new LinkedList<>(serviceEmployeePairs), date,
+                slot.plusMinutes(currentPair.getLeft().getAvgDuration()));
         if (subsequentSlots != null) {
           subsequentSlots.add(0, slot);
           return subsequentSlots;
@@ -427,24 +452,10 @@ public class TimeSlotManagement {
     return null;
   }
 
-
-  void checkSlotsAndAdd(List<LocalTime> availableSlots,
-                        LinkedList<Pair<jooq.tables.pojos.Service, Employee>> serviceEmployeePairs, LocalDate date,
-                        Set<LocalTime> possibleStartTimes, Integer serviceDuration) {
-    for (LocalTime slot : availableSlots) {
-      // Make a copy of the original list for each recursive call
-      LinkedList<Pair<jooq.tables.pojos.Service, Employee>> remainingPairs = new LinkedList<>(serviceEmployeePairs);
-      remainingPairs.removeFirst();  // Remove the first pair for the recursive call
-
-      // Check if the entire sequence can be scheduled starting from this slot
-      List<LocalTime> result = getAvailableConsecutiveTimeSlotsForDateNew(
-          remainingPairs, date, slot.plusMinutes(serviceDuration));
-
-      if (result != null) {
-        possibleStartTimes.add(slot);  // Add this slot as a possible start time
-        // Do not return here; continue to find all possible start times
-      }
-    }
+  private boolean fitsWithinTolerableTime(LocalTime slot, LocalTime previousEndTime) {
+    final int tolerableWaitTimeMinutes = 15;
+    return slot.equals(previousEndTime) ||
+        slot.isAfter(previousEndTime) && slot.isBefore(previousEndTime.plusMinutes(tolerableWaitTimeMinutes).plusSeconds(1));
   }
 
 }

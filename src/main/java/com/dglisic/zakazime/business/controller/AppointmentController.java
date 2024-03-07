@@ -33,26 +33,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AppointmentController {
 
   private final AppointmentService appointmentService;
-  private final TimeSlotManagement timeSlotManagement;
-
-  @GetMapping("/{businessId}/available")
-  public ResponseEntity<List<StartTime>> getAvailableTimeSlots(@PathVariable Integer businessId,
-                                                               @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy")
-                                                               @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
-                                                               LocalDate date,
-                                                               @RequestParam Integer duration) {
-    return ResponseEntity.ok(timeSlotManagement.findAvailableTimeSlotsForBusiness(businessId, date, duration));
-  }
-
-  @GetMapping("/{businessId}/{employeeId}/available")
-  public ResponseEntity<List<StartTime>> getAvailableTimeSlots(@PathVariable Integer businessId,
-                                                               @PathVariable Integer employeeId,
-                                                               @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy")
-                                                               @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
-                                                               LocalDate date,
-                                                               @RequestParam Integer duration) {
-    return ResponseEntity.ok(timeSlotManagement.getEmployeeAvailableTimeSlots(businessId, employeeId, date, duration));
-  }
 
   @PostMapping
   public ResponseEntity<MessageResponse> createSingleServiceAppointment(
@@ -109,5 +89,7 @@ public class AppointmentController {
                                                               LocalDate date) {
     return ResponseEntity.ok(appointmentService.getBlockTimeForDate(businessId, employeeId, date));
   }
+
+
 
 }

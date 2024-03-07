@@ -1,5 +1,6 @@
 package com.dglisic.zakazime.business.domain;
 
+import java.time.LocalDateTime;
 import jooq.tables.pojos.Appointment;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.Customer;
@@ -14,4 +15,5 @@ public class SingleServiceAppointmentData {
   private Service service;
   private Employee employee;
   private Appointment appointment;
+  private LocalDateTime startTime;
 }

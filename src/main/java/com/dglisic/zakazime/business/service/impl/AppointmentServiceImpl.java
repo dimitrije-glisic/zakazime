@@ -128,7 +128,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     businessValidator.requireBusinessExists(request.businessId());
     final Employee employee = employeeValidator.requireEmployeeExistsAndReturn(request.employeeId());
     EmployeeValidator.requireIsEmployeeOfBusiness(employee, request.businessId());
-    timeSlotManagement.validateAvailability(request.businessId(), request.employeeId(), request.start(), request.duration());
+    timeSlotManagement.validateAvailabilityNew(request.businessId(), request.employeeId(), request.start(), request.duration());
   }
 
   private Appointment requireAppointmentExistsAndBelongsToEmployee(Integer businessId, Integer employeeId,
