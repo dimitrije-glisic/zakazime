@@ -91,6 +91,11 @@ public class BusinessServiceImpl implements BusinessService {
   }
 
   @Override
+  public List<Employee> getEmployeesForService(Integer serviceId) {
+    return businessRepository.getEmployeesForService(serviceId);
+  }
+
+  @Override
   public List<Service> getServicesOfBusiness(final Integer businessId) {
     log.debug("Getting services for business with id {}", businessId);
     final Business business = businessRepository.findById(businessId)

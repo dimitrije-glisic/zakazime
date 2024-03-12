@@ -5,9 +5,9 @@ import com.dglisic.zakazime.business.controller.dto.CreateBlockTimeRequest;
 import com.dglisic.zakazime.business.controller.dto.DeleteBlockTimeRequest;
 import com.dglisic.zakazime.business.controller.dto.MultiServiceAppointmentRequest;
 import com.dglisic.zakazime.business.controller.dto.SingleServiceAppointmentRequest;
-import com.dglisic.zakazime.business.domain.SingleServiceAppointmentData;
 import com.dglisic.zakazime.business.domain.AppointmentStatus;
 import com.dglisic.zakazime.business.domain.OutboxMessageStatus;
+import com.dglisic.zakazime.business.domain.SingleServiceAppointmentData;
 import com.dglisic.zakazime.business.repository.AppointmentRepository;
 import com.dglisic.zakazime.business.repository.OutboxMessageRepository;
 import com.dglisic.zakazime.business.service.AppointmentService;
@@ -48,7 +48,6 @@ public class AppointmentServiceImpl implements AppointmentService {
   @Override
   @Transactional
   public void createMultiServiceAppointment(MultiServiceAppointmentRequest request) {
-    TimeSlotManagement.validateStartTime(request.startTime());
     appointmentMultiServiceCreator.createAppointment(request);
   }
 

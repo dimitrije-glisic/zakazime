@@ -54,4 +54,5 @@ public interface BusinessService {
   List<Employee> getEmployees(Integer businessId);
 
 
+  List<Employee> getEmployeesForService(Integer serviceId);
 }

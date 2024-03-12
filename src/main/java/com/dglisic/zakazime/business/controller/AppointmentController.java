@@ -5,9 +5,7 @@ import com.dglisic.zakazime.business.controller.dto.CreateBlockTimeRequest;
 import com.dglisic.zakazime.business.controller.dto.DeleteBlockTimeRequest;
 import com.dglisic.zakazime.business.controller.dto.MultiServiceAppointmentRequest;
 import com.dglisic.zakazime.business.controller.dto.SingleServiceAppointmentRequest;
-import com.dglisic.zakazime.business.controller.dto.StartTime;
 import com.dglisic.zakazime.business.service.AppointmentService;
-import com.dglisic.zakazime.business.service.impl.TimeSlotManagement;
 import com.dglisic.zakazime.common.MessageResponse;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.Valid;
@@ -89,7 +87,6 @@ public class AppointmentController {
                                                               LocalDate date) {
     return ResponseEntity.ok(appointmentService.getBlockTimeForDate(businessId, employeeId, date));
   }
-
 
 
 }

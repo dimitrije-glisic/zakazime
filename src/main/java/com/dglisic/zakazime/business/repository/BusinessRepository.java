@@ -55,4 +55,6 @@ public interface BusinessRepository {
   void changeStatus(Integer businessId, String string);
 
   List<Employee> getEmployees(Integer businessId);
+
+  List<Employee> getEmployeesForService(Integer serviceId);
 }

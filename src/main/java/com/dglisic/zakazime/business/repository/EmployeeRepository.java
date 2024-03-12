@@ -30,4 +30,5 @@ public interface EmployeeRepository {
 
   Optional<EmployeeRichObject> findByIdFull(Integer businessId, Integer employeeId);
 
+  List<Employee> findByServiceId(Integer serviceId);
 }

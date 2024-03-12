@@ -79,6 +79,13 @@ public class EmployeeServiceImpl implements EmployeeService {
   }
 
   @Override
+  public List<Employee> getAllForService(Integer businessId, Integer serviceId) {
+    businessValidator.requireBusinessExists(businessId);
+    businessValidator.requireServiceBelongsToBusiness(serviceId, businessId);
+    return employeeRepository.findByServiceId(serviceId);
+  }
+
+  @Override
   public void activate(Integer businessId, Integer employeeId) {
     validateOnEmployeeChange(businessId, employeeId);
     employeeRepository.setEmployeeActive(employeeId);

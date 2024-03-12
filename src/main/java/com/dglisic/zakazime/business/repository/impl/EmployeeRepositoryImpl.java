@@ -157,4 +157,13 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
   }
 
+  @Override
+  public List<Employee> findByServiceId(Integer serviceId) {
+    return dsl.select(EMPLOYEE.asterisk())
+        .from(EMPLOYEE)
+        .join(EMPLOYEE_SERVICE_MAP).on(EMPLOYEE.ID.eq(EMPLOYEE_SERVICE_MAP.EMPLOYEE_ID))
+        .where(EMPLOYEE_SERVICE_MAP.SERVICE_ID.eq(serviceId))
+        .fetchInto(Employee.class);
+  }
+
 }

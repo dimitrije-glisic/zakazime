@@ -10,6 +10,6 @@ public record MultiServiceAppointmentRequest(
     @NotNull Integer businessId,
     @NotEmpty List<EmployeeServiceIdPair> employeeServicePairs,
     @NotNull CustomerData customerData,
-    @NotNull @DateTimeFormat(pattern = "dd-MM-yyyy HH:mm") LocalDateTime startTime
+    @NotNull @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDateTime startTime
 ) implements CreateAppointmentRequest {
 }

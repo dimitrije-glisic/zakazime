@@ -7,6 +7,7 @@ import static jooq.tables.BusinessAccountMap.BUSINESS_ACCOUNT_MAP;
 import static jooq.tables.BusinessImage.BUSINESS_IMAGE;
 import static jooq.tables.BusinessPredefinedCategoryMap.BUSINESS_PREDEFINED_CATEGORY_MAP;
 import static jooq.tables.BusinessType.BUSINESS_TYPE;
+import static jooq.tables.Employee.EMPLOYEE;
 import static jooq.tables.PredefinedCategory.PREDEFINED_CATEGORY;
 import static jooq.tables.Service.SERVICE;
 import static jooq.tables.UserDefinedCategory.USER_DEFINED_CATEGORY;
@@ -236,8 +237,18 @@ public class BusinessRepositoryImpl implements BusinessRepository {
 
   @Override
   public List<Employee> getEmployees(Integer businessId) {
-    return dsl.selectFrom(jooq.tables.Employee.EMPLOYEE)
-        .where(jooq.tables.Employee.EMPLOYEE.BUSINESS_ID.eq(businessId))
+    return dsl.selectFrom(EMPLOYEE)
+        .where(EMPLOYEE.BUSINESS_ID.eq(businessId))
+        .fetchInto(Employee.class);
+  }
+
+  @Override
+  public List<Employee> getEmployeesForService(Integer serviceId) {
+    return dsl.select(EMPLOYEE)
+        .from(EMPLOYEE)
+        .join(jooq.tables.EmployeeServiceMap.EMPLOYEE_SERVICE_MAP)
+        .on(EMPLOYEE.ID.eq(jooq.tables.EmployeeServiceMap.EMPLOYEE_SERVICE_MAP.EMPLOYEE_ID))
+        .where(jooq.tables.EmployeeServiceMap.EMPLOYEE_SERVICE_MAP.SERVICE_ID.eq(serviceId))
         .fetchInto(Employee.class);
   }
 
