@@ -67,11 +67,12 @@ public class CustomerServiceImpl implements CustomerService {
     if (StringUtils.isNotBlank(password)) {
       // create account for customer
       final RegistrationRequest registrationRequest = new RegistrationRequest(
-          customer.getFirstName(), customer.getLastName(), customer.getEmail(), password,
+          customer.getFirstName(), customer.getLastName(), customer.getPhone(), customer.getEmail(), password,
           UserServiceImpl.RoleName.USER.toString());
       userService.registerUser(registrationRequest);
     }
     // if passed data contains password, create an account for the customer if one does not exist
     return customer;
   }
+
 }

@@ -98,17 +98,16 @@ public class UserServiceImpl implements UserService {
   private Account fromRegistrationRequest(final RegistrationRequest registrationRequest) {
     final Role role = fromString(registrationRequest.role());
     final LocalDateTime createdOn = LocalDateTime.now();
-    return new Account(
-        null,
-        registrationRequest.firstName(),
-        registrationRequest.lastName(),
-        registrationRequest.password(),
-        registrationRequest.email(),
-        true,
-        role.getId(),
-        createdOn,
-        null
-    );
+    final Account account = new Account();
+    account.setFirstName(registrationRequest.firstName());
+    account.setLastName(registrationRequest.lastName());
+    account.setPassword(registrationRequest.password());
+    account.setPhone(registrationRequest.phone());
+    account.setEmail(registrationRequest.email());
+    account.setIsEnabled(true);
+    account.setRoleId(role.getId());
+    account.setCreatedOn(createdOn);
+    return account;
   }
 
   private Role fromString(String roleName) {

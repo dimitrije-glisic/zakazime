@@ -31,7 +31,6 @@ public class AppointmentSingleServiceCreator extends AppointmentCreator<SingleSe
 
   @Override
   public void createAppointment(SingleServiceAppointmentRequest request) {
-    businessValidator.requireCurrentUserPermittedToChangeBusiness(request.businessId());
     final SingleServiceAppointmentData appointmentData = validateAndPrepareAppointmentData(request);
     final Customer customer =
         customerService.handleCustomerDataOnAppointmentCreation(request.businessId(), request.customerData());
