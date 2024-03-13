@@ -1,7 +1,7 @@
 package com.dglisic.zakazime.business.service.impl;
 
 import com.dglisic.zakazime.business.controller.dto.DateTimeSlot;
-import com.dglisic.zakazime.business.controller.dto.MultiServiceEmplAvailabilityRequest;
+import com.dglisic.zakazime.business.controller.dto.MultiServiceEmployeeAvailabilityRequest;
 import com.dglisic.zakazime.business.controller.dto.StartTime;
 import com.dglisic.zakazime.business.repository.AppointmentRepository;
 import com.dglisic.zakazime.business.repository.WorkingHoursRepository;
@@ -265,14 +265,14 @@ public class TimeSlotManagement {
   // no-employeeId-specified functionality
   // ================================================================================================================
 
-  public Set<LocalTime> findAllPossibleStartTimes(MultiServiceEmplAvailabilityRequest request) {
+  public Set<LocalTime> findAllPossibleStartTimes(MultiServiceEmployeeAvailabilityRequest request) {
     final LinkedList<Pair<jooq.tables.pojos.Service, Employee>> serviceEmployeePairs = new LinkedList<>();
     for (var pair : request.employeeServicePairs()) {
       var service = businessValidator.requireServiceBelongsToBusinessAndReturn(pair.serviceId(), request.businessId());
       var employee = pair.employeeId() != null ? employeeValidator.requireEmployeeExistsAndReturn(pair.employeeId()) : null;
       serviceEmployeePairs.add(Pair.of(service, employee));
     }
-    final LocalDate date = request.startTime().toLocalDate();
+    final LocalDate date = request.date();
     final Set<LocalTime> possibleStartTimes = findAllPossibleStartTimesNew(request.businessId(), serviceEmployeePairs, date);
     if (possibleStartTimes.isEmpty()) {
       throw new ApplicationException("No available time slots found for the specified services", HttpStatus.BAD_REQUEST);

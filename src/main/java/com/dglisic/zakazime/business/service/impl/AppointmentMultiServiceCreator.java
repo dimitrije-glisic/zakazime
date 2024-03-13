@@ -41,7 +41,6 @@ public class AppointmentMultiServiceCreator extends AppointmentCreator<MultiServ
   @Override
   @Transactional
   public void createAppointment(MultiServiceAppointmentRequest request) {
-    businessValidator.requireCurrentUserPermittedToChangeBusiness(request.businessId());
     final MultiServiceAppointmentData appointmentData = validateAndPrepareAppointmentDataReadable(request);
     final Customer customer =
         customerService.handleCustomerDataOnAppointmentCreation(request.businessId(), request.customerData());

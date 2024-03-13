@@ -1,6 +1,6 @@
 package com.dglisic.zakazime.business.controller;
 
-import com.dglisic.zakazime.business.controller.dto.MultiServiceEmplAvailabilityRequest;
+import com.dglisic.zakazime.business.controller.dto.MultiServiceEmployeeAvailabilityRequest;
 import com.dglisic.zakazime.business.controller.dto.StartTime;
 import com.dglisic.zakazime.business.service.impl.TimeSlotManagement;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -64,7 +64,7 @@ public class TimeslotController {
 
   @PostMapping("/available/multi")
   public ResponseEntity<List<StartTime>> findAllPossibleStartTimesNew(
-      @RequestBody @Valid MultiServiceEmplAvailabilityRequest request) {
+      @RequestBody @Valid MultiServiceEmployeeAvailabilityRequest request) {
     Set<LocalTime> allPossibleStartTimesNew = timeSlotManagement.findAllPossibleStartTimes(request);
     return ResponseEntity.ok(allPossibleStartTimesNew.stream().map(StartTime::new).toList());
   }
