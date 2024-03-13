@@ -30,4 +30,6 @@ public interface AppointmentService {
   List<Appointment> getAppointmentsForDate(Integer businessId, Integer employeeId, LocalDate date);
 
   List<EmployeeBlockTime> getBlockTimeForDate(Integer businessId, Integer employeeId, LocalDate date);
+
+  List<Appointment> getAllAppointments(Integer businessId);
 }

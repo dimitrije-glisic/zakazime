@@ -99,6 +99,11 @@ public class AppointmentServiceImpl implements AppointmentService {
     return appointmentRepository.getBlockTimeForDate(employeeId, date);
   }
 
+  @Override
+  public List<Appointment> getAllAppointments(Integer businessId) {
+    return appointmentRepository.getAllAppointments(businessId);
+  }
+
   private SingleServiceAppointmentData handleAppointmentAction(AppointmentRequestContext request, AppointmentStatus status) {
     businessValidator.requireCurrentUserPermittedToChangeBusiness(request.businessId());
     final Integer businessId = request.businessId();

@@ -26,4 +26,6 @@ public interface AppointmentRepository {
   Optional<EmployeeBlockTime> findBlockTimeById(Integer blockTimeId);
 
   void deleteBlockTime(Integer blockTimeId);
+
+  List<Appointment> getAllAppointments(Integer businessId);
 }
