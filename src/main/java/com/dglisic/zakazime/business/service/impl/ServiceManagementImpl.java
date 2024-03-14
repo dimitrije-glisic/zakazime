@@ -49,6 +49,15 @@ public class ServiceManagementImpl implements ServiceManagement {
   }
 
   @Override
+  public Service getServiceById(Integer serviceId) {
+    final Optional<Service> service = serviceRepository.findServiceById(serviceId);
+    if (service.isEmpty()) {
+      throw new ApplicationException("Service with id " + serviceId + " does not exist", HttpStatus.BAD_REQUEST);
+    }
+    return service.get();
+  }
+
+  @Override
   public void deleteService(Integer businessId, Integer serviceId) {
     validateOnDeleteService(businessId, serviceId);
     serviceRepository.delete(serviceId);

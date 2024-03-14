@@ -114,4 +114,13 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         .fetchInto(Appointment.class);
   }
 
+  @Override
+  public List<Appointment> getAllAppointmentsFromDate(Integer businessId, LocalDate fromDate) {
+    return jooq.select(APPOINTMENT)
+        .from(APPOINTMENT)
+        .where(APPOINTMENT.BUSINESS_ID.eq(businessId)
+            .and(APPOINTMENT.START_TIME.greaterOrEqual(fromDate.atStartOfDay())))
+        .fetchInto(Appointment.class);
+  }
+
 }

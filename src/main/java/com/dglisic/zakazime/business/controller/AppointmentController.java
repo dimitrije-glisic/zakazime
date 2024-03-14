@@ -1,6 +1,7 @@
 package com.dglisic.zakazime.business.controller;
 
 import com.dglisic.zakazime.business.controller.dto.AppointmentRequestContext;
+import com.dglisic.zakazime.business.controller.dto.AppointmentRichObject;
 import com.dglisic.zakazime.business.controller.dto.CreateBlockTimeRequest;
 import com.dglisic.zakazime.business.controller.dto.DeleteBlockTimeRequest;
 import com.dglisic.zakazime.business.controller.dto.MultiServiceAppointmentRequest;
@@ -58,6 +59,15 @@ public class AppointmentController {
   @GetMapping("/{businessId}/all")
   public ResponseEntity<List<Appointment>> getAllAppointments(@PathVariable Integer businessId) {
     return ResponseEntity.ok(appointmentService.getAllAppointments(businessId));
+  }
+
+  @GetMapping("/{businessId}/all-full-info")
+  public ResponseEntity<List<AppointmentRichObject>> getAllAppointmentFullInfo(@PathVariable Integer businessId,
+                                                                               @RequestParam(required = false)
+                                                                               @DateTimeFormat(pattern = "dd-MM-yyyy")
+                                                                               @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+                                                                               LocalDate fromDate) {
+    return ResponseEntity.ok(appointmentService.getAllAppointmentsFullInfoFromDate(businessId, fromDate));
   }
 
   @PostMapping("/confirm")

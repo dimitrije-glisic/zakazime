@@ -75,4 +75,10 @@ public class CustomerServiceImpl implements CustomerService {
     return customer;
   }
 
+  @Override
+  public Customer requireCustomerExistsAndReturn(Integer customerId) {
+    return customerRepository.findCustomerById(customerId)
+        .orElseThrow(() -> new ApplicationException("Customer with id " + customerId + " not found", HttpStatus.BAD_REQUEST));
+  }
+
 }

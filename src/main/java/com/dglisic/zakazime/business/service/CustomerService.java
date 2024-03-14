@@ -19,4 +19,6 @@ public interface CustomerService {
 
   Customer handleCustomerDataOnAppointmentCreation(Integer businessId, CustomerData customerData);
 
+  Customer requireCustomerExistsAndReturn(Integer customerId);
+
 }

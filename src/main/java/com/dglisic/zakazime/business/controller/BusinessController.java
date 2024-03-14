@@ -143,6 +143,13 @@ public class BusinessController {
     return ResponseEntity.ok(business);
   }
 
+  @GetMapping("{businessId}/full")
+  public ResponseEntity<BusinessRichObject> getRichBusinessData(@PathVariable @Valid @NotBlank Integer businessId) {
+    logger.info("Getting business profile for business {}", businessId);
+    final BusinessRichObject business = businessService.getCompleteBusinessData(businessId);
+    return ResponseEntity.ok(business);
+  }
+
   @GetMapping
   public Business getBusinessProfileForUser(Principal user) {
     logger.info("Getting business profile for user {}", user.getName());

@@ -47,6 +47,8 @@ public interface BusinessService {
 
   BusinessRichObject getCompleteBusinessData(String city, String businessName);
 
+  BusinessRichObject getCompleteBusinessData(Integer businessId);
+
   void submitBusiness(Integer businessId);
 
   List<Business> getAllActive();

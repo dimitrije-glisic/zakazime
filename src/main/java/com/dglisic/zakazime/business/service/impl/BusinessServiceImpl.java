@@ -175,9 +175,23 @@ public class BusinessServiceImpl implements BusinessService {
         .orElseThrow(
             () -> new ApplicationException(String.format("Business with name %s in city %s not found", businessName, city),
                 HttpStatus.NOT_FOUND));
+    return completeBusinessData(business);
+  }
+
+  @Override
+  public BusinessRichObject getCompleteBusinessData(Integer businessId) {
+    final Business business = businessRepository.findById(businessId)
+        .orElseThrow(
+            () -> new ApplicationException(String.format("Business with id %s not found", businessId),
+                HttpStatus.NOT_FOUND));
+    return completeBusinessData(business);
+  }
+
+  private BusinessRichObject completeBusinessData(Business business) {
     final List<Service> services = businessRepository.getServicesOfBusiness(business.getId());
     final List<UserDefinedCategory> userDefinedCategories = businessRepository.getUserDefinedCategories(business.getId());
-    return new BusinessRichObject(business, services, userDefinedCategories);
+    final List<Employee> employees = businessRepository.getEmployees(business.getId());
+    return new BusinessRichObject(business, services, userDefinedCategories, employees);
   }
 
   private @NotNull String makeUrl(final Integer id, final MultipartFile imageFile) {

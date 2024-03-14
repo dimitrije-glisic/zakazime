@@ -21,4 +21,6 @@ public interface ServiceManagement {
                      final @Valid UpdateServiceRequest updateServiceRequest);
 
 
+  Service getServiceById(Integer serviceId);
+
 }

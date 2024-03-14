@@ -1,6 +1,7 @@
 package com.dglisic.zakazime.business.service.impl;
 
 import com.dglisic.zakazime.business.controller.dto.AppointmentRequestContext;
+import com.dglisic.zakazime.business.controller.dto.AppointmentRichObject;
 import com.dglisic.zakazime.business.controller.dto.CreateBlockTimeRequest;
 import com.dglisic.zakazime.business.controller.dto.DeleteBlockTimeRequest;
 import com.dglisic.zakazime.business.controller.dto.MultiServiceAppointmentRequest;
@@ -11,13 +12,18 @@ import com.dglisic.zakazime.business.domain.SingleServiceAppointmentData;
 import com.dglisic.zakazime.business.repository.AppointmentRepository;
 import com.dglisic.zakazime.business.repository.OutboxMessageRepository;
 import com.dglisic.zakazime.business.service.AppointmentService;
+import com.dglisic.zakazime.business.service.CustomerService;
+import com.dglisic.zakazime.business.service.ServiceManagement;
 import com.dglisic.zakazime.common.ApplicationException;
+import jakarta.annotation.Nullable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Appointment;
 import jooq.tables.pojos.Business;
+import jooq.tables.pojos.Customer;
 import jooq.tables.pojos.Employee;
 import jooq.tables.pojos.EmployeeBlockTime;
 import jooq.tables.pojos.OutboxMessage;
@@ -37,6 +43,8 @@ public class AppointmentServiceImpl implements AppointmentService {
   private final AppointmentRepository appointmentRepository;
   private final AppointmentSingleServiceCreator appointmentSingleServiceCreator;
   private final AppointmentMultiServiceCreator appointmentMultiServiceCreator;
+  private final ServiceManagement serviceManagement;
+  private final CustomerService customerService;
 
   @Override
   @Transactional
@@ -104,6 +112,23 @@ public class AppointmentServiceImpl implements AppointmentService {
     return appointmentRepository.getAllAppointments(businessId);
   }
 
+  @Override
+  public List<AppointmentRichObject> getAllAppointmentsFullInfoFromDate(Integer businessId, @Nullable LocalDate fromDate) {
+    var startDate = fromDate;
+    if (fromDate == null) {
+      startDate = LocalDate.now();
+    }
+    final List<Appointment> allAppointmentsFromDate = appointmentRepository.getAllAppointmentsFromDate(businessId, startDate);
+    final List<AppointmentRichObject> result = new ArrayList<>();
+    allAppointmentsFromDate.forEach(appointment -> {
+      final jooq.tables.pojos.Service service = serviceManagement.getServiceById(appointment.getServiceId());
+      final Employee employee = employeeValidator.requireEmployeeExistsAndReturn(appointment.getEmployeeId());
+      final Customer customer = customerService.requireCustomerExistsAndReturn(appointment.getCustomerId());
+      result.add(new AppointmentRichObject(appointment, service, employee, customer));
+    });
+    return result;
+  }
+
   private SingleServiceAppointmentData handleAppointmentAction(AppointmentRequestContext request, AppointmentStatus status) {
     businessValidator.requireCurrentUserPermittedToChangeBusiness(request.businessId());
     final Integer businessId = request.businessId();
@@ -113,6 +138,8 @@ public class AppointmentServiceImpl implements AppointmentService {
     final SingleServiceAppointmentData appointmentData = businessAndEmployeeValidation(businessId, employeeId);
     final Appointment appointment = requireAppointmentExistsAndBelongsToEmployee(businessId, employeeId, appointmentId);
     appointmentData.setAppointment(appointment);
+    final Customer customer = customerService.requireCustomerExistsAndReturn(appointment.getCustomerId());
+    appointmentData.setCustomer(customer);
     // change appointment status to cancelled
     appointmentRepository.updateAppointmentStatus(appointmentId, status.toString());
     return appointmentData;
