@@ -7,6 +7,7 @@ import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.controller.RegistrationRequest;
 import com.dglisic.zakazime.user.service.UserService;
 import com.dglisic.zakazime.user.service.UserServiceImpl;
+import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Customer;
 import lombok.AllArgsConstructor;
@@ -79,6 +80,39 @@ public class CustomerServiceImpl implements CustomerService {
   public Customer requireCustomerExistsAndReturn(Integer customerId) {
     return customerRepository.findCustomerById(customerId)
         .orElseThrow(() -> new ApplicationException("Customer with id " + customerId + " not found", HttpStatus.BAD_REQUEST));
+  }
+
+  @Override
+  public Customer getCustomer(Integer businessId, Integer customerId) {
+    //todo: check if customer belongs to business
+    return findCustomerById(customerId)
+        .orElseThrow(() -> new ApplicationException("Customer with id " + customerId + " not found", HttpStatus.NOT_FOUND));
+  }
+
+  @Override
+  public List<Customer> getAllCustomersForBusiness(Integer businessId) {
+    return customerRepository.getAllCustomersForBusiness(businessId);
+  }
+
+  @Override
+  public Customer createCustomer(Integer businessId, CustomerData request) {
+    final var customer = new Customer()
+        .setBusinessId(businessId)
+        .setFirstName(request.firstName())
+        .setLastName(request.lastName())
+        .setEmail(request.email())
+        .setPhone(request.phone());
+    return createCustomer(customer);
+  }
+
+  @Override
+  public Customer updateCustomer(Integer businessId, Integer customerId, CustomerData request) {
+    final var customer = requireCustomerExistsAndReturn(customerId);
+    customer.setFirstName(request.firstName());
+    customer.setLastName(request.lastName());
+    customer.setEmail(request.email());
+    customer.setPhone(request.phone());
+    return customerRepository.update(customer);
   }
 
 }

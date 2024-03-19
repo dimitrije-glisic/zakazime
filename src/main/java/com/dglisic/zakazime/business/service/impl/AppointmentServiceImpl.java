@@ -28,12 +28,14 @@ import jooq.tables.pojos.Employee;
 import jooq.tables.pojos.EmployeeBlockTime;
 import jooq.tables.pojos.OutboxMessage;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class AppointmentServiceImpl implements AppointmentService {
 
   private final BusinessValidator businessValidator;
@@ -119,6 +121,24 @@ public class AppointmentServiceImpl implements AppointmentService {
       startDate = LocalDate.now();
     }
     final List<Appointment> allAppointmentsFromDate = appointmentRepository.getAllAppointmentsFromDate(businessId, startDate);
+    return getAppointmentRichObjects(allAppointmentsFromDate);
+  }
+
+  @Override
+  public List<AppointmentRichObject> getAppointmentsForCustomer(Integer businessId, Integer customerId) {
+    final Customer customer = customerService.requireCustomerExistsAndReturn(customerId);
+    requireCustomerBelongsToBusiness(businessId, customer);
+    final List<Appointment> appointments = appointmentRepository.getAppointmentsForCustomer(customerId);
+    return getAppointmentRichObjects(appointments);
+  }
+
+  private void requireCustomerBelongsToBusiness(Integer businessId, Customer customer) {
+    if (!customer.getBusinessId().equals(businessId)) {
+      throw new ApplicationException("Customer does not belong to business", HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  private List<AppointmentRichObject> getAppointmentRichObjects(List<Appointment> allAppointmentsFromDate) {
     final List<AppointmentRichObject> result = new ArrayList<>();
     allAppointmentsFromDate.forEach(appointment -> {
       final jooq.tables.pojos.Service service = serviceManagement.getServiceById(appointment.getServiceId());

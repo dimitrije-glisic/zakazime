@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.BusinessImage;
+import jooq.tables.pojos.Customer;
 import jooq.tables.pojos.Employee;
 import jooq.tables.pojos.PredefinedCategory;
 import jooq.tables.pojos.Service;
@@ -250,6 +251,13 @@ public class BusinessRepositoryImpl implements BusinessRepository {
         .on(EMPLOYEE.ID.eq(jooq.tables.EmployeeServiceMap.EMPLOYEE_SERVICE_MAP.EMPLOYEE_ID))
         .where(jooq.tables.EmployeeServiceMap.EMPLOYEE_SERVICE_MAP.SERVICE_ID.eq(serviceId))
         .fetchInto(Employee.class);
+  }
+
+  @Override
+  public List<Customer> getAllCustomersForBusiness(Integer businessId) {
+    return dsl.selectFrom(jooq.tables.Customer.CUSTOMER)
+        .where(jooq.tables.Customer.CUSTOMER.BUSINESS_ID.eq(businessId))
+        .fetchInto(Customer.class);
   }
 
 }

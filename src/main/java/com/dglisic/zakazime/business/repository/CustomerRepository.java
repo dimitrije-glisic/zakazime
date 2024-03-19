@@ -1,5 +1,6 @@
 package com.dglisic.zakazime.business.repository;
 
+import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Customer;
 
@@ -13,4 +14,5 @@ public interface CustomerRepository {
 
   Optional<Customer> findCustomerById(Integer id);
 
+  List<Customer> getAllCustomersForBusiness(Integer businessId);
 }

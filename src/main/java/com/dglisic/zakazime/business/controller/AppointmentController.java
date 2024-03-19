@@ -15,6 +15,7 @@ import java.util.List;
 import jooq.tables.pojos.Appointment;
 import jooq.tables.pojos.EmployeeBlockTime;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/appointments")
 @AllArgsConstructor
+@Slf4j
 public class AppointmentController {
 
   private final AppointmentService appointmentService;
@@ -63,9 +65,9 @@ public class AppointmentController {
 
   @GetMapping("/{businessId}/all-full-info")
   public ResponseEntity<List<AppointmentRichObject>> getAllAppointmentFullInfo(@PathVariable Integer businessId,
-                                                                               @RequestParam(required = false)
-                                                                               @DateTimeFormat(pattern = "dd-MM-yyyy")
-                                                                               @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+                                                                               @RequestParam
+                                                                               @DateTimeFormat(pattern = "yyyy-MM-dd")
+                                                                               @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
                                                                                LocalDate fromDate) {
     return ResponseEntity.ok(appointmentService.getAllAppointmentsFullInfoFromDate(businessId, fromDate));
   }
@@ -101,6 +103,12 @@ public class AppointmentController {
                                                               @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
                                                               LocalDate date) {
     return ResponseEntity.ok(appointmentService.getBlockTimeForDate(businessId, employeeId, date));
+  }
+
+  @GetMapping("/{businessId}/customer/{customerId}")
+  public ResponseEntity<List<AppointmentRichObject>> getAppointmentsForCustomer(@PathVariable Integer businessId,
+                                                                                @PathVariable Integer customerId) {
+    return ResponseEntity.ok(appointmentService.getAppointmentsForCustomer(businessId, customerId));
   }
 
 

@@ -2,6 +2,7 @@ package com.dglisic.zakazime.business.service;
 
 import com.dglisic.zakazime.business.controller.dto.BusinessRichObject;
 import com.dglisic.zakazime.business.controller.dto.CreateBusinessProfileRequest;
+import com.dglisic.zakazime.business.controller.dto.CustomerDto;
 import com.dglisic.zakazime.business.controller.dto.ImageType;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -53,8 +54,5 @@ public interface BusinessService {
 
   List<Business> getAllActive();
 
-  List<Employee> getEmployees(Integer businessId);
-
-
-  List<Employee> getEmployeesForService(Integer serviceId);
+  List<CustomerDto> getAllCustomersForBusiness(Integer businessId);
 }

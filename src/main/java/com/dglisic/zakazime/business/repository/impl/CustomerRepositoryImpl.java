@@ -3,6 +3,7 @@ package com.dglisic.zakazime.business.repository.impl;
 import static jooq.tables.Customer.CUSTOMER;
 
 import com.dglisic.zakazime.business.repository.CustomerRepository;
+import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Customer;
 import jooq.tables.records.CustomerRecord;
@@ -47,6 +48,13 @@ public class CustomerRepositoryImpl implements CustomerRepository {
     return jooq.selectFrom(CUSTOMER)
         .where(CUSTOMER.ID.eq(id))
         .fetchOptionalInto(Customer.class);
+  }
+
+  @Override
+  public List<Customer> getAllCustomersForBusiness(Integer businessId) {
+    return jooq.selectFrom(CUSTOMER)
+        .where(CUSTOMER.BUSINESS_ID.eq(businessId))
+        .fetchInto(Customer.class);
   }
 
 }

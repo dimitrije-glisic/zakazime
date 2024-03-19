@@ -36,4 +36,6 @@ public interface AppointmentService {
   List<Appointment> getAllAppointments(Integer businessId);
 
   List<AppointmentRichObject> getAllAppointmentsFullInfoFromDate(Integer businessId, @Nullable LocalDate fromDate);
+
+  List<AppointmentRichObject> getAppointmentsForCustomer(Integer businessId, Integer customerId);
 }

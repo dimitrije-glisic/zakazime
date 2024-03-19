@@ -23,4 +23,5 @@ public interface ServiceManagement {
 
   Service getServiceById(Integer serviceId);
 
+  List<Service> getAllForEmployee(Integer businessId, Integer employeeId);
 }

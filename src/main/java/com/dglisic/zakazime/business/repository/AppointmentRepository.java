@@ -31,4 +31,6 @@ public interface AppointmentRepository {
   List<Appointment> getAllAppointments(Integer businessId);
 
   List<Appointment> getAllAppointmentsFromDate(Integer businessId, LocalDate fromDate);
+
+  List<Appointment> getAppointmentsForCustomer(Integer customerId);
 }

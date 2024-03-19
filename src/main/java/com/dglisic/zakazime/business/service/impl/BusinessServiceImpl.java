@@ -3,10 +3,12 @@ package com.dglisic.zakazime.business.service.impl;
 import com.dglisic.zakazime.business.controller.dto.BusinessMapper;
 import com.dglisic.zakazime.business.controller.dto.BusinessRichObject;
 import com.dglisic.zakazime.business.controller.dto.CreateBusinessProfileRequest;
+import com.dglisic.zakazime.business.controller.dto.CustomerDto;
 import com.dglisic.zakazime.business.controller.dto.ImageType;
 import com.dglisic.zakazime.business.repository.BusinessImageRepository;
 import com.dglisic.zakazime.business.repository.BusinessRepository;
 import com.dglisic.zakazime.business.repository.PredefinedCategoryRepository;
+import com.dglisic.zakazime.business.service.AppointmentService;
 import com.dglisic.zakazime.business.service.BusinessService;
 import com.dglisic.zakazime.business.service.ImageStorage;
 import com.dglisic.zakazime.common.ApplicationException;
@@ -14,12 +16,14 @@ import com.dglisic.zakazime.user.service.UserService;
 import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.BusinessImage;
+import jooq.tables.pojos.Customer;
 import jooq.tables.pojos.Employee;
 import jooq.tables.pojos.PredefinedCategory;
 import jooq.tables.pojos.Service;
@@ -42,6 +46,7 @@ public class BusinessServiceImpl implements BusinessService {
   private final ImageStorage imageStorage;
   private final BusinessImageRepository businessImageRepository;
   private final BusinessValidator businessValidator;
+  private final AppointmentService appointmentService;
 
   @Override
   public Business create(final CreateBusinessProfileRequest request) {
@@ -85,14 +90,14 @@ public class BusinessServiceImpl implements BusinessService {
   }
 
   @Override
-  public List<Employee> getEmployees(Integer businessId) {
+  public List<CustomerDto> getAllCustomersForBusiness(Integer businessId) {
     businessValidator.requireBusinessExists(businessId);
-    return businessRepository.getEmployees(businessId);
-  }
-
-  @Override
-  public List<Employee> getEmployeesForService(Integer serviceId) {
-    return businessRepository.getEmployeesForService(serviceId);
+    final List<Customer> allCustomersForBusiness = businessRepository.getAllCustomersForBusiness(businessId);
+    final List<CustomerDto> result = new ArrayList<>();
+    allCustomersForBusiness.forEach(customer ->
+        result.add(new CustomerDto(customer, appointmentService.getAppointmentsForCustomer(businessId, customer.getId())))
+    );
+    return result;
   }
 
   @Override

@@ -5,7 +5,7 @@ import com.dglisic.zakazime.business.controller.dto.MultiServiceEmployeeAvailabi
 import com.dglisic.zakazime.business.controller.dto.StartTime;
 import com.dglisic.zakazime.business.repository.AppointmentRepository;
 import com.dglisic.zakazime.business.repository.WorkingHoursRepository;
-import com.dglisic.zakazime.business.service.BusinessService;
+import com.dglisic.zakazime.business.service.EmployeeService;
 import com.dglisic.zakazime.common.ApplicationException;
 import jakarta.annotation.Nullable;
 import java.time.LocalDate;
@@ -34,7 +34,7 @@ public class TimeSlotManagement {
 
   private final BusinessValidator businessValidator;
   private final EmployeeValidator employeeValidator;
-  private final BusinessService businessService;
+  private final EmployeeService employeeService;
   private final WorkingHoursRepository workingHoursRepository;
   private final AppointmentRepository appointmentRepository;
 
@@ -52,7 +52,7 @@ public class TimeSlotManagement {
   public List<StartTime> findAvailableTimeSlotsForBusiness(Integer businessId, LocalDate date, Integer durationInMinutes) {
     businessValidator.requireBusinessExists(businessId);
 //    validateDurationAgainstSlot(durationInMinutes);
-    final List<Employee> employees = businessService.getEmployees(businessId);
+    final List<Employee> employees = employeeService.getAllForBusiness(businessId);
     final Set<LocalTime> uniqueAvailableSlots = collectUniqueAvailableSlots(employees, date, durationInMinutes);
     return convertAndSortAvailableSlots(uniqueAvailableSlots);
   }
@@ -242,7 +242,7 @@ public class TimeSlotManagement {
                                                                        Integer tolerance,
                                                                        Integer avgDuration) {
     final int CHECK_INTERVAL = 5;
-    List<Employee> employees = businessService.getEmployees(id);
+    List<Employee> employees = employeeService.getAllForBusiness(id);
     List<Pair<Employee, LocalDateTime>> availableEmployees = new ArrayList<>();
 
     LocalDateTime endTime = appointmentStartTime.plusMinutes(tolerance).plusSeconds(1);
@@ -294,7 +294,7 @@ public class TimeSlotManagement {
       // if not, check all employees for available slots and add all possible start times
       if (firstPair.getRight() == null) {
         // If no specific employee is required, check all employees for available slots
-        List<Employee> allEmployees = businessService.getEmployees(businessId);
+        List<Employee> allEmployees = employeeService.getAllForBusiness(businessId);
         for (Employee employee : allEmployees) {
           List<LocalTime> availableSlots = getAvailableTimeSlotsForDate(employee.getId(), date);
           checkFirstLevelSlotsAndAddIfChainExists(businessId, availableSlots, serviceEmployeePairs, date, possibleStartTimes,
@@ -343,7 +343,7 @@ public class TimeSlotManagement {
 
     // If no specific employee is required
     if (currentPair.getRight() == null) {
-      List<Employee> allEmployees = businessService.getEmployees(businessId);
+      List<Employee> allEmployees = employeeService.getAllForBusiness(businessId);
       for (Employee employee : allEmployees) {
         List<LocalTime> employeeSlots = getAvailableTimeSlotsForDate(employee.getId(), date);
         List<LocalTime> subsequentSlots =
@@ -402,7 +402,7 @@ public class TimeSlotManagement {
 
     // If no specific employee is requested, fetch slots for any available employee
     if (employeeId == null) {
-      return getEmployeeAvailableTimeSlotsForService(service, date);
+      return getEmployeeAvailableTimeSlotsForService(businessId, service, date);
     }
 
     // Validate requested employee
@@ -410,7 +410,7 @@ public class TimeSlotManagement {
     EmployeeValidator.requireIsEmployeeOfBusiness(employee, businessId);
 
     // Check if the employee provides the specified service
-    final List<Employee> employeesForService = businessService.getEmployeesForService(serviceId);
+    final List<Employee> employeesForService = employeeService.getAllForService(businessId, serviceId);
     if (!employeesForService.contains(employee)) {
       throw new ApplicationException("Employee does not provide the specified service", HttpStatus.BAD_REQUEST);
     }
@@ -419,9 +419,10 @@ public class TimeSlotManagement {
     return getEmployeeAvailableTimeSlotsForEmployee(service, date, employeeId);
   }
 
-  private List<StartTime> getEmployeeAvailableTimeSlotsForService(jooq.tables.pojos.Service service, LocalDate date) {
+  private List<StartTime> getEmployeeAvailableTimeSlotsForService(Integer businessId, jooq.tables.pojos.Service service,
+                                                                  LocalDate date) {
     final Set<LocalTime> uniqueAvailableSlots = collectUniqueAvailableSlots(
-        businessService.getEmployeesForService(service.getId()), date, service.getAvgDuration());
+        employeeService.getAllForService(businessId, service.getId()), date, service.getAvgDuration());
     return convertAndSortAvailableSlots(uniqueAvailableSlots);
   }
 
