@@ -25,6 +25,8 @@ public interface AppointmentService {
   //  void cancelAppointment(Integer appointmentId);
   void cancelAppointment(AppointmentRequestContext request);
 
+  void noShowAppointment(AppointmentRequestContext request);
+
   void deleteBlockTime(DeleteBlockTimeRequest request);
 
   void rescheduleAppointment(Integer businessId, Integer employeeId, Integer appointmentId, LocalDateTime newStart);
@@ -38,4 +40,6 @@ public interface AppointmentService {
   List<AppointmentRichObject> getAllAppointmentsFullInfoFromDate(Integer businessId, @Nullable LocalDate fromDate);
 
   List<AppointmentRichObject> getAppointmentsForCustomer(Integer businessId, Integer customerId);
+
+  AppointmentRichObject getAppointmentFullInfo(Integer businessId, Integer appointmentId);
 }

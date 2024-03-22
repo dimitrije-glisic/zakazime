@@ -67,7 +67,7 @@ public class ServiceController {
     return ResponseEntity.ok(new MessageResponse("Service deleted successfully"));
   }
 
-  @GetMapping("/for-employee/{employeeId}")
+  @GetMapping("services/for-employee/{employeeId}")
   public ResponseEntity<List<Service>> getAllForEmployee(@PathVariable @Valid @NotBlank Integer businessId,
                                                          @PathVariable @Valid @NotBlank Integer employeeId) {
     log.info("Getting services for employee {} of business {}", employeeId, businessId);

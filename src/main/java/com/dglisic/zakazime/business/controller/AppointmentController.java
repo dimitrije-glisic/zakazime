@@ -72,6 +72,12 @@ public class AppointmentController {
     return ResponseEntity.ok(appointmentService.getAllAppointmentsFullInfoFromDate(businessId, fromDate));
   }
 
+  @GetMapping("/{businessId}/{appointmentId}/full")
+  public ResponseEntity<AppointmentRichObject> getAppointmentFullInfo(@PathVariable Integer businessId,
+                                                                      @PathVariable Integer appointmentId) {
+    return ResponseEntity.ok(appointmentService.getAppointmentFullInfo(businessId, appointmentId));
+  }
+
   @PostMapping("/confirm")
   public ResponseEntity<MessageResponse> confirmAppointment(@RequestBody @Valid AppointmentRequestContext request) {
     appointmentService.confirmAppointment(request);
@@ -82,6 +88,12 @@ public class AppointmentController {
   public ResponseEntity<MessageResponse> cancelAppointment(@RequestBody @Valid AppointmentRequestContext request) {
     appointmentService.cancelAppointment(request);
     return ResponseEntity.status(201).body(new MessageResponse("Appointment cancelled successfully"));
+  }
+
+  @PostMapping("/no-show")
+  public ResponseEntity<MessageResponse> noShowAppointment(@RequestBody @Valid AppointmentRequestContext request) {
+    appointmentService.noShowAppointment(request);
+    return ResponseEntity.status(201).body(new MessageResponse("Appointment marked as no-show successfully"));
   }
 
   @PostMapping("/block-time")

@@ -34,7 +34,13 @@ public class OutboxMessageProcessor {
     mailMessage.setTo(message.getRecipient());
     mailMessage.setSubject(message.getSubject());
     mailMessage.setText(message.getBody());
-    mailSender.send(mailMessage);
+    try {
+      mailSender.send(mailMessage);
+    } catch (Exception e) {
+      log.error("Failed to send email", e);
+      updateStatusWithRetries(message.getId(), OutboxMessageStatus.FAILED);
+      return;
+    }
     updateStatusWithRetries(message.getId(), OutboxMessageStatus.SENT);
   }
 
@@ -61,7 +67,6 @@ public class OutboxMessageProcessor {
     }
     // After max retries, log and potentially raise an alert for manual intervention
     log.error("Failed to update outbox message status after {} retries", maxRetries);
-    outboxMessageRepository.updateStatus(messageId, OutboxMessageStatus.FAILED);
   }
 
 }

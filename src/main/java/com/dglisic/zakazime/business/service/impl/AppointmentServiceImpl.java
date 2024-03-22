@@ -82,6 +82,11 @@ public class AppointmentServiceImpl implements AppointmentService {
   }
 
   @Override
+  public void noShowAppointment(AppointmentRequestContext request) {
+    handleAppointmentAction(request, AppointmentStatus.NO_SHOW);
+  }
+
+  @Override
   public void deleteBlockTime(DeleteBlockTimeRequest request) {
     final Integer businessId = request.businessId();
     final Integer employeeId = request.employeeId();
@@ -130,6 +135,23 @@ public class AppointmentServiceImpl implements AppointmentService {
     requireCustomerBelongsToBusiness(businessId, customer);
     final List<Appointment> appointments = appointmentRepository.getAppointmentsForCustomer(customerId);
     return getAppointmentRichObjects(appointments);
+  }
+
+  @Override
+  public AppointmentRichObject getAppointmentFullInfo(Integer businessId, Integer appointmentId) {
+    final Appointment appointment = requireAppointmentExistsAndBelongsToBusiness(businessId, appointmentId);
+    final jooq.tables.pojos.Service service = serviceManagement.getServiceById(appointment.getServiceId());
+    final Employee employee = employeeValidator.requireEmployeeExistsAndReturn(appointment.getEmployeeId());
+    final Customer customer = customerService.requireCustomerExistsAndReturn(appointment.getCustomerId());
+    return new AppointmentRichObject(appointment, service, employee, customer);
+  }
+
+  private Appointment requireAppointmentExistsAndBelongsToBusiness(Integer businessId, Integer appointmentId) {
+    final Appointment appointment = requireAppointmentExistsAndReturn(appointmentId);
+    if (!appointment.getBusinessId().equals(businessId)) {
+      throw new ApplicationException("Appointment does not belong to business", HttpStatus.BAD_REQUEST);
+    }
+    return appointment;
   }
 
   private void requireCustomerBelongsToBusiness(Integer businessId, Customer customer) {

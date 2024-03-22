@@ -44,9 +44,6 @@ public class TimeSlotManagement {
     if (startTime.isBefore(now)) {
       throw new ApplicationException("Appointment start time cannot be in the past", HttpStatus.BAD_REQUEST);
     }
-    if (startTime.getMinute() % SLOT_DURATION_IN_MINUTES != 0) {
-      throw new ApplicationException("Appointment start time minutes should be a multiple of 15 minutes", HttpStatus.BAD_REQUEST);
-    }
   }
 
   public List<StartTime> findAvailableTimeSlotsForBusiness(Integer businessId, LocalDate date, Integer durationInMinutes) {
