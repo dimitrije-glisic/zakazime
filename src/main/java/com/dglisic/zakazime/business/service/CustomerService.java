@@ -8,6 +8,8 @@ import jooq.tables.pojos.Customer;
 
 public interface CustomerService {
 
+  Optional<Customer> findCustomerOfBusinessByEmail(Integer businessId, String email);
+
   /*
     * Find customers by email. One email can be associated with multiple customer entries since
     * one user can be a customer of multiple businesses.

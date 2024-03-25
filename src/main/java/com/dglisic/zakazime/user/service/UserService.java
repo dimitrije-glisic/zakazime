@@ -4,6 +4,7 @@ import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.controller.RegistrationRequest;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
+import jooq.tables.pojos.Role;
 
 public interface UserService {
 
@@ -23,4 +24,5 @@ public interface UserService {
   Account requireLoggedInUser();
 
   Account createBusinessUser(Business business);
+
 }

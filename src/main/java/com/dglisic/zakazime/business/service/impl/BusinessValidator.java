@@ -46,11 +46,12 @@ public class BusinessValidator {
   // todo - add business_role table and check if logged in user has role of owner/business_admin for business
 
   public void requireCurrentUserPermittedToChangeBusiness(final Integer businessId) {
-    Account loggedInUser = userService.requireLoggedInUser();
+    final Account loggedInUser = userService.requireLoggedInUser();
     if (!businessRepository.isUserRelatedToBusiness(loggedInUser.getId(), businessId)) {
       throw new ApplicationException("User " + loggedInUser.getEmail() + " is not related to business " + businessId,
           HttpStatus.BAD_REQUEST);
     }
   }
+
 
 }

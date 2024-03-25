@@ -85,14 +85,23 @@ public class AppointmentController {
 
   @PostMapping("/confirm")
   public ResponseEntity<MessageResponse> confirmAppointment(@RequestBody @Valid AppointmentRequestContext request) {
+    log.debug("Confirming appointment: {}", request);
     appointmentService.confirmAppointment(request);
-    return ResponseEntity.status(201).body(new MessageResponse("Appointment confirmed successfully"));
+    return ResponseEntity.status(200).body(new MessageResponse("Appointment confirmed successfully"));
   }
 
   @PostMapping("/cancel")
   public ResponseEntity<MessageResponse> cancelAppointment(@RequestBody @Valid AppointmentRequestContext request) {
+    log.debug("Cancelling appointment: {}", request);
     appointmentService.cancelAppointment(request);
-    return ResponseEntity.status(201).body(new MessageResponse("Appointment cancelled successfully"));
+    return ResponseEntity.status(200).body(new MessageResponse("Appointment cancelled successfully"));
+  }
+
+  @PostMapping("/complete")
+  public ResponseEntity<MessageResponse> completeAppointment(@RequestBody @Valid AppointmentRequestContext request) {
+    log.debug("Completing appointment: {}", request);
+    appointmentService.completeAppointment(request);
+    return ResponseEntity.status(200).body(new MessageResponse("Appointment completed successfully"));
   }
 
   @PostMapping("/no-show")

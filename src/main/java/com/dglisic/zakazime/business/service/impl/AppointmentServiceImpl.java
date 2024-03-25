@@ -86,6 +86,11 @@ public class AppointmentServiceImpl implements AppointmentService {
   }
 
   @Override
+  public void completeAppointment(AppointmentRequestContext request) {
+    handleAppointmentAction(request, AppointmentStatus.COMPLETED);
+  }
+
+  @Override
   public void noShowAppointment(AppointmentRequestContext request) {
     handleAppointmentAction(request, AppointmentStatus.NO_SHOW);
   }
@@ -197,12 +202,17 @@ public class AppointmentServiceImpl implements AppointmentService {
     return result;
   }
 
+  //todo: consider having separate methods for business owner and customer to handle appointment actions
+  //todo: there is duplication in the code for handling appointment actions
   private SingleServiceAppointmentData handleAppointmentAction(AppointmentRequestContext request, AppointmentStatus status) {
-    businessValidator.requireCurrentUserPermittedToChangeBusiness(request.businessId());
+    // appointment can be changed by business owner or customer who made the appointment
+    requireUserPermittedToChangeAppointment(request);
+
+    validateStatusTransition(request, status);
+
     final Integer businessId = request.businessId();
     final Integer employeeId = request.employeeId();
     final Integer appointmentId = request.appointmentId();
-    businessValidator.requireCurrentUserPermittedToChangeBusiness(businessId);
     final SingleServiceAppointmentData appointmentData = businessAndEmployeeValidation(businessId, employeeId);
     final Appointment appointment = requireAppointmentExistsAndBelongsToEmployee(businessId, employeeId, appointmentId);
     appointmentData.setAppointment(appointment);
@@ -211,6 +221,37 @@ public class AppointmentServiceImpl implements AppointmentService {
     // change appointment status to cancelled
     appointmentRepository.updateAppointmentStatus(appointmentId, status.toString());
     return appointmentData;
+  }
+
+  private void requireUserPermittedToChangeAppointment(AppointmentRequestContext request) {
+    try {
+      businessValidator.requireCurrentUserPermittedToChangeBusiness(request.businessId());
+    } catch (ApplicationException e) {
+      // if not business owner, check if customer who made the appointment
+      final Account account = userService.requireLoggedInUser();
+      final Customer customer = customerService.findCustomerOfBusinessByEmail(request.businessId(), account.getEmail())
+          .orElseThrow(() -> new ApplicationException("User not permitted to change appointment", HttpStatus.BAD_REQUEST));
+      final Appointment appointment = requireAppointmentExistsAndReturn(request.appointmentId());
+      if (!appointment.getCustomerId().equals(customer.getId())) {
+        throw new ApplicationException("User not permitted to change appointment", HttpStatus.BAD_REQUEST);
+      }
+    }
+  }
+
+  private void validateStatusTransition(AppointmentRequestContext request, AppointmentStatus status) {
+    final Appointment appointment = requireAppointmentExistsAndReturn(request.appointmentId());
+    final AppointmentStatus currentStatus = AppointmentStatus.valueOf(appointment.getStatus());
+
+    final boolean isBusinessOwner = isBusinessOwner(userService.requireLoggedInUser());
+    if (!AppointmentStatus.canTransition(currentStatus, status, isBusinessOwner)) {
+      throw new ApplicationException("Invalid status transition", HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  private boolean isBusinessOwner(Account user) {
+    // todo: improve this
+    final Integer SERVICE_PROVIDER_ROLE_ID = 3;
+    return user.getRoleId().equals(SERVICE_PROVIDER_ROLE_ID);
   }
 
   private SingleServiceAppointmentData businessAndEmployeeValidation(Integer businessId, Integer employeeId) {

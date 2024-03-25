@@ -25,6 +25,8 @@ public interface AppointmentService {
   //  void cancelAppointment(Integer appointmentId);
   void cancelAppointment(AppointmentRequestContext request);
 
+  void completeAppointment(AppointmentRequestContext request);
+
   void noShowAppointment(AppointmentRequestContext request);
 
   void deleteBlockTime(DeleteBlockTimeRequest request);

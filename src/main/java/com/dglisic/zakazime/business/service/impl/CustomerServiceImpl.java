@@ -23,6 +23,11 @@ public class CustomerServiceImpl implements CustomerService {
   private final UserService userService;
 
   @Override
+  public Optional<Customer> findCustomerOfBusinessByEmail(Integer businessId, String email) {
+    return customerRepository.findCustomerOfBusinessByEmail(businessId, email);
+  }
+
+  @Override
   public List<Customer> findCustomersByEmail(String email) {
     return customerRepository.findCustomersByEmail(email);
   }
