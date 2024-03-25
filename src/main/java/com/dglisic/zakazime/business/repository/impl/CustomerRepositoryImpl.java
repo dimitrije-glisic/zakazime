@@ -37,10 +37,10 @@ public class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   @Override
-  public Optional<Customer> findCustomerByEmail(String email) {
+  public List<Customer> findCustomersByEmail(String email) {
     return jooq.selectFrom(CUSTOMER)
         .where(CUSTOMER.EMAIL.eq(email))
-        .fetchOptionalInto(Customer.class);
+        .fetchInto(Customer.class);
   }
 
   @Override
@@ -55,6 +55,14 @@ public class CustomerRepositoryImpl implements CustomerRepository {
     return jooq.selectFrom(CUSTOMER)
         .where(CUSTOMER.BUSINESS_ID.eq(businessId))
         .fetchInto(Customer.class);
+  }
+
+  @Override
+  public Optional<Customer> findCustomerOfBusinessByEmail(Integer businessId, String email) {
+    return jooq.selectFrom(CUSTOMER)
+        .where(CUSTOMER.BUSINESS_ID.eq(businessId)
+            .and(CUSTOMER.EMAIL.eq(email)))
+        .fetchOptionalInto(Customer.class);
   }
 
 }

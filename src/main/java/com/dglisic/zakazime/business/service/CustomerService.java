@@ -8,13 +8,11 @@ import jooq.tables.pojos.Customer;
 
 public interface CustomerService {
 
-  Customer createCustomer(Customer customer);
-
-  Customer requireCustomerByEmail(String email) throws ApplicationException;
-
-  Optional<Customer> findCustomerByEmail(String email);
-
-  Customer requireCustomerById(Integer id) throws ApplicationException;
+  /*
+    * Find customers by email. One email can be associated with multiple customer entries since
+    * one user can be a customer of multiple businesses.
+   */
+  List<Customer> findCustomersByEmail(String email);
 
   Optional<Customer> findCustomerById(Integer id);
 

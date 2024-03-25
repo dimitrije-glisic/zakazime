@@ -1,7 +1,6 @@
 package com.dglisic.zakazime.user.service;
 
 import static com.dglisic.zakazime.user.service.UserServiceImpl.RoleName.SERVICE_PROVIDER;
-import static com.dglisic.zakazime.user.service.UserServiceImpl.RoleName.USER;
 
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.controller.RegistrationRequest;
@@ -39,6 +38,12 @@ public class UserServiceImpl implements UserService {
     return user.orElseThrow(() -> new ApplicationException("User not found", HttpStatus.NOT_FOUND));
   }
 
+  @Override
+  public Account findUserByIdOrElseThrow(Integer id) throws ApplicationException {
+    Optional<Account> user = userRepository.findById(id);
+    return user.orElseThrow(() -> new ApplicationException("User not found", HttpStatus.NOT_FOUND));
+  }
+
   /**
    * Retrieves the logged-in user.
    *
@@ -54,20 +59,6 @@ public class UserServiceImpl implements UserService {
     return findUserByEmailOrElseThrow(authentication.getName());
   }
 
-
-  //not needed anymore?
-  @Override
-  public void setRoleToServiceProvider(Account user) {
-    Role currentRole = roleRepository.findById(user.getRoleId())
-        // this should never happen; this would mean that user has not been properly created
-        .orElseThrow(() -> new ApplicationException("Role not found", HttpStatus.INTERNAL_SERVER_ERROR));
-
-    Role serviceProviderRole = roleRepository.findByName(SERVICE_PROVIDER.value).get();
-
-    if (USER.value.equals(currentRole.getName())) {
-      userRepository.updateRole(user, serviceProviderRole);
-    }
-  }
 
   @Override
   @Transactional

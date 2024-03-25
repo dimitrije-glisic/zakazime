@@ -18,10 +18,9 @@ public interface UserService {
    */
   Account findUserByEmailOrElseThrow(String email) throws ApplicationException;
 
-  Account requireLoggedInUser();
+  Account findUserByIdOrElseThrow(Integer id) throws ApplicationException;
 
-  //not needed anymore?
-  void setRoleToServiceProvider(Account user);
+  Account requireLoggedInUser();
 
   Account createBusinessUser(Business business);
 }

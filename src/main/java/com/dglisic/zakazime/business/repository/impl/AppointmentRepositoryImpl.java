@@ -124,6 +124,14 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
   }
 
   @Override
+  public List<Appointment> getAppointmentsForCustomerAndBusiness(Integer businessId, Integer customerId) {
+    return jooq.selectFrom(APPOINTMENT)
+        .where(APPOINTMENT.CUSTOMER_ID.eq(customerId))
+        .and(APPOINTMENT.BUSINESS_ID.eq(businessId))
+        .fetchInto(Appointment.class);
+  }
+
+  @Override
   public List<Appointment> getAppointmentsForCustomer(Integer customerId) {
     return jooq.selectFrom(APPOINTMENT)
         .where(APPOINTMENT.CUSTOMER_ID.eq(customerId))

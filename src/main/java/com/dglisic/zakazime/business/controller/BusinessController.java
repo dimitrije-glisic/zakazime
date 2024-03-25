@@ -152,6 +152,9 @@ public class BusinessController {
 
   @GetMapping
   public Business getBusinessProfileForUser(Principal user) {
+    if (user == null) {
+      throw new ApplicationException("User not authenticated", HttpStatus.UNAUTHORIZED);
+    }
     logger.info("Getting business profile for user {}", user.getName());
     String userEmail = user.getName();
     return businessService.getBusinessProfileForUser(userEmail);

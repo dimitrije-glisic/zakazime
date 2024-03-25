@@ -1,6 +1,5 @@
 package com.dglisic.zakazime.business.repository;
 
-import com.dglisic.zakazime.business.controller.dto.AppointmentRichObject;
 import com.dglisic.zakazime.business.controller.dto.DateTimeSlot;
 import java.time.LocalDate;
 import java.util.List;
@@ -31,6 +30,8 @@ public interface AppointmentRepository {
   List<Appointment> getAllAppointments(Integer businessId);
 
   List<Appointment> getAllAppointmentsFromDate(Integer businessId, LocalDate fromDate);
+
+  List<Appointment> getAppointmentsForCustomerAndBusiness(Integer businessId, Integer customerId);
 
   List<Appointment> getAppointmentsForCustomer(Integer customerId);
 }

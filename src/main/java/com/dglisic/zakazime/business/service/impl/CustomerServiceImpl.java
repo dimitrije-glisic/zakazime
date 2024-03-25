@@ -23,29 +23,8 @@ public class CustomerServiceImpl implements CustomerService {
   private final UserService userService;
 
   @Override
-  public Customer createCustomer(Customer customer) {
-    final var customerByEmail = customerRepository.findCustomerByEmail(customer.getEmail());
-    if (customerByEmail.isPresent()) {
-      throw new ApplicationException("Customer with email " + customer.getEmail() + " already exists", HttpStatus.BAD_REQUEST);
-    }
-    return customerRepository.save(customer);
-  }
-
-  @Override
-  public Customer requireCustomerByEmail(String email) throws ApplicationException {
-    return customerRepository.findCustomerByEmail(email)
-        .orElseThrow(() -> new ApplicationException("Customer with email " + email + " not found", HttpStatus.NOT_FOUND));
-  }
-
-  @Override
-  public Optional<Customer> findCustomerByEmail(String email) {
-    return customerRepository.findCustomerByEmail(email);
-  }
-
-  @Override
-  public Customer requireCustomerById(Integer id) throws ApplicationException {
-    return customerRepository.findCustomerById(id)
-        .orElseThrow(() -> new ApplicationException("Customer with id " + id + " not found", HttpStatus.NOT_FOUND));
+  public List<Customer> findCustomersByEmail(String email) {
+    return customerRepository.findCustomersByEmail(email);
   }
 
   @Override
@@ -56,7 +35,7 @@ public class CustomerServiceImpl implements CustomerService {
   @Override
   public Customer handleCustomerDataOnAppointmentCreation(Integer businessId, CustomerData customerData) {
     final String email = customerData.email();
-    final Optional<Customer> customerOptional = findCustomerByEmail(email);
+    final Optional<Customer> customerOptional = customerRepository.findCustomerOfBusinessByEmail(businessId, email);
     // if not present create new customer
     final Customer customer = customerOptional.orElseGet(() -> createCustomer(new Customer()
         .setBusinessId(businessId)
@@ -113,6 +92,14 @@ public class CustomerServiceImpl implements CustomerService {
     customer.setEmail(request.email());
     customer.setPhone(request.phone());
     return customerRepository.update(customer);
+  }
+
+  private Customer createCustomer(Customer customer) {
+    final var customerByEmail = customerRepository.findCustomerOfBusinessByEmail(customer.getBusinessId(), customer.getEmail());
+    if (customerByEmail.isPresent()) {
+      throw new ApplicationException("Customer with email " + customer.getEmail() + " already exists", HttpStatus.BAD_REQUEST);
+    }
+    return customerRepository.save(customer);
   }
 
 }

@@ -10,9 +10,12 @@ public interface CustomerRepository {
 
   Customer update(Customer customer);
 
-  Optional<Customer> findCustomerByEmail(String email);
+  List<Customer> findCustomersByEmail(String email);
 
   Optional<Customer> findCustomerById(Integer id);
 
   List<Customer> getAllCustomersForBusiness(Integer businessId);
+
+  Optional<Customer> findCustomerOfBusinessByEmail(Integer businessId, String email);
+
 }

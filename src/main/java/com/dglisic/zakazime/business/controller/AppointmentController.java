@@ -78,6 +78,11 @@ public class AppointmentController {
     return ResponseEntity.ok(appointmentService.getAppointmentFullInfo(businessId, appointmentId));
   }
 
+  @GetMapping("/for-user/{userId}")
+  public ResponseEntity<List<AppointmentRichObject>> getAppointmentsForUser(@PathVariable Integer userId) {
+    return ResponseEntity.ok(appointmentService.getAppointmentsForUser(userId));
+  }
+
   @PostMapping("/confirm")
   public ResponseEntity<MessageResponse> confirmAppointment(@RequestBody @Valid AppointmentRequestContext request) {
     appointmentService.confirmAppointment(request);

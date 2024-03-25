@@ -15,12 +15,15 @@ import com.dglisic.zakazime.business.service.AppointmentService;
 import com.dglisic.zakazime.business.service.CustomerService;
 import com.dglisic.zakazime.business.service.ServiceManagement;
 import com.dglisic.zakazime.common.ApplicationException;
+import com.dglisic.zakazime.user.service.UserService;
 import jakarta.annotation.Nullable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Appointment;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.Customer;
@@ -47,6 +50,7 @@ public class AppointmentServiceImpl implements AppointmentService {
   private final AppointmentMultiServiceCreator appointmentMultiServiceCreator;
   private final ServiceManagement serviceManagement;
   private final CustomerService customerService;
+  private final UserService userService;
 
   @Override
   @Transactional
@@ -133,7 +137,7 @@ public class AppointmentServiceImpl implements AppointmentService {
   public List<AppointmentRichObject> getAppointmentsForCustomer(Integer businessId, Integer customerId) {
     final Customer customer = customerService.requireCustomerExistsAndReturn(customerId);
     requireCustomerBelongsToBusiness(businessId, customer);
-    final List<Appointment> appointments = appointmentRepository.getAppointmentsForCustomer(customerId);
+    final List<Appointment> appointments = appointmentRepository.getAppointmentsForCustomerAndBusiness(businessId, customerId);
     return getAppointmentRichObjects(appointments);
   }
 
@@ -143,7 +147,28 @@ public class AppointmentServiceImpl implements AppointmentService {
     final jooq.tables.pojos.Service service = serviceManagement.getServiceById(appointment.getServiceId());
     final Employee employee = employeeValidator.requireEmployeeExistsAndReturn(appointment.getEmployeeId());
     final Customer customer = customerService.requireCustomerExistsAndReturn(appointment.getCustomerId());
-    return new AppointmentRichObject(appointment, service, employee, customer);
+    final Business business = businessValidator.requireBusinessExistsAndReturn(businessId);
+    return new AppointmentRichObject(appointment, service, employee, customer, business);
+  }
+
+  @Override
+  public List<AppointmentRichObject> getAppointmentsForUser(Integer userId) {
+    final Account account = userService.findUserByIdOrElseThrow(userId);
+    final List<Customer> customers = customerService.findCustomersByEmail(account.getEmail());
+    if (customers.isEmpty()) {
+      // account is not a customers - does not have appointments yet
+      return new ArrayList<>();
+    }
+
+    final List<Appointment> allAppointments = new ArrayList<>();
+    for (Customer customer : customers) {
+      final List<Appointment> appointments = appointmentRepository.getAppointmentsForCustomer(customer.getId());
+      allAppointments.addAll(appointments);
+    }
+
+    allAppointments.sort(Comparator.comparing(Appointment::getStartTime));
+    return getAppointmentRichObjects(allAppointments);
+
   }
 
   private Appointment requireAppointmentExistsAndBelongsToBusiness(Integer businessId, Integer appointmentId) {
@@ -166,7 +191,8 @@ public class AppointmentServiceImpl implements AppointmentService {
       final jooq.tables.pojos.Service service = serviceManagement.getServiceById(appointment.getServiceId());
       final Employee employee = employeeValidator.requireEmployeeExistsAndReturn(appointment.getEmployeeId());
       final Customer customer = customerService.requireCustomerExistsAndReturn(appointment.getCustomerId());
-      result.add(new AppointmentRichObject(appointment, service, employee, customer));
+      final Business business = businessValidator.requireBusinessExistsAndReturn(appointment.getBusinessId());
+      result.add(new AppointmentRichObject(appointment, service, employee, customer, business));
     });
     return result;
   }

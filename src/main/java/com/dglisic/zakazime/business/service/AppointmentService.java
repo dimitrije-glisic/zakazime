@@ -42,4 +42,6 @@ public interface AppointmentService {
   List<AppointmentRichObject> getAppointmentsForCustomer(Integer businessId, Integer customerId);
 
   AppointmentRichObject getAppointmentFullInfo(Integer businessId, Integer appointmentId);
+
+  List<AppointmentRichObject> getAppointmentsForUser(Integer userId);
 }
