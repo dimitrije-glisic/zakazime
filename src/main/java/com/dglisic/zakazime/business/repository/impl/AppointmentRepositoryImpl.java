@@ -2,6 +2,7 @@ package com.dglisic.zakazime.business.repository.impl;
 
 import static jooq.tables.Appointment.APPOINTMENT;
 import static jooq.tables.EmployeeBlockTime.EMPLOYEE_BLOCK_TIME;
+import static jooq.tables.Review.REVIEW;
 import static org.jooq.impl.DSL.select;
 
 import com.dglisic.zakazime.business.controller.dto.DateTimeSlot;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Appointment;
 import jooq.tables.pojos.EmployeeBlockTime;
+import jooq.tables.pojos.Review;
 import jooq.tables.records.AppointmentRecord;
 import jooq.tables.records.EmployeeBlockTimeRecord;
 import lombok.AllArgsConstructor;
@@ -136,6 +138,13 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
     return jooq.selectFrom(APPOINTMENT)
         .where(APPOINTMENT.CUSTOMER_ID.eq(customerId))
         .fetchInto(Appointment.class);
+  }
+
+  @Override
+  public Optional<Review> findReviewByAppointmentId(Integer id) {
+    return jooq.selectFrom(REVIEW)
+        .where(REVIEW.APPOINTMENT_ID.eq(id))
+        .fetchOptionalInto(Review.class);
   }
 
 }

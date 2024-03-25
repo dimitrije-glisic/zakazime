@@ -30,6 +30,7 @@ import jooq.tables.pojos.Customer;
 import jooq.tables.pojos.Employee;
 import jooq.tables.pojos.EmployeeBlockTime;
 import jooq.tables.pojos.OutboxMessage;
+import jooq.tables.pojos.Review;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -147,13 +148,15 @@ public class AppointmentServiceImpl implements AppointmentService {
   }
 
   @Override
-  public AppointmentRichObject getAppointmentFullInfo(Integer businessId, Integer appointmentId) {
+  public AppointmentRichObject requireAppointmentFullInfo(Integer businessId, Integer appointmentId) {
     final Appointment appointment = requireAppointmentExistsAndBelongsToBusiness(businessId, appointmentId);
-    final jooq.tables.pojos.Service service = serviceManagement.getServiceById(appointment.getServiceId());
-    final Employee employee = employeeValidator.requireEmployeeExistsAndReturn(appointment.getEmployeeId());
-    final Customer customer = customerService.requireCustomerExistsAndReturn(appointment.getCustomerId());
-    final Business business = businessValidator.requireBusinessExistsAndReturn(businessId);
-    return new AppointmentRichObject(appointment, service, employee, customer, business);
+    return createRichObject(appointment);
+  }
+
+  @Override
+  public AppointmentRichObject requireAppointmentFullInfo(Integer appointmentId) {
+    final Appointment appointment = requireAppointmentExistsAndReturn(appointmentId);
+    return createRichObject(appointment);
   }
 
   @Override
@@ -192,14 +195,17 @@ public class AppointmentServiceImpl implements AppointmentService {
 
   private List<AppointmentRichObject> getAppointmentRichObjects(List<Appointment> allAppointmentsFromDate) {
     final List<AppointmentRichObject> result = new ArrayList<>();
-    allAppointmentsFromDate.forEach(appointment -> {
-      final jooq.tables.pojos.Service service = serviceManagement.getServiceById(appointment.getServiceId());
-      final Employee employee = employeeValidator.requireEmployeeExistsAndReturn(appointment.getEmployeeId());
-      final Customer customer = customerService.requireCustomerExistsAndReturn(appointment.getCustomerId());
-      final Business business = businessValidator.requireBusinessExistsAndReturn(appointment.getBusinessId());
-      result.add(new AppointmentRichObject(appointment, service, employee, customer, business));
-    });
+    allAppointmentsFromDate.forEach(appointment -> result.add(createRichObject(appointment)));
     return result;
+  }
+
+  private AppointmentRichObject createRichObject(Appointment appointment) {
+    final jooq.tables.pojos.Service service = serviceManagement.getServiceById(appointment.getServiceId());
+    final Employee employee = employeeValidator.requireEmployeeExistsAndReturn(appointment.getEmployeeId());
+    final Customer customer = customerService.requireCustomerExistsAndReturn(appointment.getCustomerId());
+    final Business business = businessValidator.requireBusinessExistsAndReturn(appointment.getBusinessId());
+    final Review review = appointmentRepository.findReviewByAppointmentId(appointment.getId()).orElse(null);
+    return new AppointmentRichObject(appointment, service, employee, customer, business, review);
   }
 
   //todo: consider having separate methods for business owner and customer to handle appointment actions

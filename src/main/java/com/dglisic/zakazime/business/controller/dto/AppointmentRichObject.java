@@ -4,6 +4,7 @@ import jooq.tables.pojos.Appointment;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.Customer;
 import jooq.tables.pojos.Employee;
+import jooq.tables.pojos.Review;
 import jooq.tables.pojos.Service;
 
 public record AppointmentRichObject(
@@ -11,7 +12,8 @@ public record AppointmentRichObject(
     Service service,
     Employee employee,
     Customer customer,
-    Business business
+    Business business,
+    Review review
 ) {
 
 }

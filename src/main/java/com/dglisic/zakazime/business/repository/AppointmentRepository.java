@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Appointment;
 import jooq.tables.pojos.EmployeeBlockTime;
+import jooq.tables.pojos.Review;
 
 public interface AppointmentRepository {
 
@@ -34,4 +35,6 @@ public interface AppointmentRepository {
   List<Appointment> getAppointmentsForCustomerAndBusiness(Integer businessId, Integer customerId);
 
   List<Appointment> getAppointmentsForCustomer(Integer customerId);
+
+  Optional<Review> findReviewByAppointmentId(Integer id);
 }

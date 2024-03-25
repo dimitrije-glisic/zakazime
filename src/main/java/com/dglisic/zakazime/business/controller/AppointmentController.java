@@ -75,7 +75,7 @@ public class AppointmentController {
   @GetMapping("/{businessId}/{appointmentId}/full")
   public ResponseEntity<AppointmentRichObject> getAppointmentFullInfo(@PathVariable Integer businessId,
                                                                       @PathVariable Integer appointmentId) {
-    return ResponseEntity.ok(appointmentService.getAppointmentFullInfo(businessId, appointmentId));
+    return ResponseEntity.ok(appointmentService.requireAppointmentFullInfo(businessId, appointmentId));
   }
 
   @GetMapping("/for-user/{userId}")
