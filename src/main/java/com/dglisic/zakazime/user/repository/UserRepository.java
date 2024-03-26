@@ -19,4 +19,6 @@ public interface UserRepository {
   void updateRole(Account user, Role role);
 
   Optional<Account> findById(Integer id);
+
+  Account updateUser(Account user);
 }

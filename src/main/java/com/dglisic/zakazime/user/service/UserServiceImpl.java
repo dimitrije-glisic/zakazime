@@ -2,8 +2,10 @@ package com.dglisic.zakazime.user.service;
 
 import static com.dglisic.zakazime.user.service.UserServiceImpl.RoleName.SERVICE_PROVIDER;
 
+import com.dglisic.zakazime.business.repository.CustomerRepository;
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.controller.RegistrationRequest;
+import com.dglisic.zakazime.user.controller.UpdateUserInfoRequest;
 import com.dglisic.zakazime.user.repository.RoleRepository;
 import com.dglisic.zakazime.user.repository.UserRepository;
 import java.time.LocalDateTime;
@@ -13,6 +15,7 @@ import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.Role;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
   private final UserRepository userRepository;
   private final RoleRepository roleRepository;
+  private final CustomerRepository customerRepository;
 
   @Override
   public Account registerUser(final RegistrationRequest registrationRequest) {
@@ -59,7 +63,6 @@ public class UserServiceImpl implements UserService {
     return findUserByEmailOrElseThrow(authentication.getName());
   }
 
-
   @Override
   @Transactional
   public Account createBusinessUser(Business business) {
@@ -76,6 +79,41 @@ public class UserServiceImpl implements UserService {
     final Account savedUser = userRepository.saveUser(businessUser);
     this.userRepository.linkBusinessProfileToUser(savedUser.getId(), business.getId());
     return savedUser;
+  }
+
+  @Override
+  @Transactional
+  public Account updateUser(Integer userId, UpdateUserInfoRequest updateRequest) {
+    final Account existingUser = findUserByIdOrElseThrow(userId);
+    // check if logged-in existingUser is the account owner
+    final Account loggedInUser = requireLoggedInUser();
+    if (!loggedInUser.getId().equals(existingUser.getId())) {
+      throw new ApplicationException("User is not the owner of the account", HttpStatus.FORBIDDEN);
+    }
+
+    existingUser.setFirstName(updateRequest.firstName());
+    existingUser.setLastName(updateRequest.lastName());
+    existingUser.setPhone(updateRequest.phone());
+
+    if (!updateRequest.email().equals(existingUser.getEmail())) {
+      final Optional<Account> byEmail = userRepository.findByEmail(updateRequest.email());
+      if (byEmail.isPresent()) {
+        throw new ApplicationException("User with this email already exists", HttpStatus.BAD_REQUEST);
+      } else {
+        existingUser.setEmail(updateRequest.email());
+        updateCustomerEmail(existingUser.getEmail(), updateRequest.email());
+      }
+    }
+
+    if (StringUtils.isNotBlank(updateRequest.password())) {
+      existingUser.setPassword(updateRequest.password());
+    }
+
+    return userRepository.updateUser(existingUser);
+  }
+
+  private void updateCustomerEmail(String existingUserEmail, String newEmail) {
+    customerRepository.updateAllCustomerEmails(existingUserEmail, newEmail);
   }
 
   private String generateUsername(String name) {

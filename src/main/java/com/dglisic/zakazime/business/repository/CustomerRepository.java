@@ -18,4 +18,5 @@ public interface CustomerRepository {
 
   Optional<Customer> findCustomerOfBusinessByEmail(Integer businessId, String email);
 
+  void updateAllCustomerEmails(String existingUserEmail, String newEmail);
 }

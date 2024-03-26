@@ -2,9 +2,9 @@ package com.dglisic.zakazime.user.service;
 
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.controller.RegistrationRequest;
+import com.dglisic.zakazime.user.controller.UpdateUserInfoRequest;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
-import jooq.tables.pojos.Role;
 
 public interface UserService {
 
@@ -25,4 +25,5 @@ public interface UserService {
 
   Account createBusinessUser(Business business);
 
+  Account updateUser(Integer userId, UpdateUserInfoRequest updateRequest);
 }

@@ -65,4 +65,12 @@ public class CustomerRepositoryImpl implements CustomerRepository {
         .fetchOptionalInto(Customer.class);
   }
 
+  @Override
+  public void updateAllCustomerEmails(String existingUserEmail, String newEmail) {
+    jooq.update(CUSTOMER)
+        .set(CUSTOMER.EMAIL, newEmail)
+        .where(CUSTOMER.EMAIL.eq(existingUserEmail))
+        .execute();
+  }
+
 }

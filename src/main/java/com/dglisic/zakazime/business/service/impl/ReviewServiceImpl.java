@@ -25,6 +25,11 @@ public class ReviewServiceImpl implements ReviewService {
 
   @Override
   public Review createReview(ReviewRequest request) {
+    //review for appointment not exists
+    if (reviewRepository.findReviewForAppointment(request.appointmentId()).isPresent()) {
+      throw new ApplicationException("Review for given appointment already exists", HttpStatus.BAD_REQUEST);
+    }
+
     //appointment exists and current user is the owner of the appointment
     final AppointmentRichObject appointment = appointmentService.requireAppointmentFullInfo(request.appointmentId());
     final Account currentUser = userService.requireLoggedInUser();
@@ -35,6 +40,41 @@ public class ReviewServiceImpl implements ReviewService {
     //create review
     final Review newReview = fromRequest(request);
     return reviewRepository.createReview(newReview);
+  }
+
+  @Override
+  public void updateReview(ReviewRequest request) {
+    //review exists
+    final Review existingReview = reviewRepository.findReviewForAppointment(request.appointmentId())
+        .orElseThrow(() -> new ApplicationException("Review for given appointment not exists", HttpStatus.BAD_REQUEST));
+
+    //appointment exists and current user is the owner of the appointment
+    final AppointmentRichObject appointment = appointmentService.requireAppointmentFullInfo(request.appointmentId());
+    final Account currentUser = userService.requireLoggedInUser();
+    if (!isAppointmentOwner(appointment.customer(), currentUser)) {
+      throw new ApplicationException("User is not the owner of the appointment", HttpStatus.BAD_REQUEST);
+    }
+
+    //update review
+    final Review newReview = fromRequest(request);
+    reviewRepository.updateReview(existingReview.getId(), newReview);
+  }
+
+  @Override
+  public void deleteReview(Integer reviewId) {
+    //review exists
+    final Review existingReview = reviewRepository.findReviewById(reviewId)
+        .orElseThrow(() -> new ApplicationException("Review not exists", HttpStatus.BAD_REQUEST));
+
+    //appointment exists and current user is the owner of the appointment
+    final AppointmentRichObject appointment = appointmentService.requireAppointmentFullInfo(existingReview.getAppointmentId());
+    final Account currentUser = userService.requireLoggedInUser();
+    if (!isAppointmentOwner(appointment.customer(), currentUser)) {
+      throw new ApplicationException("User is not the owner of the appointment", HttpStatus.BAD_REQUEST);
+    }
+
+    //delete review
+    reviewRepository.deleteReview(existingReview.getId());
   }
 
   @Override
