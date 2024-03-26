@@ -179,6 +179,16 @@ public class AppointmentServiceImpl implements AppointmentService {
 
   }
 
+  @Override
+  public List<AppointmentRichObject> getAllAppointmentsWithReviewsForBusiness(Integer businessId) {
+    final List<Appointment> allAppointments = appointmentRepository.getAllAppointmentsWithReview(businessId);
+    final List<AppointmentRichObject> result = new ArrayList<>();
+    for (Appointment appointment : allAppointments) {
+      result.add(createRichObject(appointment));
+    }
+    return result;
+  }
+
   private Appointment requireAppointmentExistsAndBelongsToBusiness(Integer businessId, Integer appointmentId) {
     final Appointment appointment = requireAppointmentExistsAndReturn(appointmentId);
     if (!appointment.getBusinessId().equals(businessId)) {

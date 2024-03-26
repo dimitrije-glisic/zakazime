@@ -147,4 +147,14 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         .fetchOptionalInto(Review.class);
   }
 
+  @Override
+  public List<Appointment> getAllAppointmentsWithReview(Integer businessId) {
+    return jooq.select(APPOINTMENT.fields())
+        .from(APPOINTMENT)
+        .join(REVIEW)
+        .on(APPOINTMENT.ID.eq(REVIEW.APPOINTMENT_ID))
+        .where(APPOINTMENT.BUSINESS_ID.eq(businessId))
+        .fetchInto(Appointment.class);
+  }
+
 }

@@ -27,20 +27,6 @@ public class ReviewRepositoryImpl implements ReviewRepository {
   }
 
   @Override
-  public List<Review> getReviewsForUser(Integer userId) {
-    return jooq.select(REVIEW)
-        .from(REVIEW)
-        .join(APPOINTMENT)
-        .on(REVIEW.APPOINTMENT_ID.eq(APPOINTMENT.ID))
-        .join(CUSTOMER)
-        .on(APPOINTMENT.CUSTOMER_ID.eq(CUSTOMER.ID))
-        .join(ACCOUNT)
-        .on(CUSTOMER.EMAIL.eq(ACCOUNT.EMAIL))
-        .where(ACCOUNT.ID.eq(userId))
-        .fetchInto(Review.class);
-  }
-
-  @Override
   public void updateReview(Integer reviewId, Review newReview) {
     jooq.update(REVIEW)
         .set(REVIEW.SERVICE, newReview.getService())

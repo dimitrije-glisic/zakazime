@@ -48,4 +48,6 @@ public interface AppointmentService {
   AppointmentRichObject requireAppointmentFullInfo(Integer appointmentId);
 
   List<AppointmentRichObject> getAppointmentsForUser(Integer userId);
+
+  List<AppointmentRichObject> getAllAppointmentsWithReviewsForBusiness(Integer businessId);
 }

@@ -7,16 +7,17 @@ import com.dglisic.zakazime.business.service.AppointmentService;
 import com.dglisic.zakazime.business.service.ReviewService;
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.service.UserService;
-import java.util.List;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Customer;
 import jooq.tables.pojos.Review;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class ReviewServiceImpl implements ReviewService {
 
   private final AppointmentService appointmentService;
@@ -32,7 +33,9 @@ public class ReviewServiceImpl implements ReviewService {
 
     //appointment exists and current user is the owner of the appointment
     final AppointmentRichObject appointment = appointmentService.requireAppointmentFullInfo(request.appointmentId());
+    log.debug("Customer: {}", appointment.customer());
     final Account currentUser = userService.requireLoggedInUser();
+    log.debug("Current user: {}", currentUser);
     if (!isAppointmentOwner(appointment.customer(), currentUser)) {
       throw new ApplicationException("User is not the owner of the appointment", HttpStatus.BAD_REQUEST);
     }
@@ -77,13 +80,9 @@ public class ReviewServiceImpl implements ReviewService {
     reviewRepository.deleteReview(existingReview.getId());
   }
 
-  @Override
-  public List<Review> getReviewsForUser(Integer userId) {
-    return reviewRepository.getReviewsForUser(userId);
-  }
-
   private boolean isAppointmentOwner(Customer customer, Account currentUser) {
     //compare emails
+
     return customer.getEmail().equals(currentUser.getEmail());
   }
 

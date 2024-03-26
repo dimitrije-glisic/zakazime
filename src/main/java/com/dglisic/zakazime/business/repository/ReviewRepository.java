@@ -8,8 +8,6 @@ public interface ReviewRepository {
 
     Review createReview(Review review);
 
-  List<Review> getReviewsForUser(Integer userId);
-
   void updateReview(Integer id, Review newReview);
 
   Optional<Review> findReviewForAppointment(Integer integer);
