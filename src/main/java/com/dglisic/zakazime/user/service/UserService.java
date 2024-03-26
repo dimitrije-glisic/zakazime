@@ -2,6 +2,7 @@ package com.dglisic.zakazime.user.service;
 
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.controller.RegistrationRequest;
+import com.dglisic.zakazime.user.controller.UpdateUserInfoRequest;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
 
@@ -18,10 +19,11 @@ public interface UserService {
    */
   Account findUserByEmailOrElseThrow(String email) throws ApplicationException;
 
+  Account findUserByIdOrElseThrow(Integer id) throws ApplicationException;
+
   Account requireLoggedInUser();
 
-  //not needed anymore?
-  void setRoleToServiceProvider(Account user);
-
   Account createBusinessUser(Business business);
+
+  Account updateUser(Integer userId, UpdateUserInfoRequest updateRequest);
 }

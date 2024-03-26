@@ -2,12 +2,14 @@ package com.dglisic.zakazime.business.service;
 
 import com.dglisic.zakazime.business.controller.dto.BusinessRichObject;
 import com.dglisic.zakazime.business.controller.dto.CreateBusinessProfileRequest;
+import com.dglisic.zakazime.business.controller.dto.CustomerDto;
 import com.dglisic.zakazime.business.controller.dto.ImageType;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.BusinessImage;
+import jooq.tables.pojos.Employee;
 import jooq.tables.pojos.PredefinedCategory;
 import jooq.tables.pojos.Service;
 import jooq.tables.pojos.UserDefinedCategory;
@@ -46,8 +48,11 @@ public interface BusinessService {
 
   BusinessRichObject getCompleteBusinessData(String city, String businessName);
 
+  BusinessRichObject getCompleteBusinessData(Integer businessId);
+
   void submitBusiness(Integer businessId);
 
   List<Business> getAllActive();
 
+  List<CustomerDto> getAllCustomersForBusiness(Integer businessId);
 }

@@ -3,9 +3,9 @@ package com.dglisic.zakazime.business.service.impl;
 import com.dglisic.zakazime.business.repository.BusinessRepository;
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.service.UserService;
-import java.util.List;
 import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
+import jooq.tables.pojos.Service;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -25,6 +25,13 @@ public class BusinessValidator {
     }
   }
 
+  public Service requireServiceBelongsToBusinessAndReturn(Integer serviceId, Integer businessId) {
+    return businessRepository.findServiceOfBusiness(serviceId, businessId).orElseThrow(
+        () -> new ApplicationException("Service with id " + serviceId + " does not belong to business with id " + businessId,
+            HttpStatus.BAD_REQUEST)
+    );
+  }
+
   public void requireBusinessExists(final Integer businessId) {
     businessRepository.findById(businessId).orElseThrow(
         () -> new ApplicationException("Business with id " + businessId + " does not exist", HttpStatus.BAD_REQUEST)
@@ -39,11 +46,12 @@ public class BusinessValidator {
   // todo - add business_role table and check if logged in user has role of owner/business_admin for business
 
   public void requireCurrentUserPermittedToChangeBusiness(final Integer businessId) {
-    Account loggedInUser = userService.requireLoggedInUser();
+    final Account loggedInUser = userService.requireLoggedInUser();
     if (!businessRepository.isUserRelatedToBusiness(loggedInUser.getId(), businessId)) {
       throw new ApplicationException("User " + loggedInUser.getEmail() + " is not related to business " + businessId,
           HttpStatus.BAD_REQUEST);
     }
   }
+
 
 }

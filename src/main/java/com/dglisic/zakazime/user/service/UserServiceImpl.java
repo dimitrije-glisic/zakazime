@@ -1,10 +1,11 @@
 package com.dglisic.zakazime.user.service;
 
 import static com.dglisic.zakazime.user.service.UserServiceImpl.RoleName.SERVICE_PROVIDER;
-import static com.dglisic.zakazime.user.service.UserServiceImpl.RoleName.USER;
 
+import com.dglisic.zakazime.business.repository.CustomerRepository;
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.controller.RegistrationRequest;
+import com.dglisic.zakazime.user.controller.UpdateUserInfoRequest;
 import com.dglisic.zakazime.user.repository.RoleRepository;
 import com.dglisic.zakazime.user.repository.UserRepository;
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ import jooq.tables.pojos.Account;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.Role;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
   private final UserRepository userRepository;
   private final RoleRepository roleRepository;
+  private final CustomerRepository customerRepository;
 
   @Override
   public Account registerUser(final RegistrationRequest registrationRequest) {
@@ -36,6 +39,12 @@ public class UserServiceImpl implements UserService {
   @Override
   public Account findUserByEmailOrElseThrow(String email) {
     Optional<Account> user = userRepository.findByEmail(email);
+    return user.orElseThrow(() -> new ApplicationException("User not found", HttpStatus.NOT_FOUND));
+  }
+
+  @Override
+  public Account findUserByIdOrElseThrow(Integer id) throws ApplicationException {
+    Optional<Account> user = userRepository.findById(id);
     return user.orElseThrow(() -> new ApplicationException("User not found", HttpStatus.NOT_FOUND));
   }
 
@@ -52,21 +61,6 @@ public class UserServiceImpl implements UserService {
       throw new ApplicationException("User not authenticated", HttpStatus.UNAUTHORIZED);
     }
     return findUserByEmailOrElseThrow(authentication.getName());
-  }
-
-
-  //not needed anymore?
-  @Override
-  public void setRoleToServiceProvider(Account user) {
-    Role currentRole = roleRepository.findById(user.getRoleId())
-        // this should never happen; this would mean that user has not been properly created
-        .orElseThrow(() -> new ApplicationException("Role not found", HttpStatus.INTERNAL_SERVER_ERROR));
-
-    Role serviceProviderRole = roleRepository.findByName(SERVICE_PROVIDER.value).get();
-
-    if (USER.value.equals(currentRole.getName())) {
-      userRepository.updateRole(user, serviceProviderRole);
-    }
   }
 
   @Override
@@ -87,6 +81,41 @@ public class UserServiceImpl implements UserService {
     return savedUser;
   }
 
+  @Override
+  @Transactional
+  public Account updateUser(Integer userId, UpdateUserInfoRequest updateRequest) {
+    final Account existingUser = findUserByIdOrElseThrow(userId);
+    // check if logged-in existingUser is the account owner
+    final Account loggedInUser = requireLoggedInUser();
+    if (!loggedInUser.getId().equals(existingUser.getId())) {
+      throw new ApplicationException("User is not the owner of the account", HttpStatus.FORBIDDEN);
+    }
+
+    existingUser.setFirstName(updateRequest.firstName());
+    existingUser.setLastName(updateRequest.lastName());
+    existingUser.setPhone(updateRequest.phone());
+
+    if (!updateRequest.email().equals(existingUser.getEmail())) {
+      final Optional<Account> byEmail = userRepository.findByEmail(updateRequest.email());
+      if (byEmail.isPresent()) {
+        throw new ApplicationException("User with this email already exists", HttpStatus.BAD_REQUEST);
+      } else {
+        existingUser.setEmail(updateRequest.email());
+        updateCustomerEmail(existingUser.getEmail(), updateRequest.email());
+      }
+    }
+
+    if (StringUtils.isNotBlank(updateRequest.password())) {
+      existingUser.setPassword(updateRequest.password());
+    }
+
+    return userRepository.updateUser(existingUser);
+  }
+
+  private void updateCustomerEmail(String existingUserEmail, String newEmail) {
+    customerRepository.updateAllCustomerEmails(existingUserEmail, newEmail);
+  }
+
   private String generateUsername(String name) {
     return name.toLowerCase().replaceAll("\\s+", "") + "_user" + UUID.randomUUID().toString().substring(0, 4);
   }
@@ -98,17 +127,16 @@ public class UserServiceImpl implements UserService {
   private Account fromRegistrationRequest(final RegistrationRequest registrationRequest) {
     final Role role = fromString(registrationRequest.role());
     final LocalDateTime createdOn = LocalDateTime.now();
-    return new Account(
-        null,
-        registrationRequest.firstName(),
-        registrationRequest.lastName(),
-        registrationRequest.password(),
-        registrationRequest.email(),
-        true,
-        role.getId(),
-        createdOn,
-        null
-    );
+    final Account account = new Account();
+    account.setFirstName(registrationRequest.firstName());
+    account.setLastName(registrationRequest.lastName());
+    account.setPassword(registrationRequest.password());
+    account.setPhone(registrationRequest.phone());
+    account.setEmail(registrationRequest.email());
+    account.setIsEnabled(true);
+    account.setRoleId(role.getId());
+    account.setCreatedOn(createdOn);
+    return account;
   }
 
   private Role fromString(String roleName) {
@@ -129,7 +157,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @AllArgsConstructor
-  enum RoleName {
+  public enum RoleName {
     USER("USER"),
     SERVICE_PROVIDER("SERVICE_PROVIDER"),
     ADMIN("ADMIN"),

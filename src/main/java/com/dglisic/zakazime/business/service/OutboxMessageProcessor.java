@@ -20,7 +20,7 @@ public class OutboxMessageProcessor {
   private final OutboxMessageRepository outboxMessageRepository;
   private final JavaMailSender mailSender;
 
-  @Scheduled(fixedRate = 5000) // Example: Run every 5 seconds
+  @Scheduled(fixedRate = 5000)
   @Transactional
   public void processOutboxMessages() {
     final List<OutboxMessage> pendingMessages = outboxMessageRepository.findByStatus(OutboxMessageStatus.PENDING.toString());
@@ -34,7 +34,13 @@ public class OutboxMessageProcessor {
     mailMessage.setTo(message.getRecipient());
     mailMessage.setSubject(message.getSubject());
     mailMessage.setText(message.getBody());
-    mailSender.send(mailMessage);
+    try {
+      mailSender.send(mailMessage);
+    } catch (Exception e) {
+      log.error("Failed to send email", e);
+      updateStatusWithRetries(message.getId(), OutboxMessageStatus.FAILED);
+      return;
+    }
     updateStatusWithRetries(message.getId(), OutboxMessageStatus.SENT);
   }
 
@@ -62,6 +68,5 @@ public class OutboxMessageProcessor {
     // After max retries, log and potentially raise an alert for manual intervention
     log.error("Failed to update outbox message status after {} retries", maxRetries);
   }
-
 
 }

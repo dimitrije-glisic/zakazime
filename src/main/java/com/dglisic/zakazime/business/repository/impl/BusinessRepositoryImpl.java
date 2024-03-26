@@ -7,6 +7,7 @@ import static jooq.tables.BusinessAccountMap.BUSINESS_ACCOUNT_MAP;
 import static jooq.tables.BusinessImage.BUSINESS_IMAGE;
 import static jooq.tables.BusinessPredefinedCategoryMap.BUSINESS_PREDEFINED_CATEGORY_MAP;
 import static jooq.tables.BusinessType.BUSINESS_TYPE;
+import static jooq.tables.Employee.EMPLOYEE;
 import static jooq.tables.PredefinedCategory.PREDEFINED_CATEGORY;
 import static jooq.tables.Service.SERVICE;
 import static jooq.tables.UserDefinedCategory.USER_DEFINED_CATEGORY;
@@ -19,6 +20,8 @@ import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.BusinessImage;
+import jooq.tables.pojos.Customer;
+import jooq.tables.pojos.Employee;
 import jooq.tables.pojos.PredefinedCategory;
 import jooq.tables.pojos.Service;
 import jooq.tables.pojos.UserDefinedCategory;
@@ -140,6 +143,17 @@ public class BusinessRepositoryImpl implements BusinessRepository {
   }
 
   @Override
+  public Optional<Service> findServiceOfBusiness(Integer serviceId, Integer businessId) {
+    final Service service = dsl.select(SERVICE)
+        .from(SERVICE)
+        .join(USER_DEFINED_CATEGORY).on(SERVICE.CATEGORY_ID.eq(USER_DEFINED_CATEGORY.ID))
+        .where(SERVICE.ID.eq(serviceId))
+        .and(USER_DEFINED_CATEGORY.BUSINESS_ID.eq(businessId))
+        .fetchOneInto(Service.class);
+    return Optional.ofNullable(service);
+  }
+
+  @Override
   public boolean serviceBelongsToBusiness(Integer serviceId, Integer businessId) {
     Integer count = dsl.selectCount()
         .from(SERVICE)
@@ -220,6 +234,30 @@ public class BusinessRepositoryImpl implements BusinessRepository {
         .set(BUSINESS.STATUS, string)
         .where(BUSINESS.ID.eq(businessId))
         .execute();
+  }
+
+  @Override
+  public List<Employee> getEmployees(Integer businessId) {
+    return dsl.selectFrom(EMPLOYEE)
+        .where(EMPLOYEE.BUSINESS_ID.eq(businessId))
+        .fetchInto(Employee.class);
+  }
+
+  @Override
+  public List<Employee> getEmployeesForService(Integer serviceId) {
+    return dsl.select(EMPLOYEE)
+        .from(EMPLOYEE)
+        .join(jooq.tables.EmployeeServiceMap.EMPLOYEE_SERVICE_MAP)
+        .on(EMPLOYEE.ID.eq(jooq.tables.EmployeeServiceMap.EMPLOYEE_SERVICE_MAP.EMPLOYEE_ID))
+        .where(jooq.tables.EmployeeServiceMap.EMPLOYEE_SERVICE_MAP.SERVICE_ID.eq(serviceId))
+        .fetchInto(Employee.class);
+  }
+
+  @Override
+  public List<Customer> getAllCustomersForBusiness(Integer businessId) {
+    return dsl.selectFrom(jooq.tables.Customer.CUSTOMER)
+        .where(jooq.tables.Customer.CUSTOMER.BUSINESS_ID.eq(businessId))
+        .fetchInto(Customer.class);
   }
 
 }

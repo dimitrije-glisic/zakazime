@@ -17,4 +17,8 @@ public interface UserRepository {
   List<Account> getAllUsers();
 
   void updateRole(Account user, Role role);
+
+  Optional<Account> findById(Integer id);
+
+  Account updateUser(Account user);
 }

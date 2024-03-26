@@ -39,6 +39,11 @@ public class EmployeeController {
     return ResponseEntity.status(200).body(employeeService.getAll(businessId));
   }
 
+  @GetMapping("/for-service/{serviceId}")
+  public ResponseEntity<List<Employee>> getAllForService(@PathVariable Integer businessId, @PathVariable Integer serviceId) {
+    return ResponseEntity.status(200).body(employeeService.getAllForService(businessId, serviceId));
+  }
+
   @GetMapping("/{employeeId}")
   public ResponseEntity<Employee> findById(@PathVariable Integer businessId, @PathVariable Integer employeeId) {
     return ResponseEntity.status(200).body(employeeService.findById(businessId, employeeId));

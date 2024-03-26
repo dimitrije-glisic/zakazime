@@ -18,4 +18,6 @@ public interface ServiceRepository {
   boolean existsByTitleAndBusinessId(String title, Integer businessId);
 
   void delete(Integer serviceId);
+
+  List<Service> findByEmployeeId(Integer employeeId);
 }

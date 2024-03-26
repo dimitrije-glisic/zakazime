@@ -21,4 +21,7 @@ public interface ServiceManagement {
                      final @Valid UpdateServiceRequest updateServiceRequest);
 
 
+  Service getServiceById(Integer serviceId);
+
+  List<Service> getAllForEmployee(Integer businessId, Integer employeeId);
 }

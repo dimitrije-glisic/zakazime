@@ -62,4 +62,26 @@ public class UserRepositoryImpl implements UserRepository {
         .where(ACCOUNT.ID.eq(user.getId()))
         .execute();
   }
+
+  @Override
+  public Optional<Account> findById(Integer id) {
+    Account user = dsl.selectFrom(ACCOUNT)
+        .where(ACCOUNT.ID.eq(id))
+        .fetchOneInto(Account.class);
+    return Optional.ofNullable(user);
+  }
+
+  @Override
+  public Account updateUser(Account user) {
+    return dsl.update(ACCOUNT)
+        .set(ACCOUNT.FIRST_NAME, user.getFirstName())
+        .set(ACCOUNT.LAST_NAME, user.getLastName())
+        .set(ACCOUNT.EMAIL, user.getEmail())
+        .set(ACCOUNT.PHONE, user.getPhone())
+        .set(ACCOUNT.PASSWORD, user.getPassword())
+        .where(ACCOUNT.ID.eq(user.getId()))
+        .returning()
+        .fetchOneInto(Account.class);
+  }
+
 }

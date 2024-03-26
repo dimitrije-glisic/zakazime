@@ -1,5 +1,6 @@
 package com.dglisic.zakazime.business.repository.impl;
 
+import static jooq.tables.EmployeeServiceMap.EMPLOYEE_SERVICE_MAP;
 import static jooq.tables.Service.SERVICE;
 import static jooq.tables.UserDefinedCategory.USER_DEFINED_CATEGORY;
 
@@ -78,6 +79,15 @@ public class ServiceRepositoryImpl implements ServiceRepository {
   @Override
   public void delete(Integer serviceId) {
     serviceDao.deleteById(serviceId);
+  }
+
+  @Override
+  public List<Service> findByEmployeeId(Integer employeeId) {
+    return dsl.select(SERVICE)
+        .from(SERVICE)
+        .join(EMPLOYEE_SERVICE_MAP).on(SERVICE.ID.eq(EMPLOYEE_SERVICE_MAP.SERVICE_ID))
+        .where(EMPLOYEE_SERVICE_MAP.EMPLOYEE_ID.eq(employeeId))
+        .fetchInto(Service.class);
   }
 
 }

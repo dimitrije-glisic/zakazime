@@ -1,11 +1,14 @@
 package com.dglisic.zakazime.business.repository;
 
+import com.dglisic.zakazime.business.controller.dto.CustomerDto;
 import com.dglisic.zakazime.business.service.impl.BusinessStatus;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.BusinessImage;
+import jooq.tables.pojos.Customer;
+import jooq.tables.pojos.Employee;
 import jooq.tables.pojos.PredefinedCategory;
 import jooq.tables.pojos.Service;
 import jooq.tables.pojos.UserDefinedCategory;
@@ -35,6 +38,8 @@ public interface BusinessRepository {
 
   List<Service> getServicesOfBusiness(Integer businessId);
 
+  Optional<Service> findServiceOfBusiness(Integer serviceId, Integer businessId);
+
   boolean serviceBelongsToBusiness(Integer serviceId, Integer businessId);
 
   List<Business> searchBusinesses(String city, String businessType, String category);
@@ -50,4 +55,10 @@ public interface BusinessRepository {
   void updateStatus(Integer businessId, BusinessStatus businessStatus);
 
   void changeStatus(Integer businessId, String string);
+
+  List<Employee> getEmployees(Integer businessId);
+
+  List<Employee> getEmployeesForService(Integer serviceId);
+
+  List<Customer> getAllCustomersForBusiness(Integer businessId);
 }

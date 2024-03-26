@@ -33,4 +33,8 @@ public interface EmployeeService {
 
   EmployeeRichObject findByIdFull(Integer businessId, Integer employeeId);
 
+  List<Employee> getAllForBusiness(Integer businessId);
+
+  List<Employee> getAllForService(Integer businessId, Integer serviceId);
+
 }

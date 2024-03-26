@@ -10,6 +10,7 @@ import com.dglisic.zakazime.common.ApplicationException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import jooq.tables.pojos.Employee;
 import jooq.tables.pojos.Service;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,7 @@ public class ServiceManagementImpl implements ServiceManagement {
   private final UserDefinedCategoryRepository userDefinedCategoryRepository;
   private final ServiceMapper serviceMapper;
   private final BusinessValidator businessValidator;
+  private final EmployeeValidator employeeValidator;
 
   @Override
   public Service addServiceToBusiness(final CreateServiceRequest serviceRequest, final Integer businessId) {
@@ -46,6 +48,31 @@ public class ServiceManagementImpl implements ServiceManagement {
     final Service service = serviceMapper.map(updateServiceRequest);
     service.setId(serviceId);
     serviceRepository.update(service);
+  }
+
+  @Override
+  public Service getServiceById(Integer serviceId) {
+    final Optional<Service> service = serviceRepository.findServiceById(serviceId);
+    if (service.isEmpty()) {
+      throw new ApplicationException("Service with id " + serviceId + " does not exist", HttpStatus.BAD_REQUEST);
+    }
+    return service.get();
+  }
+
+  @Override
+  public List<Service> getAllForEmployee(Integer businessId, Integer employeeId) {
+    businessValidator.requireBusinessExists(businessId);
+    final Employee employee = employeeValidator.requireEmployeeExistsAndReturn(employeeId);
+    if (!businessId.equals(employee.getBusinessId())) {
+      throw new ApplicationException("Employee does not belong to business", HttpStatus.BAD_REQUEST);
+    }
+    return serviceRepository.findByEmployeeId(employeeId);
+  }
+
+  private void requireEqual(Integer businessId, Integer businessId1) {
+    if (!businessId.equals(businessId1)) {
+      throw new ApplicationException("Business ids do not match", HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Override
