@@ -72,6 +72,11 @@ public class AppointmentController {
     return ResponseEntity.ok(appointmentService.getAllAppointmentsFullInfoFromDate(businessId, fromDate));
   }
 
+  @GetMapping("/{businessId}/last-created")
+  public ResponseEntity<AppointmentRichObject> getLastCreatedAppointmentFullInfo(@PathVariable Integer businessId) {
+    return ResponseEntity.ok(appointmentService.getLastCreatedAppointmentFullInfo(businessId));
+  }
+
   @GetMapping("/{businessId}/{appointmentId}/full")
   public ResponseEntity<AppointmentRichObject> getAppointmentFullInfo(@PathVariable Integer businessId,
                                                                       @PathVariable Integer appointmentId) {

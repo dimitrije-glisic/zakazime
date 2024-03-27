@@ -4,12 +4,15 @@ import com.dglisic.zakazime.business.controller.dto.BusinessRichObject;
 import com.dglisic.zakazime.business.controller.dto.CreateBusinessProfileRequest;
 import com.dglisic.zakazime.business.controller.dto.ImageType;
 import com.dglisic.zakazime.business.controller.dto.ImageUploadResponse;
+import com.dglisic.zakazime.business.controller.dto.TimeSlot;
 import com.dglisic.zakazime.business.service.BusinessService;
 import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.common.MessageResponse;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import java.security.Principal;
+import java.time.LocalDate;
 import java.util.List;
 import jooq.tables.pojos.Business;
 import jooq.tables.pojos.BusinessImage;
@@ -19,6 +22,7 @@ import jooq.tables.pojos.UserDefinedCategory;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -207,4 +211,20 @@ public class BusinessController {
     return ResponseEntity.ok(userDefinedCategoriesOfBusiness);
   }
 
+  //  ===============================================================
+  // working hours
+  // ===============================================================
+
+  @GetMapping("{businessId}/working-hours")
+  public ResponseEntity<TimeSlot> getWorkingHours(@PathVariable @Valid @NotBlank Integer businessId,
+                                                  @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd")
+                                                  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+                                                  LocalDate date
+  ) {
+    logger.debug("Getting working hours for business {} on date {}", businessId, date);
+    TimeSlot workingHours = businessService.getWorkingHours(businessId, date);
+    return ResponseEntity.ok(workingHours);
+  }
+
 }
+

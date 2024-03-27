@@ -4,7 +4,9 @@ import com.dglisic.zakazime.business.controller.dto.BusinessRichObject;
 import com.dglisic.zakazime.business.controller.dto.CreateBusinessProfileRequest;
 import com.dglisic.zakazime.business.controller.dto.CustomerDto;
 import com.dglisic.zakazime.business.controller.dto.ImageType;
+import com.dglisic.zakazime.business.controller.dto.TimeSlot;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import jooq.tables.pojos.Business;
@@ -55,4 +57,6 @@ public interface BusinessService {
   List<Business> getAllActive();
 
   List<CustomerDto> getAllCustomersForBusiness(Integer businessId);
+
+  TimeSlot getWorkingHours(Integer businessId, LocalDate date);
 }

@@ -189,6 +189,14 @@ public class AppointmentServiceImpl implements AppointmentService {
     return result;
   }
 
+  @Override
+  public AppointmentRichObject getLastCreatedAppointmentFullInfo(Integer businessId) {
+    final Optional<Appointment> lastAppointment = appointmentRepository.getLastCreatedAppointment(businessId);
+    final Appointment appointment =
+        lastAppointment.orElseThrow(() -> new ApplicationException("No appointments found", HttpStatus.NOT_FOUND));
+    return createRichObject(appointment);
+  }
+
   private Appointment requireAppointmentExistsAndBelongsToBusiness(Integer businessId, Integer appointmentId) {
     final Appointment appointment = requireAppointmentExistsAndReturn(appointmentId);
     if (!appointment.getBusinessId().equals(businessId)) {

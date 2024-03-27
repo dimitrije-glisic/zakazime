@@ -157,4 +157,13 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         .fetchInto(Appointment.class);
   }
 
+  @Override
+  public Optional<Appointment> getLastCreatedAppointment(Integer businessId) {
+    return jooq.selectFrom(APPOINTMENT)
+        .where(APPOINTMENT.BUSINESS_ID.eq(businessId))
+        .orderBy(APPOINTMENT.CREATED_AT.desc())
+        .limit(1)
+        .fetchOptionalInto(Appointment.class);
+  }
+
 }

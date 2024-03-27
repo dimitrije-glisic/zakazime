@@ -39,4 +39,6 @@ public interface AppointmentRepository {
   Optional<Review> findReviewByAppointmentId(Integer id);
 
   List<Appointment> getAllAppointmentsWithReview(Integer businessId);
+
+  Optional<Appointment> getLastCreatedAppointment(Integer businessId);
 }

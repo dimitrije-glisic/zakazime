@@ -5,9 +5,11 @@ import com.dglisic.zakazime.business.controller.dto.BusinessRichObject;
 import com.dglisic.zakazime.business.controller.dto.CreateBusinessProfileRequest;
 import com.dglisic.zakazime.business.controller.dto.CustomerDto;
 import com.dglisic.zakazime.business.controller.dto.ImageType;
+import com.dglisic.zakazime.business.controller.dto.TimeSlot;
 import com.dglisic.zakazime.business.repository.BusinessImageRepository;
 import com.dglisic.zakazime.business.repository.BusinessRepository;
 import com.dglisic.zakazime.business.repository.PredefinedCategoryRepository;
+import com.dglisic.zakazime.business.repository.WorkingHoursRepository;
 import com.dglisic.zakazime.business.service.AppointmentService;
 import com.dglisic.zakazime.business.service.BusinessService;
 import com.dglisic.zakazime.business.service.ImageStorage;
@@ -15,7 +17,9 @@ import com.dglisic.zakazime.common.ApplicationException;
 import com.dglisic.zakazime.user.service.UserService;
 import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -28,6 +32,7 @@ import jooq.tables.pojos.Employee;
 import jooq.tables.pojos.PredefinedCategory;
 import jooq.tables.pojos.Service;
 import jooq.tables.pojos.UserDefinedCategory;
+import jooq.tables.pojos.WorkingHours;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -47,6 +52,7 @@ public class BusinessServiceImpl implements BusinessService {
   private final BusinessImageRepository businessImageRepository;
   private final BusinessValidator businessValidator;
   private final AppointmentService appointmentService;
+  private final WorkingHoursRepository workingHoursRepository;
 
   @Override
   public Business create(final CreateBusinessProfileRequest request) {
@@ -99,6 +105,34 @@ public class BusinessServiceImpl implements BusinessService {
     );
     return result;
   }
+
+
+  @Override
+  public TimeSlot getWorkingHours(Integer businessId, LocalDate date) {
+    businessValidator.requireBusinessExists(businessId);
+
+    final List<Employee> employees = businessRepository.getEmployees(businessId);
+    if (employees.isEmpty()) {
+      throw new ApplicationException("No employees found for business with id " + businessId, HttpStatus.NOT_FOUND);
+    }
+
+    // Stream to find the earliest start time among all employees
+    LocalTime earliestStart = employees.stream()
+        .map(employee -> workingHoursRepository.getWorkingHours(employee.getId(), date))
+        .map(WorkingHours::getStartTime)
+        .min(LocalTime::compareTo)
+        .orElseThrow(() -> new ApplicationException("Failed to find the earliest start time", HttpStatus.INTERNAL_SERVER_ERROR));
+
+    // Stream to find the latest end time among all employees
+    LocalTime latestEnd = employees.stream()
+        .map(employee -> workingHoursRepository.getWorkingHours(employee.getId(), date))
+        .map(WorkingHours::getEndTime)
+        .max(LocalTime::compareTo)
+        .orElseThrow(() -> new ApplicationException("Failed to find the latest end time", HttpStatus.INTERNAL_SERVER_ERROR));
+
+    return new TimeSlot(earliestStart, latestEnd);
+  }
+
 
   @Override
   public List<Service> getServicesOfBusiness(final Integer businessId) {

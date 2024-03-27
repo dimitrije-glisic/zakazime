@@ -50,4 +50,6 @@ public interface AppointmentService {
   List<AppointmentRichObject> getAppointmentsForUser(Integer userId);
 
   List<AppointmentRichObject> getAllAppointmentsWithReviewsForBusiness(Integer businessId);
+
+  AppointmentRichObject getLastCreatedAppointmentFullInfo(Integer businessId);
 }
